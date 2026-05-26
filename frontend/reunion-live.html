@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Réunion en ligne</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0c2340; min-height: 100vh; display: flex; flex-direction: column; }
+
+    .topbar {
+      background: rgba(255,255,255,.06);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .logo { font-weight: 800; font-size: 1.1rem; color: #fff; }
+    .logo span { color: #f5d87e; }
+    #reunionTitre { color: #f5d87e; font-size: .95rem; font-weight: 600; }
+    #reunionInfo  { color: rgba(255,255,255,.5); font-size: .8rem; margin-top: 2px; }
+
+    .badge-live {
+      background: #ef4444; color: #fff; font-size: .7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 99px; letter-spacing: .05em;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+    .btn-back {
+      background: rgba(255,255,255,.1); color: rgba(255,255,255,.8);
+      border: none; border-radius: 8px; padding: 8px 16px;
+      font-size: .8rem; font-weight: 600; cursor: pointer; transition: .2s;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-back:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+    /* État de chargement */
+    #loadingState {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    #loadingState h2 { color: #fff; font-size: 1.2rem; }
+    #loadingState p  { color: rgba(255,255,255,.5); font-size: .875rem; text-align: center; }
+    .spinner {
+      width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.15);
+      border-top-color: #f5d87e; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Jitsi container */
+    #jitsi-container { flex: 1; display: none; }
+    #jitsi-container iframe { width: 100%; height: 100%; border: none; min-height: calc(100vh - 70px); }
+
+    /* Fallback */
+    #fallbackState {
+      flex: 1; display: none; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; padding: 40px;
+    }
+    #fallbackState h2 { color: #fff; font-size: 1.2rem; }
+    #fallbackState p  { color: rgba(255,255,255,.5); font-size: .875rem; text-align: center; max-width: 440px; }
+    .btn-join-ext {
+      background: linear-gradient(135deg, #c9930a, #f5d87e);
+      color: #0c2340; font-weight: 700; padding: 14px 32px;
+      border-radius: 12px; font-size: 1rem; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">Gestion<span>Stages</span></div>
+      <div style="width:1px;height:28px;background:rgba(255,255,255,.15)"></div>
+      <div>
+        <div id="reunionTitre">Chargement...</div>
+        <div id="reunionInfo"></div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="badge-live">🔴 LIVE</span>
+      <a href="javascript:history.back()" class="btn-back">← Quitter la réunion</a>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <h2>Connexion à la réunion...</h2>
+    <p>Veuillez autoriser l'accès à votre caméra et microphone quand le navigateur vous le demande.</p>
+  </div>
+
+  <!-- JITSI EMBED -->
+  <div id="jitsi-container"></div>
+
+  <!-- FALLBACK (si bloqué) -->
+  <div id="fallbackState">
+    <div style="font-size:4rem">📹</div>
+    <h2 id="fallbackTitre">Rejoindre la réunion</h2>
+    <p>Votre navigateur ne prend pas en charge l'affichage intégré. Cliquez ci-dessous pour ouvrir la réunion dans un nouvel onglet.</p>
+    <a id="fallbackLien" href="#" target="_blank" class="btn-join-ext">📹 Ouvrir la réunion</a>
+  </div>
+
+  <script src="https://meet.jit.si/external_api.js" onerror="jitsiEchoue()"></script>
+  <script>
+    const API = 'http://localhost:3000';
+    const params = new URLSearchParams(window.location.search);
+    const reunionId = params.get('id');
+    const lienDirect = params.get('lien'); // lien jitsi direct passé en param
+
+    let jitsi = null;
+
+    async function init() {
+      let titre = 'Réunion en ligne';
+      let heure = '';
+      let salle = '';
+      let lienJitsi = lienDirect || '';
+
+      if (reunionId) {
+        try {
+          const r = await fetch(`${API}/api/reunion/${reunionId}`);
+          if (r.ok) {
+            const data = await r.json();
+            titre = data.titre;
+            lienJitsi = data.lien_jitsi;
+            const dt = new Date(`${data.date_reunion.split('T')[0]}T${data.heure_reunion}`);
+            heure = dt.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }) + ' à ' + data.heure_reunion.substring(0,5);
+          }
+        } catch(e) {}
+      }
+
+      document.getElementById('reunionTitre').textContent = titre;
+      document.getElementById('reunionInfo').textContent  = heure;
+      document.getElementById('fallbackTitre').textContent = titre;
+
+      if (!lienJitsi) {
+        afficherFallback(titre, '#');
+        return;
+      }
+
+      // Extraire le nom de la salle depuis l'URL Jitsi
+      salle = lienJitsi.replace('https://meet.jit.si/', '').replace(/\//g, '');
+      document.getElementById('fallbackLien').href = lienJitsi;
+
+      // Charger Jitsi si l'API est disponible
+      if (typeof JitsiMeetExternalAPI !== 'undefined') {
+        lancerJitsi(salle, titre);
+      } else {
+        // Script externe bloqué → ouvrir en nouvel onglet
+        afficherFallback(titre, lienJitsi);
+      }
+    }
+
+    function lancerJitsi(salle, titre) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('jitsi-container').style.display = 'block';
+
+      // Récupérer le nom de l'utilisateur depuis localStorage (tous rôles)
+      const prenom = localStorage.getItem('user_prenom') || '';
+      const nom    = localStorage.getItem('user_nom') || '';
+      const nomAffiche = (prenom + ' ' + nom).trim() || 'Participant';
+      const email  = localStorage.getItem('user_email') || '';
+
+      jitsi = new JitsiMeetExternalAPI('meet.jit.si', {
+        roomName: salle,
+        parentNode: document.getElementById('jitsi-container'),
+        width: '100%',
+        height: '100%',
+        configOverwrite: {
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
+          enableWelcomePage: false,
+          prejoinPageEnabled: false,
+          defaultLanguage: 'fr',
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          DEFAULT_REMOTE_DISPLAY_NAME: 'Participant',
+          TOOLBAR_BUTTONS: [
+            'microphone','camera','closedcaptions','desktop','fullscreen',
+            'fodeviceselection','hangup','chat','raisehand','videoquality',
+            'filmstrip','tileview','shortcuts','mute-everyone'
+          ],
+        },
+        userInfo: { email, displayName: nomAffiche },
+      });
+
+      jitsi.addEventListener('readyToClose', () => {
+        document.getElementById('jitsi-container').style.display = 'none';
+        document.getElementById('loadingState').style.display = 'flex';
+        document.getElementById('loadingState').querySelector('h2').textContent = 'Réunion terminée';
+        document.getElementById('loadingState').querySelector('p').textContent = 'Vous avez quitté la réunion.';
+        document.querySelector('.spinner').style.display = 'none';
+      });
+    }
+
+    function afficherFallback(titre, lien) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('fallbackTitre').textContent = titre;
+      document.getElementById('fallbackLien').href = lien;
+      document.getElementById('fallbackState').style.display = 'flex';
+      // Ouvrir automatiquement dans un nouvel onglet
+      if (lien !== '#') window.open(lien, '_blank');
+    }
+
+    function jitsiEchoue() {
+      // Le script externe n'a pas pu se charger
+      init();
+    }
+
+    init();
+  </script>
+</body>
+</html>

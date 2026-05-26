@@ -1,0 +1,643 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Messagerie — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .msg-bubble-moi  { background: linear-gradient(135deg,#0c2340,#163a5f); color:#fff; border-radius:18px 18px 4px 18px; }
+    .msg-bubble-lui  { background:#fff; color:#1a2d45; border-radius:18px 18px 18px 4px; box-shadow:0 1px 4px rgba(12,35,64,.08); }
+    .enc-item { transition:background .15s; border-bottom:1px solid #f0f4fa; cursor:pointer; }
+    .enc-item:hover { background:#f8fafc; }
+    .enc-item.active { background:#fef3c7; border-left:3px solid #c9930a; }
+    .tab-btn { transition: all .2s; }
+    .tab-btn.active { color:#0c2340; border-bottom:2px solid #c9930a; font-weight:700; }
+    .tab-btn:not(.active) { color:#94a3b8; border-bottom:2px solid transparent; }
+    #chatMessages, #chatMessagesEnc { scroll-behavior:smooth; }
+    .fade-in { animation:fadeIn .35s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    .rec-dot { display:none; width:9px; height:9px; border-radius:50%; background:#ef4444; flex-shrink:0; animation:recBlink 1s infinite; }
+    .rec-dot.show { display:inline-block; }
+    @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .btn-vocal { background:#f0f4fa; color:#475569; transition:background .2s; }
+    .btn-vocal:hover { background:#e2e8f0; }
+    .btn-stop-vocal { background:#fee2e2; color:#dc2626; transition:background .2s; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html"      class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html"   class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html"        class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html"     class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"   class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"    class="nav-link active"><span class="nav-icon">💬</span> Messagerie <span id="badgeNav" class="hidden ml-auto text-xs font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5"></span></a>
+      <a href="ressources.html"    class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5"><span class="nav-icon">🚪</span> Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 flex flex-col h-screen overflow-hidden">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 flex justify-between items-center flex-shrink-0"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#c9930a">💬</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Messagerie</h1>
+          <p class="text-xs text-gray-400" id="topSub">Conversations</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYOUT -->
+    <div class="flex flex-1 overflow-hidden">
+
+      <!-- PANNEAU GAUCHE -->
+      <div class="w-72 flex flex-col bg-white flex-shrink-0" style="border-right:2px solid #eef2f7">
+
+        <!-- Onglets -->
+        <div class="flex flex-shrink-0" style="border-bottom:1px solid #eef2f7">
+          <button id="tabAdmin" onclick="switchTab('admin')"
+                  class="tab-btn active flex-1 py-3 text-sm text-center">
+            👑 Admin
+          </button>
+          <button id="tabEnc" onclick="switchTab('encadrants')"
+                  class="tab-btn flex-1 py-3 text-sm text-center relative">
+            👨‍🏫 Encadrants
+            <span id="badgeEncTab" class="hidden absolute -top-1 right-2 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold" style="background:#dc2626;font-size:.6rem"></span>
+          </button>
+          <button id="tabEtu" onclick="switchTab('etudiants')"
+                  class="tab-btn flex-1 py-3 text-sm text-center relative">
+            🎓 Étudiants
+            <span id="badgeEtuTab" class="hidden absolute -top-1 right-2 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center font-bold" style="background:#dc2626;font-size:.6rem"></span>
+          </button>
+        </div>
+
+        <!-- Panneau ADMIN -->
+        <div id="panelAdmin" class="flex flex-col overflow-hidden" style="flex:1">
+          <div class="p-5 flex flex-col items-center text-center" style="border-bottom:1px solid #eef2f7">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl text-white mb-2"
+                 style="background:linear-gradient(135deg,#0c2340,#163a5f)">AD</div>
+            <p class="font-bold text-gray-800 text-sm">Administrateur</p>
+            <p class="text-xs text-gray-400">👑 Super Admin</p>
+          </div>
+          <div class="p-4 flex-1 text-xs text-gray-500 space-y-2">
+            <p>📋 Signalez des problèmes concernant votre département</p>
+            <p>📊 Demandez des ressources ou des ajustements</p>
+            <p>🔔 Recevez des directives administratives</p>
+          </div>
+          <div class="p-3" style="border-top:1px solid #eef2f7">
+            <p id="compteurMsgAdmin" class="text-xs text-gray-400 text-center"></p>
+          </div>
+        </div>
+
+        <!-- Panneau ENCADRANTS -->
+        <div id="panelEnc" class="hidden flex-col overflow-hidden" style="flex:1">
+          <div class="p-3 flex-shrink-0" style="border-bottom:1px solid #eef2f7">
+            <p class="text-xs text-gray-400 font-medium">Encadrants de votre département</p>
+          </div>
+          <div id="listeEncadrants" class="overflow-y-auto" style="flex:1">
+            <p class="text-center text-gray-400 p-6 text-sm">⏳ Chargement...</p>
+          </div>
+        </div>
+
+        <!-- Panneau ÉTUDIANTS -->
+        <div id="panelEtu" class="hidden flex-col overflow-hidden" style="flex:1">
+          <div class="p-3 flex-shrink-0" style="border-bottom:1px solid #eef2f7">
+            <input id="searchEtu" oninput="filtrerEtudiants()" type="text" placeholder="🔍 Rechercher un étudiant…"
+                   class="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none"/>
+          </div>
+          <div id="listeEtudiants" class="overflow-y-auto" style="flex:1">
+            <p class="text-center text-gray-400 p-6 text-sm">⏳ Chargement...</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ZONE DE CHAT -->
+      <div class="flex-1 flex flex-col overflow-hidden" style="background:#f0f4fa">
+
+        <!-- Chat Admin -->
+        <div id="chatAdmin" class="flex-1 flex flex-col overflow-hidden">
+          <div id="chatMessages" class="flex-1 overflow-y-auto p-5 space-y-3 fade-in"></div>
+          <div class="bg-white p-4 flex-shrink-0" style="border-top:1px solid #eef2f7">
+            <div class="flex gap-3 items-center">
+              <input id="inputMsg" type="text"
+                     placeholder="Écrire un message à l'administrateur..."
+                     onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMsgAdmin();}"
+                     class="flex-1 border border-gray-200 rounded-2xl px-5 py-3 text-sm focus:outline-none"/>
+              <button onclick="envoyerMsgAdmin()"
+                      class="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                      style="background:#c9930a">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              </button>
+              <div id="recDot_adm" class="rec-dot"></div>
+              <button id="btnRec_adm" onclick="startVocal('adm')" title="Message vocal"
+                      class="btn-vocal w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+              </button>
+              <button id="btnStop_adm" onclick="stopVocal('adm')" title="Arrêter" class="hidden btn-stop-vocal w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Encadrants -->
+        <div id="chatEncZone" class="hidden flex-1 flex flex-col overflow-hidden">
+          <div id="chatEncVide" class="flex-1 flex flex-col items-center justify-center gap-4">
+            <span class="text-6xl">👨‍🏫</span>
+            <div class="text-center">
+              <p class="font-semibold text-gray-500">Sélectionnez un encadrant</p>
+              <p class="text-sm text-gray-400 mt-1">Choisissez un encadrant dans la liste</p>
+            </div>
+          </div>
+          <div id="chatEncActif" class="hidden flex-1 flex flex-col overflow-hidden">
+            <div class="bg-white px-5 py-3 flex items-center gap-4 flex-shrink-0"
+                 style="border-bottom:1px solid #eef2f7">
+              <div id="encAvatar" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+                   style="background:#163a5f"></div>
+              <div>
+                <p id="encNom" class="font-bold text-gray-800 text-sm"></p>
+                <p class="text-xs text-gray-400">👨‍🏫 Encadrant — votre département</p>
+              </div>
+            </div>
+            <div id="chatMessagesEnc" class="flex-1 overflow-y-auto p-5 space-y-3 fade-in"></div>
+            <div class="bg-white p-4 flex-shrink-0" style="border-top:1px solid #eef2f7">
+              <div class="flex gap-3 items-center">
+                <input id="inputMsgEnc" type="text"
+                       placeholder="Écrire un message à cet encadrant..."
+                       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMsgEnc();}"
+                       class="flex-1 border border-gray-200 rounded-2xl px-5 py-3 text-sm focus:outline-none"/>
+                <button onclick="envoyerMsgEnc()"
+                        class="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                        style="background:#0c2340">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </button>
+                <div id="recDot_enc" class="rec-dot"></div>
+                <button id="btnRec_enc" onclick="startVocal('enc')" title="Message vocal"
+                        class="btn-vocal w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+                </button>
+                <button id="btnStop_enc" onclick="stopVocal('enc')" title="Arrêter" class="hidden btn-stop-vocal w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Étudiants -->
+        <div id="chatEtuZone" class="hidden flex-1 flex flex-col overflow-hidden">
+          <div id="chatEtuVide" class="flex-1 flex flex-col items-center justify-center gap-4">
+            <span class="text-6xl">🎓</span>
+            <div class="text-center">
+              <p class="font-semibold text-gray-500">Sélectionnez un étudiant</p>
+              <p class="text-sm text-gray-400 mt-1">Choisissez un étudiant dans la liste</p>
+            </div>
+          </div>
+          <div id="chatEtuActif" class="hidden flex-1 flex flex-col overflow-hidden">
+            <div class="bg-white px-5 py-3 flex items-center gap-4 flex-shrink-0"
+                 style="border-bottom:1px solid #eef2f7">
+              <div id="etuAvatar" class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+                   style="background:#0891b2"></div>
+              <div>
+                <p id="etuNom" class="font-bold text-gray-800 text-sm"></p>
+                <p id="etuInfo" class="text-xs text-gray-400">🎓 Étudiant — votre département</p>
+              </div>
+            </div>
+            <div id="chatMessagesEtu" class="flex-1 overflow-y-auto p-5 space-y-3 fade-in"></div>
+            <div class="bg-white p-4 flex-shrink-0" style="border-top:1px solid #eef2f7">
+              <div class="flex gap-3 items-center">
+                <input id="inputMsgEtu" type="text"
+                       placeholder="Écrire un message à cet étudiant..."
+                       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();envoyerMsgEtu();}"
+                       class="flex-1 border border-gray-200 rounded-2xl px-5 py-3 text-sm focus:outline-none"/>
+                <button onclick="envoyerMsgEtu()"
+                        class="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0"
+                        style="background:#0891b2">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('chef_departement');
+  const API     = 'http://localhost:3000';
+  const CHEF_ID = parseInt(localStorage.getItem('chef_id'));
+
+  let ongletActif   = 'admin';
+  let encActuel     = null;
+  let etuActuel     = null;
+  let tousEtudiants = [];
+  let intervalAdmin = null;
+  let intervalEnc   = null;
+  let intervalEtu   = null;
+
+  // ══ PROFIL ══════════════════════════════════════
+  async function chargerProfil() {
+    try {
+      const r = await fetch(`${API}/api/chef/profil/${CHEF_ID}`);
+      const u = await r.json();
+      document.getElementById('avatarMenu').textContent = `${u.prenom[0]}${u.nom[0]}`;
+      document.getElementById('nomMenu').textContent    = `${u.prenom} ${u.nom}`;
+      document.getElementById('nomDept').textContent    = u.departement || '—';
+      localStorage.setItem('chef_id', u.id);
+    } catch(e) {}
+  }
+
+  // ══ BADGE NAV (total non lus) ══════════════════════
+  async function majBadgeNav() {
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        fetch(`${API}/api/chef/messagerie/${CHEF_ID}/non-lus`),
+        fetch(`${API}/api/chef/messagerie/${CHEF_ID}/encadrants/non-lus`),
+        fetch(`${API}/api/chef/messagerie/${CHEF_ID}/etudiants/non-lus`)
+      ]);
+      const d1 = await r1.json();
+      const d2 = await r2.json();
+      const d3 = await r3.json();
+      const total = (d1.nb || 0) + (d2.nb || 0) + (d3.nb || 0);
+      const b = document.getElementById('badgeNav');
+      if (total > 0) { b.textContent = total > 9 ? '9+' : total; b.classList.remove('hidden'); }
+      else b.classList.add('hidden');
+    } catch(e) {}
+  }
+
+  // ══ ONGLETS ══════════════════════════════════════
+  function switchTab(tab) {
+    ongletActif = tab;
+    const isAdmin = tab === 'admin';
+    const isEnc   = tab === 'encadrants';
+    const isEtu   = tab === 'etudiants';
+
+    document.getElementById('tabAdmin').className = `tab-btn ${isAdmin ? 'active' : ''} flex-1 py-3 text-sm text-center`;
+    document.getElementById('tabEnc').className   = `tab-btn ${isEnc   ? 'active' : ''} flex-1 py-3 text-sm text-center relative`;
+    document.getElementById('tabEtu').className   = `tab-btn ${isEtu   ? 'active' : ''} flex-1 py-3 text-sm text-center relative`;
+
+    document.getElementById('panelAdmin').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('panelEnc').style.display   = isEnc   ? 'flex' : 'none';
+    document.getElementById('panelEtu').style.display   = isEtu   ? 'flex' : 'none';
+    document.getElementById('chatAdmin').classList.toggle('hidden', !isAdmin);
+    document.getElementById('chatEncZone').classList.toggle('hidden', !isEnc);
+    document.getElementById('chatEtuZone').classList.toggle('hidden', !isEtu);
+
+    clearInterval(intervalAdmin); intervalAdmin = null;
+    clearInterval(intervalEnc);   intervalEnc   = null;
+    clearInterval(intervalEtu);   intervalEtu   = null;
+
+    if (isAdmin) {
+      chargerMsgsAdmin();
+      intervalAdmin = setInterval(chargerMsgsAdmin, 5000);
+    } else if (isEnc) {
+      chargerListeEncadrants();
+    } else if (isEtu) {
+      chargerListeEtudiants();
+    }
+  }
+
+  // ══ ONGLET ADMIN ══════════════════════════════════
+  async function chargerMsgsAdmin() {
+    const r = await fetch(`${API}/api/chef/messagerie/${CHEF_ID}`);
+    const messages = await r.json();
+    const container = document.getElementById('chatMessages');
+    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
+    document.getElementById('compteurMsgAdmin').textContent =
+      messages.length ? `${messages.length} message${messages.length > 1 ? 's' : ''}` : 'Aucun message';
+    if (!messages.length) {
+      container.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 py-16">
+        <span class="text-6xl">💬</span>
+        <p class="font-semibold text-gray-500">Démarrez la conversation</p>
+        <p class="text-sm text-gray-400 mt-1">Envoyez un message à l'administrateur</p>
+      </div>`;
+      return;
+    }
+    renderMessages(container, messages, CHEF_ID, '👑 Administrateur');
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+    majBadgeNav();
+  }
+
+  async function envoyerMsgAdmin() {
+    const input = document.getElementById('inputMsg');
+    const contenu = input.value.trim();
+    if (!contenu) return;
+    input.value = '';
+    await fetch(`${API}/api/chef/messagerie/${CHEF_ID}`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ contenu })
+    });
+    chargerMsgsAdmin();
+  }
+
+  // ══ ONGLET ENCADRANTS ═════════════════════════════
+  async function chargerListeEncadrants() {
+    const r = await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/encadrants`);
+    const encadrants = await r.json();
+    const container  = document.getElementById('listeEncadrants');
+
+    const totalNL = encadrants.reduce((s, e) => s + (e.non_lus || 0), 0);
+    const badge = document.getElementById('badgeEncTab');
+    if (totalNL > 0) { badge.textContent = totalNL > 9 ? '9+' : totalNL; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+
+    if (!encadrants.length) {
+      container.innerHTML = `<div class="text-center p-8"><span class="text-4xl">👨‍🏫</span><p class="text-gray-400 text-sm mt-3">Aucun encadrant dans votre département</p></div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    encadrants.forEach(enc => {
+      const isActive = encActuel && encActuel.id === enc.id;
+      const div = document.createElement('div');
+      div.className = `enc-item px-4 py-3 flex items-center gap-3${isActive ? ' active' : ''}`;
+      div.onclick = () => ouvrirConvEnc(enc);
+      div.innerHTML = `
+        <div class="relative flex-shrink-0">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white"
+               style="background:${isActive ? '#c9930a' : '#163a5f'}">
+            ${escapeHtml(enc.prenom[0])}${escapeHtml(enc.nom[0])}
+          </div>
+          ${enc.non_lus > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-xs flex items-center justify-center text-white font-bold" style="background:#dc2626;font-size:.6rem">${enc.non_lus}</span>` : ''}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(enc.prenom)} ${escapeHtml(enc.nom)}</p>
+          <p class="text-xs text-gray-400 truncate mt-0.5">${enc.dernier_message ? escapeHtml(enc.dernier_message) : '<em>Aucun message</em>'}</p>
+          ${enc.date_dernier ? `<p class="text-xs text-gray-300 mt-0.5">${formatHeure(enc.date_dernier)}</p>` : ''}
+        </div>`;
+      container.appendChild(div);
+    });
+  }
+
+  async function ouvrirConvEnc(enc) {
+    encActuel = enc;
+    clearInterval(intervalEnc);
+    document.getElementById('chatEncVide').classList.add('hidden');
+    document.getElementById('chatEncActif').classList.remove('hidden');
+    document.getElementById('encAvatar').textContent = `${escapeHtml(enc.prenom[0])}${escapeHtml(enc.nom[0])}`;
+    document.getElementById('encNom').textContent    = `${enc.prenom} ${enc.nom}`;
+    chargerListeEncadrants();
+    await chargerMsgsEnc();
+    intervalEnc = setInterval(() => { chargerMsgsEnc(); chargerListeEncadrants(); }, 5000);
+  }
+
+  async function chargerMsgsEnc() {
+    if (!encActuel) return;
+    const r = await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/encadrant/${encActuel.id}`);
+    const messages = await r.json();
+    const container = document.getElementById('chatMessagesEnc');
+    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
+    if (!messages.length) {
+      container.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 py-16">
+        <span class="text-6xl">💬</span>
+        <p class="font-semibold text-gray-500">Démarrez la conversation</p>
+        <p class="text-sm text-gray-400 mt-1">Envoyez un message à cet encadrant</p>
+      </div>`;
+      return;
+    }
+    renderMessages(container, messages, CHEF_ID, `👨‍🏫 ${encActuel.prenom} ${encActuel.nom}`);
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  }
+
+  async function envoyerMsgEnc() {
+    if (!encActuel) return;
+    const input = document.getElementById('inputMsgEnc');
+    const contenu = input.value.trim();
+    if (!contenu) return;
+    input.value = '';
+    await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/encadrant/${encActuel.id}`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ contenu })
+    });
+    chargerMsgsEnc();
+    chargerListeEncadrants();
+  }
+
+  // ══ ONGLET ÉTUDIANTS ═════════════════════════════
+  async function chargerListeEtudiants() {
+    const r = await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/etudiants`);
+    tousEtudiants = await r.json();
+    const totalNL = tousEtudiants.reduce((s, e) => s + (e.non_lus || 0), 0);
+    const badge = document.getElementById('badgeEtuTab');
+    if (totalNL > 0) { badge.textContent = totalNL > 9 ? '9+' : totalNL; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+    afficherListeEtudiants(tousEtudiants);
+  }
+
+  function filtrerEtudiants() {
+    const q = document.getElementById('searchEtu').value.toLowerCase();
+    afficherListeEtudiants(tousEtudiants.filter(e =>
+      (e.prenom + ' ' + e.nom + ' ' + (e.filiere || '')).toLowerCase().includes(q)
+    ));
+  }
+
+  function afficherListeEtudiants(liste) {
+    const container = document.getElementById('listeEtudiants');
+    if (!liste.length) {
+      container.innerHTML = `<div class="text-center p-8"><span class="text-4xl">🎓</span><p class="text-gray-400 text-sm mt-3">Aucun étudiant trouvé</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    liste.forEach(etu => {
+      const isActive = etuActuel && etuActuel.id === etu.id;
+      const div = document.createElement('div');
+      div.className = `enc-item px-4 py-3 flex items-center gap-3${isActive ? ' active' : ''}`;
+      div.onclick = () => ouvrirConvEtu(etu);
+      div.innerHTML = `
+        <div class="relative flex-shrink-0">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white"
+               style="background:${isActive ? '#c9930a' : '#0891b2'}">
+            ${escapeHtml(etu.prenom[0])}${escapeHtml(etu.nom[0])}
+          </div>
+          ${etu.non_lus > 0 ? `<span class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-xs flex items-center justify-center text-white font-bold" style="background:#dc2626;font-size:.6rem">${etu.non_lus}</span>` : ''}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(etu.prenom)} ${escapeHtml(etu.nom)}</p>
+          <p class="text-xs text-gray-400 truncate mt-0.5">${etu.filiere ? escapeHtml(etu.filiere) : ''}${etu.annee_etude ? ' · ' + etu.annee_etude + 'e an.' : ''}</p>
+          ${etu.dernier_message ? `<p class="text-xs text-gray-300 mt-0.5 truncate">${escapeHtml(etu.dernier_message)}</p>` : ''}
+        </div>`;
+      container.appendChild(div);
+    });
+  }
+
+  async function ouvrirConvEtu(etu) {
+    etuActuel = etu;
+    clearInterval(intervalEtu);
+    document.getElementById('chatEtuVide').classList.add('hidden');
+    document.getElementById('chatEtuActif').classList.remove('hidden');
+    document.getElementById('etuAvatar').textContent = `${escapeHtml(etu.prenom[0])}${escapeHtml(etu.nom[0])}`;
+    document.getElementById('etuNom').textContent    = `${etu.prenom} ${etu.nom}`;
+    document.getElementById('etuInfo').textContent   = `🎓 Étudiant${etu.filiere ? ' — ' + etu.filiere : ''}${etu.annee_etude ? ' (' + etu.annee_etude + 'e année)' : ''}`;
+    chargerListeEtudiants();
+    await chargerMsgsEtu();
+    intervalEtu = setInterval(() => { chargerMsgsEtu(); chargerListeEtudiants(); }, 5000);
+  }
+
+  async function chargerMsgsEtu() {
+    if (!etuActuel) return;
+    const r = await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/etudiant/${etuActuel.id}`);
+    const messages = await r.json();
+    const container = document.getElementById('chatMessagesEtu');
+    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
+    if (!messages.length) {
+      container.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-4 py-16">
+        <span class="text-6xl">💬</span>
+        <p class="font-semibold text-gray-500">Démarrez la conversation</p>
+        <p class="text-sm text-gray-400 mt-1">Envoyez un message à cet étudiant</p>
+      </div>`;
+      return;
+    }
+    renderMessages(container, messages, CHEF_ID, `🎓 ${etuActuel.prenom} ${etuActuel.nom}`);
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  }
+
+  async function envoyerMsgEtu() {
+    if (!etuActuel) return;
+    const input = document.getElementById('inputMsgEtu');
+    const contenu = input.value.trim();
+    if (!contenu) return;
+    input.value = '';
+    await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/etudiant/${etuActuel.id}`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ contenu })
+    });
+    chargerMsgsEtu();
+    chargerListeEtudiants();  }
+  // ══ RENDU MESSAGES ══════════════════════════════
+  function renderMessages(container, messages, moiId, labelAutre) {
+    container.innerHTML = '';
+    let lastDate = '';
+    messages.forEach(m => {
+      const msgDate = new Date(m.date_envoi).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+      if (msgDate !== lastDate) {
+        lastDate = msgDate;
+        const sep = document.createElement('div');
+        sep.className = 'flex items-center gap-3 my-2';
+        sep.innerHTML = `<div class="flex-1 h-px bg-gray-200"></div><p class="text-xs text-gray-400 flex-shrink-0 capitalize">${msgDate}</p><div class="flex-1 h-px bg-gray-200"></div>`;
+        container.appendChild(sep);
+      }
+      const estMoi = m.expediteur_id === moiId;
+      const div = document.createElement('div');
+      div.className = `flex ${estMoi ? 'justify-end' : 'justify-start'}`;
+      div.innerHTML = `
+        <div class="max-w-xs lg:max-w-md xl:max-w-lg">
+          ${!estMoi ? `<p class="text-xs text-gray-400 mb-1 px-1">${labelAutre}</p>` : ''}
+          <div class="${estMoi ? 'msg-bubble-moi' : 'msg-bubble-lui'} px-4 py-3 text-sm leading-relaxed">
+            ${m.contenu && m.contenu.startsWith('audio/') ? '<audio controls style="max-width:200px;height:32px"><source src="' + API + '/uploads/' + m.contenu + '"></audio>' : escapeHtml(m.contenu)}
+          </div>
+          <p class="text-xs text-gray-400 mt-1 ${estMoi ? 'text-right' : 'text-left'} px-1">
+            ${formatHeure(m.date_envoi)}${estMoi && m.est_lu ? ' · ✓✓' : ''}
+          </p>
+        </div>`;
+      container.appendChild(div);
+    });
+  }
+
+  // ══ UTILITAIRES ══════════════════════════════════
+  function formatHeure(d) {
+    return new Date(d).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  }
+  function escapeHtml(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // ══ INIT ═════════════════════════════════════════
+  /* ── MESSAGES VOCAUX ────────────────────────── */
+  let _vRecorder = null, _vChunks = [], _vStream = null;
+
+  async function startVocal(ctx) {
+    try {
+      _vStream   = await navigator.mediaDevices.getUserMedia({ audio: true });
+      _vRecorder = new MediaRecorder(_vStream);
+      _vChunks   = [];
+      _vRecorder.ondataavailable = e => { if (e.data.size > 0) _vChunks.push(e.data); };
+      _vRecorder.start();
+      document.getElementById('btnRec_'  + ctx).classList.add('hidden');
+      document.getElementById('btnStop_' + ctx).classList.remove('hidden');
+      document.getElementById('recDot_'  + ctx).classList.add('show');
+    } catch(e) { console.error('Micro non disponible', e); }
+  }
+
+  function stopVocal(ctx) {
+    if (!_vRecorder) return;
+    _vRecorder.onstop = async () => {
+      const fd = new FormData();
+      fd.append('audio', new Blob(_vChunks, { type: 'audio/webm' }), 'voice.webm');
+      let expId, destId;
+      if (ctx === 'adm') { expId = CHEF_ID; destId = 1; }
+      else if (ctx === 'enc' && encActuel) { expId = CHEF_ID; destId = encActuel.id; }
+      if (!expId || !destId) return;
+      fd.append('expediteur_id',   expId);
+      fd.append('destinataire_id', destId);
+      fd.append('stage_id',        '');
+      await fetch(API + '/send-audio', { method: 'POST', body: fd });
+      if (ctx === 'adm') chargerMsgsAdmin();
+      else               chargerMsgsEnc();
+      if (_vStream) { _vStream.getTracks().forEach(t => t.stop()); _vStream = null; }
+    };
+    _vRecorder.stop();
+    document.getElementById('btnRec_'  + ctx).classList.remove('hidden');
+    document.getElementById('btnStop_' + ctx).classList.add('hidden');
+    document.getElementById('recDot_'  + ctx).classList.remove('show');
+  }
+
+  chargerProfil();
+  setInterval(majBadgeNav, 30000);
+  switchTab('admin');
+</script>
+</body>
+</html>

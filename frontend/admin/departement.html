@@ -1,0 +1,476 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Départements — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .carte-dept { transition: all .3s ease; cursor: pointer; }
+    .carte-dept:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(12,35,64,.15); }
+    .barre-progress { transition: width 1s ease; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div>
+          <p class="text-white font-bold text-sm">Gestion Stages</p>
+          <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p>
+        </div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"   class="nav-link"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"    class="nav-link active"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"     class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html"  class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"        class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"        class="nav-link"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"         class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">🏛️</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Départements</h1>
+          <p id="sousTitre" class="text-xs text-gray-400">Sélectionnez un département</p>
+        </div>
+      </div>
+      <div class="flex gap-2 items-center">
+        <button id="btnRetour" onclick="retour()"
+                class="hidden px-4 py-2 rounded-xl text-sm font-medium transition"
+                style="background:#eef2f7;color:#0c2340">
+          ← Retour
+        </button>
+        <button onclick="ouvrirModalDept()"
+                class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold transition"
+                style="background:#0c2340">
+          ➕ Nouveau département
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6">
+      <!-- VUE 1 : Tous les départements -->
+      <div id="vueDefaut" class="fade-in">
+        <div id="cartesDepts" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- VUE 2 : Détails département -->
+      <div id="vueDetails" class="hidden fade-in">
+        <!-- Bannière -->
+        <div id="banniereDept" class="rounded-2xl p-8 mb-6 text-white relative overflow-hidden">
+          <div class="absolute right-6 top-2 text-8xl opacity-10 select-none">🏛️</div>
+          <h2 id="titreDept" class="text-3xl font-bold"></h2>
+          <p id="descDept" class="text-white/80 text-sm mt-1"></p>
+        </div>
+
+        <!-- 3 cartes stats -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-white rounded-2xl p-6" style="border-top:3px solid #0c2340;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">Étudiants</p>
+                <p id="nbEtudiants" class="text-4xl font-bold mt-1" style="color:#0c2340">--</p>
+              </div>
+              <span class="text-4xl">🎓</span>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl p-6" style="border-top:3px solid #c9930a;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">Encadrants</p>
+                <p id="nbEncadrants" class="text-4xl font-bold mt-1" style="color:#c9930a">--</p>
+              </div>
+              <span class="text-4xl">👨‍🏫</span>
+            </div>
+          </div>
+          <div class="bg-white rounded-2xl p-6" style="border-top:3px solid #059669;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="text-gray-500 text-sm">Stages</p>
+                <p id="nbStages" class="text-4xl font-bold mt-1" style="color:#059669">--</p>
+              </div>
+              <span class="text-4xl">📋</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+            <h3 class="font-bold mb-4" style="color:#0c2340">📊 Stages par statut</h3>
+            <canvas id="graphStatut" height="220"></canvas>
+          </div>
+          <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+            <h3 class="font-bold mb-4" style="color:#0c2340">🎓 Stages par type</h3>
+            <canvas id="graphType" height="220"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-4">
+          <button onclick="afficherTab('stages')" id="tabStages"
+                  class="px-5 py-2 rounded-xl text-sm font-medium text-white transition"
+                  style="background:#0c2340">📋 Stages</button>
+          <button onclick="afficherTab('etudiants')" id="tabEtudiants"
+                  class="px-5 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">🎓 Étudiants</button>
+          <button onclick="afficherTab('encadrants')" id="tabEncadrants"
+                  class="px-5 py-2 rounded-xl text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition">👨‍🏫 Encadrants</button>
+        </div>
+
+        <!-- Tableau Stages -->
+        <div id="contenuStages" class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="background:#f0f4fa">
+                <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Étudiant</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Sujet</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Type</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Encadrant</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Progression</th>
+                <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Statut</th>
+              </tr>
+            </thead>
+            <tbody id="listeStages" class="divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+
+        <!-- Tableau Étudiants -->
+        <div id="contenuEtudiants" class="bg-white rounded-2xl p-6 hidden" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="background:#f0f4fa">
+                <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Nom</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Filière</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Année</th>
+                <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Type stage</th>
+              </tr>
+            </thead>
+            <tbody id="listeEtudiants" class="divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+
+        <!-- Tableau Encadrants -->
+        <div id="contenuEncadrants" class="bg-white rounded-2xl p-6 hidden" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="background:#f0f4fa">
+                <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Nom</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Grade</th>
+                <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Charge</th>
+              </tr>
+            </thead>
+            <tbody id="listeEncadrants" class="divide-y divide-gray-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL NOUVEAU DÉPARTEMENT -->
+<div id="modalDept" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4">
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold"
+             style="background:#0c2340">🏛️</div>
+        <h3 class="text-lg font-bold" style="color:#0c2340">Créer un nouveau département</h3>
+      </div>
+      <button onclick="fermerModalDept()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+    </div>
+    <div id="deptErreur" class="hidden mb-4 p-3 rounded-xl text-sm text-red-700" style="background:#fff1f2;border:1px solid #fca5a5"></div>
+    <div class="space-y-4">
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Nom du département <span class="text-red-400">*</span></label>
+        <input id="dNom" type="text" placeholder="Ex : Génie Informatique"
+               oninput="deptCheckNom()"
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/>
+        <p id="dErrNom" class="hidden text-xs text-red-500 mt-1"></p>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Description <span class="text-gray-400 font-normal">(optionnel)</span></label>
+        <textarea id="dDesc" rows="3" placeholder="Description courte du département..."
+                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"></textarea>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Assigner un chef de département <span class="text-gray-400 font-normal">(optionnel)</span></label>
+        <select id="dChef" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-white">
+          <option value="">-- Aucun chef pour l'instant --</option>
+        </select>
+        <p class="text-xs text-gray-400 mt-1.5">Seuls les encadrants sans département assigné sont listés.</p>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerModalDept()"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm transition">
+        Annuler
+      </button>
+      <button onclick="creerDept()"
+              class="flex-1 text-white py-3 rounded-xl font-medium text-sm transition"
+              style="background:#0c2340">
+        ✅ Créer le département
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+  const couleursGradient = [
+    'background: linear-gradient(135deg, #0c2340, #1e4d7b)',
+    'background: linear-gradient(135deg, #b45309, #f59e0b)',
+    'background: linear-gradient(135deg, #15803d, #22c55e)',
+  ];
+  let graphStatut = null;
+  let graphType   = null;
+
+  async function chargerDepts() {
+    const reponse = await fetch(`${API}/api/admin/departements`);
+    const depts   = await reponse.json();
+    const container = document.getElementById('cartesDepts');
+    container.innerHTML = '';
+    depts.forEach((d, i) => {
+      const gradient = couleursGradient[i] || couleursGradient[0];
+      container.innerHTML += `
+        <div onclick="chargerDetails(${d.id}, '${d.nom}', '${d.description||''}', ${i})"
+             class="carte-dept bg-white rounded-2xl overflow-hidden" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <div class="p-6 text-white relative overflow-hidden" style="${gradient}">
+            <div class="absolute right-4 top-2 text-6xl opacity-20 select-none">🏛️</div>
+            <h3 class="text-xl font-bold">${d.nom}</h3>
+            <p class="text-white/80 text-sm mt-1">${d.description||''}</p>
+          </div>
+          <div class="p-5">
+            <p class="text-sm text-gray-500 mb-4">Cliquez pour voir les détails →</p>
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-xl py-3" style="background:#eef2f7"><p class="text-xl">🎓</p><p class="text-xs text-gray-500 mt-1">Étudiants</p></div>
+              <div class="rounded-xl py-3" style="background:#fef3c7"><p class="text-xl">👨‍🏫</p><p class="text-xs text-gray-500 mt-1">Encadrants</p></div>
+              <div class="rounded-xl py-3" style="background:#d1fae5"><p class="text-xl">📋</p><p class="text-xs text-gray-500 mt-1">Stages</p></div>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  async function chargerDetails(id, nom, desc, index) {
+    const reponse = await fetch(`${API}/api/admin/departements/${id}`);
+    const data    = await reponse.json();
+    document.getElementById('vueDefaut').classList.add('hidden');
+    document.getElementById('vueDetails').classList.remove('hidden');
+    document.getElementById('btnRetour').classList.remove('hidden');
+    document.getElementById('sousTitre').textContent = `Département ${nom}`;
+    const gradient = couleursGradient[index] || couleursGradient[0];
+    document.getElementById('banniereDept').style = gradient;
+    document.getElementById('titreDept').textContent = `🏛️ ${nom}`;
+    document.getElementById('descDept').textContent  = desc;
+    document.getElementById('nbEtudiants').textContent  = data.etudiants.length;
+    document.getElementById('nbEncadrants').textContent = data.encadrants.length;
+    document.getElementById('nbStages').textContent     = data.stages.length;
+    const statuts = { en_attente:0, en_cours:0, valide:0, refuse:0 };
+    data.stages.forEach(s => { if(statuts[s.statut]!==undefined) statuts[s.statut]++; });
+    if (graphStatut) graphStatut.destroy();
+    graphStatut = new Chart(document.getElementById('graphStatut'), {
+      type: 'doughnut',
+      data: { labels: ['En attente','En cours','Validé','Refusé'], datasets: [{ data: Object.values(statuts), backgroundColor: ['#c9930a','#059669','#0c2340','#dc2626'], borderWidth:3, borderColor:'#fff' }] },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+    const types = { initiation:0, perfectionnement:0, fin_etude:0 };
+    data.stages.forEach(s => { if(types[s.type_stage]!==undefined) types[s.type_stage]++; });
+    if (graphType) graphType.destroy();
+    graphType = new Chart(document.getElementById('graphType'), {
+      type: 'bar',
+      data: { labels: ['Initiation','Perfectionnement','PFE'], datasets: [{ data: Object.values(types), backgroundColor: ['#059669','#c9930a','#0c2340'], borderRadius:10 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize:1 } } } }
+    });
+    const tbodyS = document.getElementById('listeStages');
+    tbodyS.innerHTML = data.stages.length === 0 ? `<tr><td colspan="6" class="text-center py-6 text-gray-400">Aucun stage</td></tr>` : '';
+    data.stages.forEach(s => {
+      tbodyS.innerHTML += `<tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-4 font-medium text-gray-800">${s.etudiant}</td>
+        <td class="px-4 py-4 text-gray-600">${s.titre}</td>
+        <td class="px-4 py-4">${badgeType(s.type_stage)}</td>
+        <td class="px-4 py-4 text-gray-600">${s.encadrant||'—'}</td>
+        <td class="px-4 py-4"><div class="flex items-center gap-2"><div class="w-24 bg-gray-200 rounded-full h-2"><div class="barre-progress h-2 rounded-full" style="width:${s.progression}%;background:#0c2340"></div></div><span class="text-xs font-medium text-gray-600">${s.progression}%</span></div></td>
+        <td class="px-4 py-4">${badgeStatut(s.statut)}</td>
+      </tr>`;
+    });
+    const tbodyE = document.getElementById('listeEtudiants');
+    tbodyE.innerHTML = data.etudiants.length === 0 ? `<tr><td colspan="5" class="text-center py-6 text-gray-400">Aucun étudiant</td></tr>` : '';
+    data.etudiants.forEach(e => {
+      tbodyE.innerHTML += `<tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-4"><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background:#0c2340">${e.prenom[0]}${e.nom[0]}</div><span class="font-medium text-gray-800">${e.prenom} ${e.nom}</span></div></td>
+        <td class="px-4 py-4 text-gray-600">${e.email}</td>
+        <td class="px-4 py-4 text-gray-600">${e.filiere||'—'}</td>
+        <td class="px-4 py-4 text-gray-600">${e.annee_etude}ème année</td>
+        <td class="px-4 py-4">${badgeType(e.type_stage)}</td>
+      </tr>`;
+    });
+    const tbodyEnc = document.getElementById('listeEncadrants');
+    tbodyEnc.innerHTML = data.encadrants.length === 0 ? `<tr><td colspan="4" class="text-center py-6 text-gray-400">Aucun encadrant</td></tr>` : '';
+    data.encadrants.forEach(e => {
+      const plein = e.nb_etudiants_actuel >= e.nb_etudiants_max;
+      tbodyEnc.innerHTML += `<tr class="hover:bg-gray-50 transition">
+        <td class="px-4 py-4"><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background:#c9930a">${e.prenom[0]}${e.nom[0]}</div><span class="font-medium text-gray-800">${e.prenom} ${e.nom}</span></div></td>
+        <td class="px-4 py-4 text-gray-600">${e.email}</td>
+        <td class="px-4 py-4 text-gray-600">${e.grade||'—'}</td>
+        <td class="px-4 py-4"><span class="px-3 py-1 rounded-full text-xs font-medium ${plein ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}">${e.nb_etudiants_actuel} / ${e.nb_etudiants_max} ${plein ? '🔴 Complet' : '🟢 Disponible'}</span></td>
+      </tr>`;
+    });
+    afficherTab('stages');
+  }
+
+  function retour() {
+    document.getElementById('vueDetails').classList.add('hidden');
+    document.getElementById('vueDefaut').classList.remove('hidden');
+    document.getElementById('btnRetour').classList.add('hidden');
+    document.getElementById('sousTitre').textContent = 'Sélectionnez un département';
+    afficherTab('stages');
+  }
+
+  function afficherTab(tab) {
+    ['stages','etudiants','encadrants'].forEach(t => {
+      document.getElementById(`contenu${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.add('hidden');
+      document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).style.background = '#f1f5f9';
+      document.getElementById(`tab${t.charAt(0).toUpperCase()+t.slice(1)}`).style.color = '#4b5563';
+    });
+    document.getElementById(`contenu${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.remove('hidden');
+    document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.background = '#0c2340';
+    document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).style.color = '#fff';
+  }
+
+  function badgeType(type) {
+    const s = { initiation:'bg-green-100 text-green-600', perfectionnement:'bg-amber-100 text-amber-600', fin_etude:'bg-red-100 text-red-600' };
+    const l = { initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+    return `<span class="${s[type]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[type]||type}</span>`;
+  }
+  function badgeStatut(statut) {
+    const s = { en_attente:'bg-amber-100 text-amber-600', en_cours:'bg-green-100 text-green-600', valide:'bg-blue-100 text-blue-600', refuse:'bg-red-100 text-red-600' };
+    const l = { en_attente:'En attente', en_cours:'En cours', valide:'Validé', refuse:'Refusé' };
+    return `<span class="${s[statut]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[statut]||statut}</span>`;
+  }
+  chargerDepts();
+
+  // ── Modal Nouveau Département ─────────────
+  async function ouvrirModalDept() {
+    document.getElementById('dNom').value  = '';
+    document.getElementById('dDesc').value = '';
+    document.getElementById('dErrNom').classList.add('hidden');
+    document.getElementById('dNom').style.borderColor = '#e5e7eb';
+    document.getElementById('deptErreur').classList.add('hidden');
+
+    // Charger les encadrants disponibles (sans département ou sans chef)
+    const r = await fetch(`${API}/api/admin/utilisateurs`);
+    const users = await r.json();
+    const encadrants = users.filter(u => u.role === 'encadrant');
+    const select = document.getElementById('dChef');
+    select.innerHTML = '<option value="">-- Aucun chef pour l\'instant --</option>';
+    encadrants.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u.id;
+      opt.textContent = `${u.prenom} ${u.nom}${u.departement ? ' (' + u.departement + ')' : ''}`;
+      select.appendChild(opt);
+    });
+
+    document.getElementById('modalDept').classList.remove('hidden');
+  }
+
+  function fermerModalDept() {
+    document.getElementById('modalDept').classList.add('hidden');
+  }
+
+  function deptCheckNom() {
+    const val = document.getElementById('dNom').value.trim();
+    const errEl = document.getElementById('dErrNom');
+    if (!val) {
+      document.getElementById('dNom').style.borderColor = '#f87171';
+      errEl.textContent = 'Le nom est obligatoire.';
+      errEl.classList.remove('hidden');
+      return false;
+    }
+    if (val.length < 3) {
+      document.getElementById('dNom').style.borderColor = '#f87171';
+      errEl.textContent = 'Au moins 3 caractères.';
+      errEl.classList.remove('hidden');
+      return false;
+    }
+    document.getElementById('dNom').style.borderColor = '#e5e7eb';
+    errEl.classList.add('hidden');
+    return true;
+  }
+
+  async function creerDept() {
+    if (!deptCheckNom()) return;
+    const nom     = document.getElementById('dNom').value.trim();
+    const desc    = document.getElementById('dDesc').value.trim();
+    const chef_id = document.getElementById('dChef').value;
+    const r = await fetch(`${API}/api/admin/departements`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nom, description: desc || null, chef_id: chef_id || null })
+    });
+    const data = await r.json();
+    if (r.ok) { fermerModalDept(); chargerDepts(); }
+    else {
+      const el = document.getElementById('deptErreur');
+      el.textContent = data.message;
+      el.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('modalDept').addEventListener('click', function(e) {
+    if (e.target === this) fermerModalDept();
+  });
+</script>
+</body>
+</html>

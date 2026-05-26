@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Notifications — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .notif-card {
+      background: #fff; border-radius: 14px;
+      border-left: 4px solid #c9930a;
+      box-shadow: 0 2px 10px rgba(12,35,64,.06);
+      transition: all .25s;
+    }
+    .notif-card.lue { opacity: .55; border-left-color: #cbd5e1; }
+    .notif-card.hidden-anim { opacity:0; transform:translateX(60px); transition:all .35s ease; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    .filter-btn { border-radius: 20px; padding: 6px 16px; font-size: .8rem; font-weight: 600; border: none; cursor: pointer; transition: all .2s; }
+    .filter-btn.actif { background:#0c2340; color:#fff; }
+    .filter-btn:not(.actif) { background:#e5eaf1; color:#4b5563; }
+    .filter-btn:not(.actif):hover { background:#d1d9e3; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html"      class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html"   class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html"        class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html"     class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"   class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"    class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link active"><span class="nav-icon">🔔</span> Notifications <span id="badgeNav" class="hidden ml-auto text-xs font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5"></span></a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5"><span class="nav-icon">🚪</span> Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 flex flex-col overflow-hidden">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">🔔</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Notifications</h1>
+          <p class="text-xs text-gray-400" id="subtitleTop">Chargement…</p>
+        </div>
+      </div>
+      <button onclick="marquerToutLu()"
+              class="text-sm px-4 py-2 rounded-xl font-semibold transition-all"
+              style="background:#f0f4fa;color:#0c2340;border:1.5px solid #e2e8f0">
+        ✅ Tout marquer comme lu
+      </button>
+    </div>
+
+    <!-- CONTENU -->
+    <div class="flex-1 overflow-y-auto p-6">
+
+      <!-- Filtres -->
+      <div class="flex gap-2 flex-wrap mb-5" id="filtres">
+        <button class="filter-btn actif" onclick="filtrer('tous', this)">Toutes</button>
+        <button class="filter-btn" onclick="filtrer('non_lues', this)">Non lues</button>
+        <button class="filter-btn" onclick="filtrer('affectation', this)">Affectation</button>
+        <button class="filter-btn" onclick="filtrer('stage', this)">Stages</button>
+        <button class="filter-btn" onclick="filtrer('rapport', this)">Rapports</button>
+        <button class="filter-btn" onclick="filtrer('systeme', this)">Système</button>
+      </div>
+
+      <!-- Liste -->
+      <div id="listeNotifs" class="space-y-3 fade-in"></div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('chef_departement');
+  const API     = 'http://localhost:3000';
+  const CHEF_ID = parseInt(localStorage.getItem('chef_id'));
+  let toutesNotifs = [];
+  let filtreActif  = 'tous';
+
+  const ICONES = {
+    affectation: '🔗', stage: '📋', rapport: '📄',
+    systeme: '⚙️', message: '💬', deadline: '⏰', statut: '📋', reunion: '📹', compte: '👤'
+  };
+
+  async function chargerProfil() {
+    try {
+      const r = await fetch(`${API}/api/chef/profil/${CHEF_ID}`);
+      const u = await r.json();
+      document.getElementById('avatarMenu').textContent = `${u.prenom[0]}${u.nom[0]}`;
+      document.getElementById('nomMenu').textContent    = `${u.prenom} ${u.nom}`;
+      document.getElementById('nomDept').textContent    = u.departement || '—';
+    } catch(e) {}
+  }
+
+  async function chargerNotifications() {
+    const r = await fetch(`${API}/api/chef/notifications/${CHEF_ID}`);
+    const data = await r.json();
+    toutesNotifs = data.notifs || [];
+    const nb = data.nb_non_lues || 0;
+
+    document.getElementById('subtitleTop').textContent =
+      nb > 0 ? `${nb} notification${nb > 1 ? 's' : ''} non lue${nb > 1 ? 's' : ''}` : 'Tout est à jour ✓';
+
+    const badge = document.getElementById('badgeNav');
+    if (nb > 0) { badge.textContent = nb > 9 ? '9+' : nb; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+
+    afficher();
+  }
+
+  function afficher() {
+    let liste = [...toutesNotifs];
+    if (filtreActif === 'non_lues') liste = liste.filter(n => !n.est_lue);
+    else if (filtreActif !== 'tous') liste = liste.filter(n => n.type === filtreActif);
+
+    const container = document.getElementById('listeNotifs');
+    if (liste.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-20 flex flex-col items-center gap-4">
+          <span class="text-6xl">${filtreActif === 'non_lues' ? '✅' : '🔕'}</span>
+          <div>
+            <p class="text-lg font-bold" style="color:#0c2340">
+              ${filtreActif === 'non_lues' ? 'Tout est lu !' : 'Aucune notification'}
+            </p>
+            <p class="text-gray-400 text-sm mt-1">
+              ${filtreActif === 'non_lues' ? 'Vous n\'avez aucune notification non lue.' : 'Aucune notification dans cette catégorie.'}
+            </p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = liste.map(n => `
+      <div class="notif-card p-4 flex gap-4 items-start ${n.est_lue ? 'lue' : ''}" id="notif-${n.id}">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+             style="background:${n.est_lue ? '#f1f5f9' : '#fef3cd'}">
+          ${ICONES[n.type] || '🔔'}
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-800 leading-snug">${escapeHtml(n.message)}</p>
+          ${n.stage_titre ? `<p class="text-xs text-gray-400 mt-1">Stage : <em>${escapeHtml(n.stage_titre)}</em></p>` : ''}
+          <p class="text-xs text-gray-400 mt-1">${formatDate(n.date_creation)}</p>
+          ${n.type === 'reunion' ? `<a href="/reunion-live.html?id=" onclick="ouvrirReunionDepuisNotif(event, '${escapeHtml(n.message)}')" class="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg text-xs font-bold text-white" style="background:linear-gradient(135deg,#0c2340,#163a5f)">📹 Rejoindre la réunion</a>` : ''}
+        </div>
+        <div class="flex flex-col gap-2 items-end flex-shrink-0">
+          ${!n.est_lue ? `<div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:#c9930a"></div>` : ''}
+          <button onclick="marquerLu(${n.id})" title="Marquer comme lu"
+                  class="text-xs px-3 py-1.5 rounded-lg font-medium transition"
+                  style="background:#f0f4fa;color:#0c2340">
+            ${n.est_lue ? '↩ Revenir' : '✓ Lu'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function marquerLu(id) {
+    const card = document.getElementById(`notif-${id}`);
+    card.classList.add('hidden-anim');
+    await fetch(`${API}/api/chef/notifications/${id}/lire`, { method: 'PUT' });
+    setTimeout(() => chargerNotifications(), 350);
+  }
+
+  async function marquerToutLu() {
+    await fetch(`${API}/api/chef/notifications/${CHEF_ID}/lire-tout`, { method: 'PUT' });
+    chargerNotifications();
+  }
+
+  function filtrer(type, btn) {
+    filtreActif = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('actif'));
+    btn.classList.add('actif');
+    afficher();
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = (now - d) / 1000;
+    if (diff < 60) return 'À l\'instant';
+    if (diff < 3600) return `Il y a ${Math.floor(diff / 60)} min`;
+    if (diff < 86400) return `Il y a ${Math.floor(diff / 3600)} h`;
+    return d.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Ouvrir la réunion depuis une notification : on cherche la réunion la plus récente
+  async function ouvrirReunionDepuisNotif(e, msgNotif) {
+    e.preventDefault();
+    try {
+      const r = await fetch(`${API}/api/admin/reunions`);
+      const reunions = await r.json();
+      if (!reunions.length) { window.open('https://meet.jit.si/', '_blank'); return; }
+      // Trouver la réunion dont le titre apparaît dans le message de notification
+      let cible = reunions.find(r => msgNotif.includes(r.titre));
+      if (!cible) cible = reunions[0]; // fallback: la plus récente
+      window.location.href = `/reunion-live.html?id=${cible.id}`;
+    } catch(e) {
+      window.open('https://meet.jit.si/', '_blank');
+    }
+  }
+
+  chargerProfil();
+  chargerNotifications();
+  setInterval(chargerNotifications, 30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Encadrant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .stat-card { background:#fff; border-radius:18px; padding:22px; position:relative; overflow:hidden; box-shadow:0 2px 16px rgba(12,35,64,.08); transition:transform .3s, box-shadow .3s; }
+    .stat-card:hover { transform:translateY(-6px); box-shadow:0 16px 36px rgba(12,35,64,.15); }
+    .stat-card::after { content:''; position:absolute; bottom:-18px; right:-18px; width:80px; height:80px; border-radius:50%; background:currentColor; opacity:.04; }
+    .stat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; margin-bottom:18px; flex-shrink:0; }
+    .stat-val { font-size:2.6rem; font-weight:900; line-height:1; margin-bottom:4px; }
+    .stat-lbl { font-size:.84rem; font-weight:700; color:#1f2937; }
+    .stat-sub { font-size:.72rem; color:#9ca3af; margin-top:3px; }
+    .stat-bar { height:3px; border-radius:99px; margin-top:20px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">EN</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Encadrant</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="deptMenu">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html" class="nav-link active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="etudiants.html" class="nav-link"><span class="nav-icon">👥</span> Mes Étudiants</a>
+      <a href="messagerie.html" class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="rapports.html" class="nav-link"><span class="nav-icon">📄</span> Rapports</a>
+      <a href="suggestions.html" class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="reunions.html" class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="profil.html" class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5"><span class="nav-icon">🚪</span> Déconnexion</button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">📊</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Dashboard Encadrant</h1>
+          <p class="text-xs text-gray-400"><span id="sousTitre">Chargement...</span></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+    <div class="relative">
+      <button onclick="toggleDropdown('messagesDropdown')" class="relative p-2 rounded-full hover:bg-gray-100 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <span id="badgeMessages" class="absolute -top-1 -right-1 text-white text-xs w-5 h-5 rounded-full items-center justify-center font-bold hidden" style="background:#c9930a">0</span>
+      </button>
+      <div id="messagesDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+          <h3 class="font-bold text-gray-800">Messages</h3>
+        </div>
+        <div id="listeMessages" class="divide-y divide-gray-50 max-h-72 overflow-y-auto"></div>
+        <div class="p-3 border-t border-gray-100 text-center"><a href="messagerie.html" class="text-sm font-medium hover:underline" style="color:#c9930a">Voir tous les messages →</a></div>
+      </div>
+    </div>
+    <div class="relative">
+      <button onclick="toggleDropdown('notifsDropdown')" class="relative p-2 rounded-full hover:bg-gray-100 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span id="badgeNotifs" class="absolute -top-1 -right-1 text-white text-xs w-5 h-5 rounded-full items-center justify-center font-bold hidden" style="background:#dc2626">0</span>
+      </button>
+      <div id="notifsDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+          <h3 class="font-bold text-gray-800">Notifications</h3>
+          <span onclick="marquerToutLu()" class="text-xs cursor-pointer hover:underline" style="color:#dc2626">Tout marquer lu</span>
+        </div>
+        <div id="listeNotifs" class="divide-y divide-gray-50 max-h-72 overflow-y-auto"></div>
+      </div>
+    </div>
+    <a href="profil.html" class="flex items-center gap-2 ml-2 pl-4 border-l border-gray-200 hover:opacity-80 transition">
+      <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm" style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340" id="avatarTop">EN</div>
+      <div class="hidden md:block">
+        <p class="text-sm font-semibold text-gray-800" id="nomTop">--</p>
+        <p class="text-xs font-medium" style="color:#c9930a">Encadrant</p>
+      </div>
+    </a>
+  </div>
+    </div>
+    <div class="p-6 fade-in">
+      <!-- Bannière -->
+      <div class="rounded-2xl p-6 mb-6 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#0c2340,#1e4d7b)">
+        <div class="absolute right-10 bottom-0 text-7xl opacity-20 select-none">👨‍🏫</div>
+        <p class="text-sm mb-1" style="color:rgba(201,147,10,.9)">Bienvenue</p>
+        <h2 id="nomBanniere" class="text-3xl font-bold">--</h2>
+        <p id="infoBanniere" class="text-sm mt-2" style="color:rgba(255,255,255,.7)">--</p>
+      </div>
+
+      <!-- 4 cartes -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7">👥</div>
+          <p class="stat-val" style="color:#c9930a" id="nbEtudiants">--</p>
+          <p class="stat-lbl">Étudiants encadrés</p>
+          <p class="stat-sub">Stages actifs</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#c9930a,#f5d87e)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#cffafe">🎯</div>
+          <p class="stat-val" style="color:#0891b2" id="nbEnCours">--</p>
+          <p class="stat-lbl">Stages en cours</p>
+          <p class="stat-sub">En progression</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#0891b2,#22d3ee)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eef2f7">💬</div>
+          <p class="stat-val" style="color:#0c2340" id="nbMessages">--</p>
+          <p class="stat-lbl">Messages non lus</p>
+          <p class="stat-sub">Messagerie</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#0c2340,#1e4d7b)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d1fae5">💡</div>
+          <p class="stat-val" style="color:#059669" id="nbSuggestions">--</p>
+          <p class="stat-lbl">Suggestions</p>
+          <p class="stat-sub">Sujets disponibles</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#059669,#34d399)"></div>
+        </div>
+
+      </div>
+
+      <!-- Graphiques -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h3 class="font-bold mb-4" style="color:#0c2340">📊 Mes stages par statut</h3>
+          <canvas id="graphStatut" height="220"></canvas>
+        </div>
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h3 class="font-bold mb-4" style="color:#0c2340">📋 Mes stages par type</h3>
+          <canvas id="graphType" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Tableau étudiants -->
+      <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="font-bold" style="color:#0c2340">👥 Mes étudiants encadrés</h3>
+          <a href="etudiants.html" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition" style="background:#eef2f7;color:#0c2340">Voir tous →</a>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr style="background:#f0f4fa">
+            <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Étudiant</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Type</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Sujet</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Progression</th>
+            <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Statut</th>
+          </tr></thead>
+          <tbody id="tableauEtudiants" class="divide-y divide-gray-100">
+            <tr><td colspan="5" class="text-center py-8 text-gray-400">⏳ Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  checkAuth('encadrant');
+  const API    = 'http://localhost:3000';
+  const ENC_ID = parseInt(localStorage.getItem('enc_id'));
+
+  function toggleDropdown(id) {
+    document.querySelectorAll('[id$="Dropdown"]').forEach(el => { if (el.id !== id) el.classList.add('hidden'); });
+    document.getElementById(id).classList.toggle('hidden');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.relative')) document.querySelectorAll('[id$="Dropdown"]').forEach(el => el.classList.add('hidden'));
+  });
+
+  async function chargerMessages() {
+    const reponse = await fetch(`${API}/api/encadrant/derniers-messages/${ENC_ID}`);
+    const data    = await reponse.json();
+    const badge = document.getElementById('badgeMessages');
+    if (data.nb_total > 0) { badge.textContent = data.nb_total; badge.classList.remove('hidden'); badge.classList.add('flex'); }
+    else badge.classList.add('hidden');
+    const liste = document.getElementById('listeMessages');
+    if (data.messages.length === 0) { liste.innerHTML = `<div class="p-6 text-center"><p class="text-3xl mb-2">📭</p><p class="text-sm text-gray-400">Aucun message non lu</p></div>`; return; }
+    liste.innerHTML = '';
+    data.messages.forEach(m => {
+      const initiales = `${m.prenom[0]}${m.nom[0]}`;
+      const temps = new Date(m.date_envoi).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      liste.innerHTML += `<div onclick="window.location.href='messagerie.html'" class="flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer" style="background:#fef3c7">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm shrink-0 text-white" style="background:#0c2340">${initiales}</div>
+        <div class="flex-1 min-w-0"><p class="font-medium text-gray-800 text-sm">${m.prenom} ${m.nom}</p><p class="text-gray-500 text-xs truncate">${m.contenu}</p><p class="text-gray-400 text-xs mt-1">${temps}</p></div>
+        <span class="w-2 h-2 rounded-full mt-1 shrink-0" style="background:#c9930a"></span>
+      </div>`;
+    });
+  }
+
+  async function chargerNotifications() {
+    const reponse = await fetch(`${API}/api/encadrant/notifications/${ENC_ID}`);
+    const data    = await reponse.json();
+    const badge = document.getElementById('badgeNotifs');
+    if (data.nb_non_lues > 0) { badge.textContent = data.nb_non_lues; badge.classList.remove('hidden'); badge.classList.add('flex'); }
+    else badge.classList.add('hidden');
+    const liste = document.getElementById('listeNotifs');
+    if (data.notifications.length === 0) { liste.innerHTML = `<div class="p-6 text-center"><p class="text-3xl mb-2">🔔</p><p class="text-sm text-gray-400">Aucune notification</p></div>`; return; }
+    liste.innerHTML = '';
+    data.notifications.forEach(n => {
+      const icones = { affectation:'👤', rapport:'📄', message:'💬', statut:'📋', deadline:'⏰', compte:'✅' };
+      const bg = n.est_lue ? '' : 'background:#fef3c7';
+      const date = new Date(n.date_creation).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+      liste.innerHTML += `<div class="flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition" style="${bg}">
+        <div class="text-2xl shrink-0">${icones[n.type]||'🔔'}</div>
+        <div class="flex-1"><p class="text-sm text-gray-800">${n.message}</p>${n.stage_titre ? `<p class="text-xs mt-1" style="color:#c9930a">📋 ${n.stage_titre}</p>` : ''}<p class="text-xs text-gray-400 mt-1">${date}</p></div>
+        ${!n.est_lue ? `<span class="w-2 h-2 bg-red-500 rounded-full mt-1 shrink-0"></span>` : ''}
+      </div>`;
+    });
+  }
+
+  async function marquerToutLu() {
+    await fetch(`${API}/api/encadrant/notifications/${ENC_ID}/lire`, { method: 'PUT' });
+    chargerNotifications();
+  }
+
+  async function chargerDashboard() {
+    try {
+      const r1   = await fetch(`${API}/api/encadrant/profil/${ENC_ID}`);
+      const user = await r1.json();
+      const nomComplet = `${user.prenom} ${user.nom}`;
+      document.getElementById('nomMenu').textContent     = nomComplet;
+      document.getElementById('nomTop').textContent      = nomComplet;
+      document.getElementById('nomBanniere').textContent = `👋 Bonjour ${user.prenom} !`;
+      document.getElementById('infoBanniere').textContent = `${user.grade || 'Encadrant'} — ${user.departement || ''}`;
+      document.getElementById('sousTitre').textContent   = `Département ${user.departement || ''}`;
+      document.getElementById('deptMenu').textContent    = user.departement || '';
+      const initiales = `${user.prenom[0]}${user.nom[0]}`;
+      document.getElementById('avatarMenu').textContent = initiales;
+      document.getElementById('avatarTop').textContent  = initiales;
+
+      // ── Récupérer les stages de CET encadrant ──
+      const r2     = await fetch(`${API}/api/encadrant/stages/${ENC_ID}`);
+      const stages = await r2.json();
+
+      // Étudiants encadrés = stages assignés à cet encadrant (statuts actifs)
+      const statutsActifs = ['affecte', 'en_cours', 'rapport_depose'];
+      document.getElementById('nbEtudiants').textContent = stages.filter(s => statutsActifs.includes(s.statut)).length;
+
+      // Stages en cours uniquement (statut = 'en_cours')
+      document.getElementById('nbEnCours').textContent = stages.filter(s => s.statut === 'en_cours').length;
+
+      // Messages non lus
+      const r3 = await fetch(`${API}/api/encadrant/messages-non-lus/${ENC_ID}`);
+      const msgData = await r3.json();
+      document.getElementById('nbMessages').textContent = msgData.nb_non_lus;
+
+      // Suggestions disponibles dans le département de l'encadrant
+      try {
+        const DEPT_ID = user.departement_id;
+        const r4 = await fetch(`${API}/api/encadrant/suggestions-departement/${DEPT_ID}`);
+        const sugg = await r4.json();
+        document.getElementById('nbSuggestions').textContent = Array.isArray(sugg) ? sugg.length : 0;
+      } catch(e) { document.getElementById('nbSuggestions').textContent = 0; }
+
+      // Graphique : statuts réels pour un encadrant
+      const statuts = { affecte:0, en_cours:0, rapport_depose:0, valide:0 };
+      stages.forEach(s => { if(statuts[s.statut] !== undefined) statuts[s.statut]++; });
+      new Chart(document.getElementById('graphStatut'), {
+        type: 'doughnut',
+        data: { labels:['Affecté','En cours','Rapport déposé','Validé'], datasets:[{ data:Object.values(statuts), backgroundColor:['#0891b2','#059669','#c9930a','#0c2340'], borderWidth:3, borderColor:'#fff' }] },
+        options: { plugins: { legend: { position:'bottom' } } }
+      });
+
+      const types = { initiation:0, perfectionnement:0, fin_etude:0 };
+      stages.forEach(s => { if(types[s.type_stage]!==undefined) types[s.type_stage]++; });
+      new Chart(document.getElementById('graphType'), {
+        type: 'bar',
+        data: { labels:['Initiation','Perfectionnement','PFE'], datasets:[{ data:Object.values(types), backgroundColor:['#059669','#c9930a','#0c2340'], borderRadius:10 }] },
+        options: { plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true,ticks:{stepSize:1}} } }
+      });
+
+      const tbody = document.getElementById('tableauEtudiants');
+      tbody.innerHTML = '';
+      if (stages.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-400">Aucun étudiant encadré</td></tr>`; return; }
+      stages.forEach(s => {
+        tbody.innerHTML += `<tr class="hover:bg-gray-50 transition">
+          <td class="px-4 py-3.5">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 text-white" style="background:#0c2340">${s.etudiant.split(' ').map(n=>n[0]).join('')}</div>
+              <span class="font-semibold text-gray-800 text-sm">${s.etudiant}</span>
+            </div>
+          </td>
+          <td class="px-4 py-3.5">${badgeType(s.type_stage)}</td>
+          <td class="px-4 py-3.5 text-gray-500 text-sm max-w-xs truncate">${s.titre}</td>
+          <td class="px-4 py-3.5"><div class="flex items-center gap-2"><div class="w-20 bg-gray-100 rounded-full h-1.5"><div class="h-1.5 rounded-full" style="width:${s.progression}%;background:#0c2340"></div></div><span class="text-xs font-semibold text-gray-600">${s.progression}%</span></div></td>
+          <td class="px-4 py-3.5">${badgeStatut(s.statut)}</td>
+        </tr>`;
+      });
+    } catch(err) { console.error('Erreur:', err); }
+  }
+
+  function badgeType(type) {
+    const s = { initiation:'bg-green-100 text-green-600', perfectionnement:'bg-amber-100 text-amber-600', fin_etude:'bg-red-100 text-red-600' };
+    const l = { initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+    return `<span class="${s[type]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[type]||type}</span>`;
+  }
+  function badgeStatut(statut) {
+    const s = { en_attente:'bg-amber-100 text-amber-600', affecte:'bg-blue-100 text-blue-600', en_cours:'bg-green-100 text-green-600', rapport_depose:'bg-purple-100 text-purple-600', valide:'bg-cyan-100 text-cyan-600' };
+    const l = { en_attente:'En attente', affecte:'Affecté', en_cours:'En cours', rapport_depose:'Rapport déposé', valide:'Validé' };
+    return `<span class="${s[statut]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[statut]||statut}</span>`;
+  }
+  chargerDashboard();
+  chargerMessages();
+  chargerNotifications();
+</script>
+</body>
+</html>

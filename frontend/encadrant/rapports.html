@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Rapports – Encadrant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+      * { box-sizing:border-box; }
+      body { font-family:'Inter',sans-serif; background:#f0f4fa; }
+      .nav-link { display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:12px;
+        color:rgba(255,255,255,.7); font-size:.875rem; font-weight:500;
+        transition:background .2s,color .2s; text-decoration:none; }
+      .nav-link:hover { background:rgba(255,255,255,.1); color:#fff; }
+      .nav-link.active { background:rgba(201,147,10,.2); color:#f5d87e; border-left:3px solid #c9930a; }
+      .nav-icon { font-size:1.1rem; width:28px; text-align:center; }
+      .fade-in { animation:fadeIn .4s ease; }
+      @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+  
+  <aside class="w-64 flex flex-col fixed h-full z-30" style="background:linear-gradient(180deg,#0c2340 0%,#163a5f 100%)">
+    <div class="px-6 py-5 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-sm"
+           style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+      <span class="font-bold text-white text-base tracking-wide">Gestion Stages</span>
+    </div>
+    <div class="mx-4 mb-4 p-3 rounded-2xl flex items-center gap-3" style="background:rgba(255,255,255,.08)">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+           style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340" id="avatarMenu">EN</div>
+      <div class="overflow-hidden">
+        <p class="text-white text-sm font-semibold truncate" id="nomMenu">--</p>
+        <p class="text-xs truncate" style="color:#f5d87e" id="deptMenu">--</p>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 overflow-y-auto space-y-1">
+      <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="etudiants.html" class="nav-link"><span class="nav-icon">👥</span> Mes Étudiants</a>
+      <a href="messagerie.html" class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="rapports.html" class="nav-link active"><span class="nav-icon">📄</span> Rapports</a>
+      <a href="suggestions.html" class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="reunions.html" class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="profil.html" class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 py-4">
+      <button class="nav-link w-full" style="color:#fca5a5"
+              onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background='transparent'">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <div>
+        <h1 class="text-lg font-bold" style="color:#0c2340">📄 Rapports de Stage</h1>
+        <p class="text-xs text-gray-400 mt-0.5">Consultez et validez les rapports soumis</p>
+      </div>
+    </div>
+
+    <div id="msgSucces" class="hidden mx-6 mt-4 px-4 py-3 rounded-xl text-sm font-medium"
+         style="background:#f0fdf4;border:1.5px solid #86efac;color:#166534">
+      ✅ <span id="texteSucces"></span>
+    </div>
+
+    <div class="p-6 fade-in">
+      <div id="listeRapports" class="space-y-4">
+        <p class="text-center text-gray-400 py-8">⏳ Chargement...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Feedback -->
+<div id="modalFeedback" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-lg font-bold" style="color:#0c2340">💬 Envoyer un feedback</h3>
+      <button onclick="fermerModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+    </div>
+    <p class="text-sm font-medium mb-4" style="color:#c9930a" id="nomEtudiantFeed"></p>
+    <div>
+      <label class="text-sm font-medium text-gray-600 mb-1 block">Commentaire *</label>
+      <textarea id="inputFeedback" rows="4" placeholder="Votre retour sur le rapport..."
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none resize-none transition"></textarea>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerModal()"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm transition">
+        Annuler
+      </button>
+      <button onclick="envoyerFeedback()"
+              class="flex-1 text-white py-3 rounded-xl font-medium text-sm transition"
+              style="background:linear-gradient(135deg,#0c2340,#163a5f)">
+        📨 Envoyer
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  checkAuth('encadrant');
+  const API    = 'http://localhost:3000';
+  const ENC_ID = parseInt(localStorage.getItem('enc_id'));
+  let stageActif = null;
+
+  async function chargerRapports() {
+    const r = await fetch(`${API}/api/rapport/encadrant/${ENC_ID}`);
+    const rapports = await r.json();
+    const c = document.getElementById('listeRapports');
+    if (!rapports.length) {
+      c.innerHTML = `<div class="bg-white rounded-2xl p-12 text-center shadow">
+        <p class="text-5xl mb-4">📄</p>
+        <p class="text-xl font-bold text-gray-700">Aucun rapport soumis</p>
+      </div>`;
+      return;
+    }
+    c.innerHTML = rapports.map(rap => {
+      return `<div class="bg-white rounded-2xl shadow p-6 flex items-center justify-between" style="border-left:4px solid #c9930a">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+               style="background:#f0f4fa">📄</div>
+          <div>
+            <p class="font-bold text-gray-800">${rap.etudiant}</p>
+            <p class="text-sm text-gray-500 mt-0.5">${rap.stage_titre || 'Rapport de stage'}</p>
+            <p class="text-xs text-gray-400 mt-1">${new Date(rap.date_depot).toLocaleDateString('fr-FR')}</p>
+            ${rap.chemin_fichier ? `<a href="${API}/${rap.chemin_fichier.replace(/\\/g,'/').split('/').map(encodeURIComponent).join('/')}" target="_blank" class="text-xs font-medium mt-1 inline-block" style="color:#c9930a">📎 Voir le fichier</a>` : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full text-xs font-medium ${rap.est_valide ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${rap.est_valide ? 'Validé' : 'Soumis'}</span>
+          ${!rap.est_valide ? `
+            <button onclick="validerRapport(${rap.id})"
+                    class="text-xs text-white px-4 py-2 rounded-xl font-medium transition"
+                    style="background:linear-gradient(135deg,#163a5f,#0c2340)">✅ Valider</button>` : ''}
+          <button onclick="ouvrirFeedback(${rap.stage_id},'${rap.etudiant}')"
+                  class="text-xs px-4 py-2 rounded-xl font-medium transition"
+                  style="background:#fef3c7;color:#92400e">💬 Feedback</button>
+          ${badgeType(rap.type_stage)}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function validerRapport(id) {
+    if (!confirm('Valider ce rapport ?')) return;
+    await fetch(`${API}/api/rapport/${id}/valider`, { method:'PUT' });
+    afficherSucces('Rapport validé avec succès !');
+    chargerRapports();
+  }
+
+  function ouvrirFeedback(stageId, nom) {
+    stageActif = stageId;
+    document.getElementById('nomEtudiantFeed').textContent = `Étudiant : ${nom}`;
+    document.getElementById('inputFeedback').value = '';
+    document.getElementById('modalFeedback').classList.remove('hidden');
+  }
+
+  async function envoyerFeedback() {
+    const commentaire = document.getElementById('inputFeedback').value.trim();
+    if (!commentaire) return;
+    await fetch(`${API}/api/encadrant/feedback`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ commentaire, stage_id: stageActif, encadrant_id: ENC_ID })
+    });
+    fermerModal();
+    afficherSucces('Feedback envoyé !');
+  }
+
+  function fermerModal() { document.getElementById('modalFeedback').classList.add('hidden'); }
+  document.getElementById('modalFeedback').addEventListener('click', function(e) { if (e.target===this) fermerModal(); });
+
+  function afficherSucces(msg) {
+    document.getElementById('texteSucces').textContent = msg;
+    document.getElementById('msgSucces').classList.remove('hidden');
+    setTimeout(() => document.getElementById('msgSucces').classList.add('hidden'), 3000);
+  }
+
+  function badgeType(type) {
+    const s = { initiation:'bg-green-100 text-green-600', perfectionnement:'bg-amber-100 text-amber-600', fin_etude:'bg-red-100 text-red-600' };
+    const l = { initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+    return `<span class="${s[type]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[type]||type}</span>`;
+  }
+
+  chargerRapports();
+</script>
+</body>
+</html>

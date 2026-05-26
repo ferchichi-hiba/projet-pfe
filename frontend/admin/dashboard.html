@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .stat-card { background:#fff; border-radius:18px; padding:22px; position:relative; overflow:hidden; box-shadow:0 2px 16px rgba(12,35,64,.08); transition:transform .3s, box-shadow .3s; }
+    .stat-card:hover { transform:translateY(-6px); box-shadow:0 16px 36px rgba(12,35,64,.15); }
+    .stat-card::after { content:''; position:absolute; bottom:-18px; right:-18px; width:80px; height:80px; border-radius:50%; background:currentColor; opacity:.04; }
+    .stat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; margin-bottom:18px; flex-shrink:0; }
+    .stat-val { font-size:2.6rem; font-weight:900; line-height:1; margin-bottom:4px; }
+    .stat-lbl { font-size:.84rem; font-weight:700; color:#1f2937; }
+    .stat-sub { font-size:.72rem; color:#9ca3af; margin-top:3px; }
+    .stat-bar { height:3px; border-radius:99px; margin-top:20px; }
+  </style>
+  <script src="/auth.js"></script>
+  <script src="/jwt.js"></script>
+</head>
+
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div>
+          <p class="text-white font-bold text-sm">Gestion Stages</p>
+          <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p>
+        </div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"   class="nav-link"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"    class="nav-link"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"     class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html"  class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"        class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"        class="nav-link"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"         class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">📊</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Dashboard Administrateur</h1>
+          <p class="text-xs text-gray-400">Vue globale de la plateforme</p>
+        </div>
+      </div>
+      <!-- Icônes messagerie + notifications -->
+      <div class="flex items-center gap-1">
+        <a href="messagerie.html" title="Messagerie"
+           class="relative p-2 rounded-xl hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="#0c2340" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span id="badgeMsg" class="hidden absolute -top-1 -right-1 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style="background:#c9930a"></span>
+        </a>
+        <a href="notifications.html" title="Notifications"
+           class="relative p-2 rounded-xl hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="#0c2340" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span id="badgeNotif" class="hidden absolute -top-1 -right-1 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style="background:#dc2626"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- CONTENU -->
+    <div class="p-6 fade-in">
+
+      <!-- Bannière -->
+      <div class="rounded-2xl p-6 mb-6 text-white relative overflow-hidden"
+           style="background:linear-gradient(135deg,#0c2340,#1e4d7b)">
+        <div class="absolute right-6 top-2 text-8xl opacity-10 select-none">🎓</div>
+        <p class="text-sm mb-1" style="color:rgba(201,147,10,.9)">Bienvenue sur la plateforme</p>
+        <h2 class="text-2xl font-bold">Espace Administrateur</h2>
+        <p class="text-sm mt-1" style="color:rgba(255,255,255,.7)">Gérez les comptes et supervisez toute la plateforme universitaire</p>
+      </div>
+
+      <!-- 6 cartes statistiques -->
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eef2f7">👥</div>
+          <p class="stat-val" style="color:#0c2340" id="totalUsers">--</p>
+          <p class="stat-lbl">Utilisateurs</p>
+          <p class="stat-sub">Hors administrateur</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#0c2340,#1e4d7b)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7">⏳</div>
+          <p class="stat-val" style="color:#c9930a" id="comptesAttente">--</p>
+          <p class="stat-lbl">Comptes en attente</p>
+          <p class="stat-sub">À valider</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#c9930a,#f5d87e)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d1fae5">🎓</div>
+          <p class="stat-val" style="color:#059669" id="totalEtudiants">--</p>
+          <p class="stat-lbl">Étudiants</p>
+          <p class="stat-sub">Inscrits</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#059669,#34d399)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#cffafe">👨‍🏫</div>
+          <p class="stat-val" style="color:#0891b2" id="totalEncadrants">--</p>
+          <p class="stat-lbl">Encadrants</p>
+          <p class="stat-sub">Actifs</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#0891b2,#22d3ee)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ede9fe">👨‍💼</div>
+          <p class="stat-val" style="color:#7c3aed" id="totalChefs">--</p>
+          <p class="stat-lbl">Chefs département</p>
+          <p class="stat-sub">Responsables</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eef2f7">📋</div>
+          <p class="stat-val" style="color:#163a5f" id="totalStages">--</p>
+          <p class="stat-lbl">Total Stages</p>
+          <p class="stat-sub">Tous départements</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#163a5f,#0c2340)"></div>
+        </div>
+
+      </div>
+
+      <!-- 2 graphiques -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h3 class="font-bold mb-4" style="color:#0c2340">👥 Répartition des utilisateurs</h3>
+          <canvas id="graphUsers" height="220"></canvas>
+        </div>
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h3 class="font-bold mb-4" style="color:#0c2340">🏛️ Stages par département</h3>
+          <canvas id="graphDepts" height="220"></canvas>
+        </div>
+      </div>
+
+      <!-- Stats par département -->
+      <div class="bg-white rounded-2xl p-6 mb-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <h3 class="font-bold mb-5" style="color:#0c2340">🏛️ Vue par département</h3>
+        <div id="statsDept" class="grid grid-cols-3 gap-4"></div>
+      </div>
+
+      <!-- Derniers comptes créés -->
+      <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold" style="color:#0c2340">🆕 Derniers comptes créés</h3>
+          <a href="utilisateurs.html" class="text-sm font-medium hover:underline" style="color:#c9930a">Voir tous →</a>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background:#f0f4fa">
+              <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Nom</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Rôle</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Département</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Statut</th>
+              <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableauUsers" class="divide-y divide-gray-100">
+            <tr><td colspan="5" class="text-center py-6 text-gray-400">⏳ Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+
+  async function chargerDashboard() {
+    try {
+      const r1   = await jwtFetch(`${API}/api/admin/statistiques`);
+      const data = await r1.json();
+      const r2       = await jwtFetch(`${API}/api/admin/utilisateurs`);
+      const allUsers = await r2.json();
+
+      const etudiants  = allUsers.filter(u => u.role === 'etudiant').length;
+      const encadrants = allUsers.filter(u => u.role === 'encadrant').length;
+      const chefs      = allUsers.filter(u => u.role === 'chef_departement').length;
+      const attente    = allUsers.filter(u => !u.est_actif && u.role !== 'administrateur').length;
+      const total      = allUsers.filter(u => u.role !== 'administrateur').length;
+
+      document.getElementById('totalUsers').textContent      = total;
+      document.getElementById('comptesAttente').textContent  = attente;
+      document.getElementById('totalEtudiants').textContent  = etudiants;
+      document.getElementById('totalEncadrants').textContent = encadrants;
+      document.getElementById('totalChefs').textContent      = chefs;
+      document.getElementById('totalStages').textContent     = data.totaux.total_stages;
+      // Badge notifications (comptes en attente)
+      const badgeNotif = document.getElementById('badgeNotif');
+      if (attente > 0) { badgeNotif.textContent = attente > 9 ? '9+' : attente; badgeNotif.classList.remove('hidden'); }
+      else badgeNotif.classList.add('hidden');
+      // Badge messagerie (messages non lus de chefs)
+      try {
+        const rc = await fetch(`${API}/api/admin/messagerie/chefs`);
+        const chefs = await rc.json();
+        const nbMsg = chefs.reduce((s, c) => s + (c.non_lus || 0), 0);
+        const badgeMsg = document.getElementById('badgeMsg');
+        if (nbMsg > 0) { badgeMsg.textContent = nbMsg > 9 ? '9+' : nbMsg; badgeMsg.classList.remove('hidden'); }
+        else badgeMsg.classList.add('hidden');
+      } catch(e) {}
+
+      const listeNotifs = document.getElementById('listeNotifs');
+      if (attente > 0) {
+        listeNotifs.innerHTML = `
+          <div class="flex gap-3 p-4 bg-amber-50 hover:bg-amber-100 cursor-pointer"
+               onclick="window.location.href='utilisateurs.html'">
+            <span class="text-xl">👤</span>
+            <div>
+              <p class="text-sm font-medium text-gray-800">${attente} compte(s) en attente de validation</p>
+              <p class="text-xs text-gray-400 mt-1">Cliquez pour gérer</p>
+            </div>
+          </div>`;
+      }
+
+      new Chart(document.getElementById('graphUsers'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Étudiants', 'Encadrants', 'Chefs dept', 'Admins'],
+          datasets: [{
+            data: [etudiants, encadrants, chefs, allUsers.filter(u => u.role === 'administrateur').length],
+            backgroundColor: ['#0c2340','#c9930a','#7c3aed','#059669'],
+            borderWidth: 3, borderColor: '#fff'
+          }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+
+      new Chart(document.getElementById('graphDepts'), {
+        type: 'bar',
+        data: {
+          labels: data.parDept.map(d => d.departement),
+          datasets: [{
+            label: 'Stages',
+            data: data.parDept.map(d => d.nb_stages),
+            backgroundColor: ['#0c2340','#c9930a','#059669'],
+            borderRadius: 10
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+
+      const container = document.getElementById('statsDept');
+      const couleurs  = [
+        { bg:'#eef2f7', border:'#0c2340', text:'#0c2340' },
+        { bg:'#fef3c7', border:'#c9930a', text:'#b07f08' },
+        { bg:'#d1fae5', border:'#059669', text:'#065f46' }
+      ];
+      data.parDept.forEach((d, i) => {
+        const c = couleurs[i] || couleurs[0];
+        container.innerHTML += `
+          <div class="rounded-2xl p-5" style="background:${c.bg};border-top:3px solid ${c.border}">
+            <h4 class="font-bold mb-4 text-base" style="color:${c.text}">🏛️ ${d.departement}</h4>
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">🎓 Étudiants</span>
+                <span class="font-bold text-gray-800 bg-white px-3 py-1 rounded-lg">${d.nb_etudiants}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">👨‍🏫 Encadrants</span>
+                <span class="font-bold text-gray-800 bg-white px-3 py-1 rounded-lg">${d.nb_encadrants}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">📋 Stages</span>
+                <span class="font-bold text-gray-800 bg-white px-3 py-1 rounded-lg">${d.nb_stages}</span>
+              </div>
+            </div>
+          </div>`;
+      });
+
+      const tbody   = document.getElementById('tableauUsers');
+      const recents = allUsers.slice(0, 5);
+      tbody.innerHTML = '';
+      recents.forEach(u => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-gray-50 transition">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white ${couleurRole(u.role)}">
+                  ${u.prenom[0]}${u.nom[0]}
+                </div>
+                <span class="font-medium text-gray-800">${u.prenom} ${u.nom}</span>
+              </div>
+            </td>
+            <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs font-medium ${badgeRole(u.role)}">${labelRole(u.role)}</span></td>
+            <td class="px-4 py-3 text-gray-600">${u.departement || '—'}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-1 rounded-full text-xs font-medium ${u.est_actif ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}">
+                ${u.est_actif ? '✅ Actif' : '⏳ En attente'}
+              </span>
+            </td>
+            <td class="px-4 py-3">
+              ${!u.est_actif ? `<button onclick="validerCompte(${u.id})" class="text-xs text-white px-3 py-1 rounded-lg transition" style="background:#059669">✅ Valider</button>` : '—'}
+            </td>
+          </tr>`;
+      });
+
+    } catch (err) { console.error('Erreur :', err); }
+  }
+
+  async function validerCompte(id) {
+    await fetch(`${API}/api/admin/utilisateurs/${id}/activer`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ est_actif: 1 })
+    });
+    chargerDashboard();
+  }
+
+  function couleurRole(role) {
+    if (role === 'etudiant')          return 'bg-blue-500';
+    if (role === 'encadrant')         return 'bg-amber-500';
+    if (role === 'chef_departement')  return 'bg-purple-500';
+    if (role === 'administrateur')    return 'bg-red-500';
+    return 'bg-gray-500';
+  }
+  function badgeRole(role) {
+    if (role === 'etudiant')          return 'bg-blue-100 text-blue-600';
+    if (role === 'encadrant')         return 'bg-amber-100 text-amber-600';
+    if (role === 'chef_departement')  return 'bg-purple-100 text-purple-600';
+    if (role === 'administrateur')    return 'bg-red-100 text-red-600';
+    return 'bg-gray-100 text-gray-600';
+  }
+  function labelRole(role) {
+    if (role === 'etudiant')          return '🎓 Étudiant';
+    if (role === 'encadrant')         return '👨‍🏫 Encadrant';
+    if (role === 'chef_departement')  return '👨‍💼 Chef dept';
+    if (role === 'administrateur')    return '👑 Admin';
+    return role;
+  }
+
+  chargerDashboard();
+
+</script>
+</body>
+</html>

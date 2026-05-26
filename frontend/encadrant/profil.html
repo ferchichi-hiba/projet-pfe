@@ -1,0 +1,301 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Mon Profil – Encadrant</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+    <style>
+      * { box-sizing:border-box; }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+      body { font-family:'Inter',sans-serif; background:#f0f4fa; }
+      .nav-link { display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:12px;
+        color:rgba(255,255,255,.7); font-size:.875rem; font-weight:500;
+        transition:background .2s,color .2s; text-decoration:none; }
+      .nav-link:hover { background:rgba(255,255,255,.1); color:#fff; }
+      .nav-link.active { background:rgba(201,147,10,.2); color:#f5d87e; border-left:3px solid #c9930a; }
+      .nav-icon { font-size:1.1rem; width:28px; text-align:center; }
+      .fade-in { animation:fadeIn .4s ease; }
+      @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+  <style>
+    #toast { position:fixed;top:1.5rem;right:1.5rem;z-index:9999;min-width:300px;max-width:420px;
+      display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.25rem;border-radius:1rem;
+      box-shadow:0 8px 30px rgba(0,0,0,.12);font-size:.875rem;
+      transition:opacity .4s ease,transform .4s ease;opacity:0;transform:translateY(-12px);pointer-events:none; }
+    #toast.show { opacity:1;transform:translateY(0);pointer-events:auto; }
+    #toast.succes { background:#f0fdf4;border:1.5px solid #86efac;color:#166534; }
+    #toast.erreur { background:#fff1f2;border:1.5px solid #fca5a5;color:#991b1b; }
+    #toast .toast-bar { position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 1rem 1rem;animation:toastBar 3s linear forwards; }
+    #toast.succes .toast-bar { background:#22c55e; }
+    #toast.erreur .toast-bar  { background:#ef4444; }
+    @keyframes toastBar { from{width:100%} to{width:0%} }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+  
+  <aside class="w-64 flex flex-col fixed h-full z-30" style="background:linear-gradient(180deg,#0c2340 0%,#163a5f 100%)">
+    <div class="px-6 py-5 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-sm"
+           style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+      <span class="font-bold text-white text-base tracking-wide">Gestion Stages</span>
+    </div>
+    <div class="mx-4 mb-4 p-3 rounded-2xl flex items-center gap-3" style="background:rgba(255,255,255,.08)">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+           style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340" id="avatarMenu">EN</div>
+      <div class="overflow-hidden">
+        <p class="text-white text-sm font-semibold truncate" id="nomMenu">--</p>
+        <p class="text-xs truncate" style="color:#f5d87e" id="deptMenu">--</p>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 overflow-y-auto space-y-1">
+      <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="etudiants.html" class="nav-link"><span class="nav-icon">👥</span> Mes Étudiants</a>
+      <a href="messagerie.html" class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="rapports.html" class="nav-link"><span class="nav-icon">📄</span> Rapports</a>
+      <a href="suggestions.html" class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="reunions.html" class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="profil.html" class="nav-link active"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 py-4">
+      <button class="nav-link w-full" style="color:#fca5a5"
+              onmouseover="this.style.background='rgba(239,68,68,.15)'" onmouseout="this.style.background='transparent'">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+      <h1 class="text-lg font-bold" style="color:#0c2340">👤 Mon Profil</h1>
+      <p class="text-xs text-gray-400 mt-0.5">Consultez et modifiez vos informations</p>
+    </div>
+
+    <div id="toast">
+      <span class="toast-icon text-xl" id="toastIcon"></span>
+      <div class="flex-1">
+        <p class="font-bold" id="toastTitre"></p>
+        <p class="opacity-85 leading-snug" id="toastMsg"></p>
+      </div>
+      <button onclick="fermerToast()" class="opacity-50 hover:opacity-100 text-xl leading-none">✕</button>
+      <div class="toast-bar" id="toastBar"></div>
+    </div>
+
+    <div class="p-6 fade-in max-w-4xl mx-auto">
+      <!-- Carte profil -->
+      <div class="bg-white rounded-2xl shadow p-8 mb-6" style="border-top:3px solid #c9930a">
+        <div class="flex items-center gap-6 mb-8 pb-8 border-b border-gray-100">
+          <label class="relative cursor-pointer group block flex-shrink-0" style="width:6rem;height:6rem" title="Changer la photo">
+            <div id="avatarGrand"
+                 class="w-24 h-24 rounded-full flex items-center justify-center font-bold text-3xl shadow-lg overflow-hidden"
+                 style="background:linear-gradient(135deg,#0c2340,#163a5f);color:#f5d87e">EN</div>
+            <div class="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition pointer-events-none"
+                 style="background:rgba(0,0,0,0.4)">
+              <span class="text-white text-2xl">📷</span>
+            </div>
+            <input type="file" accept="image/*" class="hidden" onchange="uploadPhoto(this)">
+          </label>
+          <div>
+            <h2 id="nomComplet" class="text-2xl font-bold text-gray-800">--</h2>
+            <p class="font-medium mt-1" style="color:#c9930a">👨‍🏫 Encadrant</p>
+            <p id="gradeAffiche" class="text-gray-500 text-sm mt-1">--</p>
+            <p id="deptAffiche"  class="text-gray-400 text-sm mt-1">--</p>
+          </div>
+        </div>
+
+        <h3 class="font-bold text-gray-700 mb-4 text-lg">✏️ Modifier mes informations</h3>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Prénom</label>
+            <input id="inputPrenom" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Nom</label>
+            <input id="inputNom" type="text" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Email</label>
+            <input id="inputEmail" type="email" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Téléphone</label>
+            <input id="inputTel" type="tel" placeholder="+216 XX XXX XXX" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Grade</label>
+            <input id="inputGrade" type="text" placeholder="ex: Maître de conférences" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Département</label>
+            <input id="inputDept" type="text" disabled class="w-full border border-gray-100 bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-400 cursor-not-allowed"/>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="text-sm font-medium text-gray-600 mb-1 block">Bio</label>
+          <textarea id="inputBio" rows="3" placeholder="Décrivez vos spécialités..."
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none resize-none transition"></textarea>
+        </div>
+        <button onclick="sauvegarderProfil()"
+                class="text-white px-6 py-3 rounded-xl font-medium text-sm transition"
+                style="background:linear-gradient(135deg,#0c2340,#163a5f)">
+          💾 Sauvegarder les modifications
+        </button>
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="bg-white rounded-2xl shadow p-8" style="border-top:3px solid #c9930a">
+        <h3 class="font-bold text-gray-700 mb-4 text-lg">🔒 Changer le mot de passe</h3>
+        <div class="space-y-4 max-w-md">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Ancien mot de passe</label>
+            <input id="inputAncien" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Nouveau mot de passe</label>
+            <input id="inputNouveau" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Confirmer</label>
+            <input id="inputConfirm" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition"/>
+          </div>
+          <button onclick="changerPassword()"
+                  class="text-white px-6 py-3 rounded-xl font-medium text-sm transition"
+                  style="background:#1e293b">
+            🔑 Changer le mot de passe
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('encadrant');
+  const API    = 'http://localhost:3000';
+  const ENC_ID = parseInt(localStorage.getItem('enc_id'));
+
+  async function chargerProfil() {
+    const r = await fetch(`${API}/api/encadrant/profil/${ENC_ID}`);
+    const user = await r.json();
+    const init = (user.prenom[0]+user.nom[0]).toUpperCase();
+    if (user.photo) {
+      const photoUrl = API + '/uploads/' + user.photo;
+      document.getElementById('avatarGrand').innerHTML = '<img src="' + photoUrl + '" class="w-full h-full object-cover rounded-full">';
+      document.getElementById('avatarMenu').innerHTML  = '<img src="' + photoUrl + '" class="w-full h-full object-cover rounded-full">';
+    } else {
+      document.getElementById('avatarGrand').textContent = init;
+      document.getElementById('avatarMenu').textContent  = init;
+    }
+    document.getElementById('nomMenu').textContent      = `${user.prenom} ${user.nom}`;
+    document.getElementById('deptMenu').textContent     = user.departement || '–';
+    document.getElementById('nomComplet').textContent   = `${user.prenom} ${user.nom}`;
+    document.getElementById('gradeAffiche').textContent = user.grade || '–';
+    document.getElementById('deptAffiche').textContent  = user.departement || '–';
+    document.getElementById('inputPrenom').value = user.prenom;
+    document.getElementById('inputNom').value    = user.nom;
+    document.getElementById('inputEmail').value  = user.email;
+    document.getElementById('inputTel').value    = user.telephone || '';
+    document.getElementById('inputGrade').value  = user.grade || '';
+    document.getElementById('inputBio').value    = user.bio || '';
+    document.getElementById('inputDept').value   = user.departement || '';
+  }
+
+  function validerProfil(prenom, nom, email, telephone, grade, bio) {
+    const nomRegex   = /^[A-Za-zÀ-ÖØ-öø-ÿ\s\-']{2,50}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const telRegex   = /^(\+216\s?)?[0-9]{2}[\s]?[0-9]{3}[\s]?[0-9]{3}$/;
+    if (!prenom.trim() || !nom.trim()) { afficherErreur('Le prénom et le nom sont obligatoires.'); return false; }
+    if (!nomRegex.test(prenom.trim())) { afficherErreur('Prénom invalide : lettres uniquement, 2 à 50 caractères.'); return false; }
+    if (!nomRegex.test(nom.trim()))    { afficherErreur('Nom invalide : lettres uniquement, 2 à 50 caractères.'); return false; }
+    if (!email.trim())                 { afficherErreur("L'email est obligatoire."); return false; }
+    if (!emailRegex.test(email.trim())) { afficherErreur("Format d'email invalide (ex : nom@domaine.com)."); return false; }
+    if (telephone.trim() && !telRegex.test(telephone.trim())) { afficherErreur('Téléphone invalide (ex : +216 12 345 678).'); return false; }
+    if (grade.trim() && grade.trim().length < 3) { afficherErreur('Le grade doit contenir au moins 3 caractères.'); return false; }
+    if (bio.trim().length > 500) { afficherErreur('La bio ne doit pas dépasser 500 caractères.'); return false; }
+    return true;
+  }
+
+  async function sauvegarderProfil() {
+    const prenom = document.getElementById('inputPrenom').value;
+    const nom    = document.getElementById('inputNom').value;
+    const email  = document.getElementById('inputEmail').value;
+    const tel    = document.getElementById('inputTel').value;
+    const grade  = document.getElementById('inputGrade').value;
+    const bio    = document.getElementById('inputBio').value;
+    if (!validerProfil(prenom, nom, email, tel, grade, bio)) return;
+    const reponse = await fetch(`${API}/api/encadrant/profil/${ENC_ID}`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ prenom, nom, email, telephone: tel, grade, bio })
+    });
+    const data = await reponse.json();
+    afficherSucces(data.message);
+    chargerProfil();
+  }
+
+  async function changerPassword() {
+    const ancien  = document.getElementById('inputAncien').value;
+    const nouveau = document.getElementById('inputNouveau').value;
+    const confirm = document.getElementById('inputConfirm').value;
+    if (!ancien || !nouveau || !confirm) { afficherErreur('Veuillez remplir tous les champs !'); return; }
+    if (nouveau !== confirm) { afficherErreur('Les mots de passe ne correspondent pas !'); return; }
+    if (nouveau.length < 6) { afficherErreur('Minimum 6 caractères !'); return; }
+    const reponse = await fetch(`${API}/api/encadrant/profil/${ENC_ID}/password`, {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ ancien, nouveau })
+    });
+    const data = await reponse.json();
+    if (reponse.ok) {
+      afficherSucces(data.message);
+      document.getElementById('inputAncien').value = '';
+      document.getElementById('inputNouveau').value = '';
+      document.getElementById('inputConfirm').value = '';
+    } else { afficherErreur(data.message); }
+  }
+
+  let _toastTimer = null;
+  function afficherToast(type, titre, msg) {
+    const t = document.getElementById('toast');
+    const bar = document.getElementById('toastBar');
+    t.className = type;
+    document.getElementById('toastIcon').textContent  = type === 'succes' ? '✅' : '⚠️';
+    document.getElementById('toastTitre').textContent = titre;
+    document.getElementById('toastMsg').textContent   = msg;
+    bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    t.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(fermerToast, 3800);
+  }
+  function fermerToast() { document.getElementById('toast').classList.remove('show'); }
+  function afficherSucces(msg) { afficherToast('succes', 'Succès', msg); }
+  function afficherErreur(msg) {
+    const parts = msg.split(' : ');
+    afficherToast('erreur', parts.length > 1 ? parts[0] : 'Champ invalide', parts.length > 1 ? parts.slice(1).join(' : ') : msg);
+  }
+
+  async function uploadPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('photo', file);
+    try {
+      const r = await fetch(`${API}/api/profil/${ENC_ID}/photo`, { method: 'PUT', body: fd });
+      const data = await r.json();
+      if (r.ok) {
+        const photoUrl = API + '/uploads/' + data.photo;
+        document.getElementById('avatarGrand').innerHTML = '<img src="' + photoUrl + '" class="w-full h-full object-cover rounded-full">';
+        document.getElementById('avatarMenu').innerHTML  = '<img src="' + photoUrl + '" class="w-full h-full object-cover rounded-full">';
+        afficherSucces(data.message || 'Photo mise à jour !');
+      } else {
+        afficherErreur(data.message || 'Erreur lors de l\'upload.');
+      }
+    } catch (e) {
+      afficherErreur('Erreur réseau lors de l\'upload.');
+    }
+  }
+
+  chargerProfil();
+</script>
+</body>
+</html>

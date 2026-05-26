@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — Plateforme Stages ISET</title>
+  <script>
+    /* Appliquer le thème avant le rendu */
+    (function(){var t=localStorage.getItem('app_theme')||'light';document.documentElement.classList.add(t==='dark'?'dark':'light');})();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="/theme.js"></script>
+  <script src="/jwt.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --iset-blue:   #003f87;
+      --iset-dark:   #001f44;
+      --iset-gold:   #c9930a;
+      --iset-light:  #e8f0fe;
+      --white:       #ffffff;
+      --gray-50:     #f8fafc;
+      --gray-200:    #e2e8f0;
+      --gray-400:    #94a3b8;
+      --gray-600:    #475569;
+      --gray-800:    #1e293b;
+      --green:       #059669;
+      --red:         #dc2626;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: var(--gray-50);
+    }
+
+    /* ─── PANNEAU GAUCHE (branding) ─── */
+    .left-panel {
+      width: 48%;
+      background: linear-gradient(160deg, var(--iset-dark) 0%, var(--iset-blue) 55%, #1565c0 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px 52px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* cercles décoratifs */
+    .left-panel::before {
+      content: '';
+      position: absolute; top: -120px; right: -120px;
+      width: 380px; height: 380px; border-radius: 50%;
+      background: rgba(255,255,255,.05);
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute; bottom: -80px; left: -60px;
+      width: 260px; height: 260px; border-radius: 50%;
+      background: rgba(255,255,255,.04);
+    }
+
+    .left-top { position: relative; z-index: 1; }
+
+    .iset-logo-wrap {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 56px;
+    }
+    .iset-logo-img {
+      width: 72px; height: 72px; border-radius: 16px;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      flex-shrink: 0;
+    }
+    .iset-logo-img img {
+      width: 64px; height: 64px; object-fit: contain;
+    }
+    .iset-logo-text { color: #fff; }
+    .iset-logo-text .iset-name {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800; font-size: 1.3rem; line-height: 1.1;
+      letter-spacing: .03em;
+    }
+    .iset-logo-text .iset-sub {
+      font-size: .72rem; font-weight: 400;
+      color: rgba(255,255,255,.6);
+      margin-top: 2px;
+    }
+
+    .left-headline {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800; font-size: 2.1rem; color: #fff;
+      line-height: 1.25; margin-bottom: 18px;
+    }
+    .left-headline span { color: #f5d87e; }
+
+    .left-desc {
+      font-size: .88rem; color: rgba(255,255,255,.65);
+      line-height: 1.75; max-width: 340px;
+    }
+
+    /* features list */
+    .features-list {
+      list-style: none; margin-top: 36px; display: flex;
+      flex-direction: column; gap: 14px;
+    }
+    .features-list li {
+      display: flex; align-items: center; gap: 12px;
+      font-size: .82rem; color: rgba(255,255,255,.8);
+    }
+    .feat-icon {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      background: rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+    }
+
+    .left-bottom {
+      position: relative; z-index: 1;
+      font-size: .72rem; color: rgba(255,255,255,.35);
+      line-height: 1.6;
+    }
+
+    /* ─── PANNEAU DROIT (formulaire) ─── */
+    .right-panel {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 32px;
+      background: var(--gray-50);
+    }
+
+    .form-card {
+      width: 100%; max-width: 420px;
+      animation: slideUp .5s cubic-bezier(.4,0,.2,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-header { margin-bottom: 32px; }
+    .form-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700; font-size: 1.7rem;
+      color: var(--iset-dark); margin-bottom: 6px;
+    }
+    .form-header p { font-size: .85rem; color: var(--gray-400); }
+
+    /* user preview */
+    .user-preview {
+      display: none; align-items: center; gap: 12px;
+      background: #eff6ff; border: 1.5px solid #bfdbfe;
+      border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;
+    }
+    .user-preview.show { display: flex; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+    .preview-avatar {
+      width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+      background: var(--iset-blue); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .9rem;
+    }
+    .preview-nom { font-weight: 600; font-size: .88rem; color: var(--iset-dark); }
+    .preview-role {
+      display: inline-block; margin-top: 2px;
+      padding: 2px 9px; border-radius: 20px; font-size: .7rem; font-weight: 600;
+      background: #dbeafe; color: #1d4ed8;
+    }
+
+    /* inputs */
+    .field-group { margin-bottom: 18px; }
+    .field-label {
+      display: block; font-size: .78rem; font-weight: 600;
+      color: var(--gray-600); margin-bottom: 7px;
+    }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400); font-size: .85rem; pointer-events: none;
+    }
+    .input-field {
+      width: 100%; padding: 12px 16px 12px 42px;
+      border: 1.5px solid var(--gray-200); border-radius: 11px;
+      font-family: 'Inter', sans-serif; font-size: .9rem;
+      color: var(--gray-800); background: #fff;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .input-field:focus {
+      border-color: var(--iset-blue);
+      box-shadow: 0 0 0 3px rgba(0,63,135,.12);
+    }
+    .input-field::placeholder { color: #cbd5e1; }
+
+    .eye-btn {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--gray-400); font-size: .85rem; padding: 4px;
+      transition: color .15s;
+    }
+    .eye-btn:hover { color: var(--iset-blue); }
+
+    /* error */
+    .err-box {
+      display: none; align-items: center; gap: 9px;
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 10px; padding: 11px 14px;
+      color: var(--red); font-size: .82rem; font-weight: 500;
+      margin-bottom: 14px;
+    }
+    .err-box.show { display: flex; }
+
+    /* bouton connexion */
+    .btn-login {
+      width: 100%; padding: 13px;
+      background: linear-gradient(135deg, var(--iset-blue), #1565c0);
+      color: #fff; font-family: 'Inter', sans-serif;
+      font-weight: 700; font-size: .95rem;
+      border: none; border-radius: 11px; cursor: pointer;
+      transition: opacity .2s, transform .12s, box-shadow .2s;
+      box-shadow: 0 4px 18px rgba(0,63,135,.35);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-login:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,63,135,.4); }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* forgot */
+    .forgot-link {
+      display: block; text-align: center; margin-top: 16px;
+      font-size: .8rem; color: var(--gray-400); text-decoration: none;
+      transition: color .2s;
+    }
+    .forgot-link:hover { color: var(--iset-blue); }
+
+    /* divider roles */
+    .roles-hint {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-top: 24px; padding-top: 20px;
+      border-top: 1px solid var(--gray-200);
+      justify-content: center;
+    }
+    .role-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 11px; border-radius: 20px; font-size: .7rem; font-weight: 500;
+      background: #fff; border: 1px solid var(--gray-200); color: var(--gray-600);
+    }
+
+    .shake { animation: shake .35s ease; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-5px); }
+      40%,80%  { transform: translateX(5px); }
+    }
+
+    /* responsive */
+    @media (max-width: 768px) {
+      .left-panel { display: none; }
+      .right-panel { padding: 24px 20px; background: linear-gradient(160deg, var(--iset-dark), var(--iset-blue)); }
+      .form-card { max-width: 100%; }
+      .form-header h2 { color: #fff; }
+      .form-header p { color: rgba(255,255,255,.6); }
+      .field-label { color: rgba(255,255,255,.8); }
+      .input-field { background: rgba(255,255,255,.95); }
+      .roles-hint { border-top-color: rgba(255,255,255,.15); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ PANNEAU GAUCHE ═══ -->
+<div class="left-panel">
+  <div class="left-top">
+
+    <!-- Logo ISET -->
+    <div class="iset-logo-wrap">
+      <div class="iset-logo-img">
+        <img src="/iset-tozeur.png" alt="ISET Tozeur"
+             style="width:64px;height:64px;object-fit:contain">
+      </div>
+      <div class="iset-logo-text">
+        <div class="iset-name">ISET Tozeur</div>
+        <div class="iset-sub">Institut Supérieur des Études<br>Technologiques de Tozeur</div>
+      </div>
+    </div>
+
+    <h1 class="left-headline">
+      Plateforme<br>de Gestion<br><span>des Stages</span>
+    </h1>
+
+    <p class="left-desc">
+      Gérez vos demandes de stage, suivez votre progression
+      et restez connecté avec votre département — tout en un seul endroit.
+    </p>
+
+    <ul class="features-list">
+      <li>
+        <div class="feat-icon">📋</div>
+        <span>Demande et suivi de stage en ligne</span>
+      </li>
+      <li>
+        <div class="feat-icon">📁</div>
+        <span>Dépôt de rapports et documents</span>
+      </li>
+      <li>
+        <div class="feat-icon">💬</div>
+        <span>Messagerie avec encadrant et chef</span>
+      </li>
+      <li>
+        <div class="feat-icon">📊</div>
+        <span>Tableau de bord par rôle</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="left-bottom">
+    Plateforme Universitaire ISET Tozeur &mdash; Gestion des Stages<br>
+    © 2025 — Tous droits réservés
+  </div>
+</div>
+
+<!-- ═══ PANNEAU DROIT ═══ -->
+<div class="right-panel">
+<div class="form-card">
+
+  <div class="form-header">
+    <h2>Bon retour 👋</h2>
+    <p>Connectez-vous pour accéder à votre espace</p>
+  </div>
+
+  <!-- Preview utilisateur -->
+  <div id="userPreview" class="user-preview">
+    <div id="previewAvatar" class="preview-avatar"></div>
+    <div>
+      <div id="previewNom" class="preview-nom"></div>
+      <span id="previewRole" class="preview-role"></span>
+    </div>
+    <span style="margin-left:auto;color:#059669;font-size:1.1rem">✓</span>
+  </div>
+
+  <!-- Erreur -->
+  <div id="msgErreur" class="err-box">
+    <i class="fa fa-circle-exclamation"></i>
+    <span id="errText"></span>
+  </div>
+
+  <form id="loginForm">
+
+    <!-- Email -->
+    <div class="field-group">
+      <label class="field-label" for="inputEmail">Adresse email</label>
+      <div class="input-wrap">
+        <i class="fa fa-envelope input-icon"></i>
+        <input id="inputEmail" type="email" class="input-field"
+               placeholder="votre.email@iset.tn" autocomplete="email" required
+               oninput="onEmailInput(this.value)">
+      </div>
+    </div>
+
+    <!-- Mot de passe -->
+    <div class="field-group">
+      <label class="field-label" for="inputPassword">Mot de passe</label>
+      <div class="input-wrap">
+        <i class="fa fa-lock input-icon"></i>
+        <input id="inputPassword" type="password" class="input-field"
+               placeholder="••••••••" autocomplete="current-password" required
+               style="padding-right:44px">
+        <button type="button" class="eye-btn" onclick="togglePwd()" id="eyeBtn">
+          <i class="fa fa-eye" id="eyeIcon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bouton connexion -->
+    <button type="submit" class="btn-login" id="btnLogin">
+      <i class="fa fa-right-to-bracket"></i> Se connecter
+    </button>
+
+    <!-- Mot de passe oublié -->
+    <a id="forgotLink" href="/forgot.html" class="forgot-link">
+      <i class="fa fa-key" style="margin-right:5px;font-size:.75rem"></i>Mot de passe oublié ?
+    </a>
+
+  </form>
+
+  <!-- Rôles disponibles -->
+  <div class="roles-hint">
+    <span class="role-chip">🛡 Administrateur</span>
+    <span class="role-chip">👑 Chef de département</span>
+    <span class="role-chip">👨‍🏫 Encadrant</span>
+    <span class="role-chip">🎓 Étudiant</span>
+  </div>
+
+</div>
+</div>
+
+<script>
+  const API = 'http://localhost:3000';
+
+  const ROLE_LABELS = {
+    administrateur:   '🛡 Administrateur',
+    chef_departement: '👑 Chef de Département',
+    encadrant:        '👨‍🏫 Encadrant',
+    etudiant:         '🎓 Étudiant'
+  };
+
+  const ROLE_REDIRECT = {
+    administrateur:   '/admin/dashboard.html',
+    chef_departement: '/chef/dashboard.html',
+    encadrant:        '/encadrant/dashboard.html',
+    etudiant:         '/etudiant.html'
+  };
+
+  function togglePwd() {
+    const inp  = document.getElementById('inputPassword');
+    const icon = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.className = 'fa fa-eye-slash';
+    } else {
+      inp.type = 'password';
+      icon.className = 'fa fa-eye';
+    }
+  }
+
+  let emailTimer = null;
+  function onEmailInput(val) {
+    clearTimeout(emailTimer);
+    document.getElementById('userPreview').classList.remove('show');
+    if (!val.includes('@') || !val.includes('.')) return;
+    emailTimer = setTimeout(() => checkEmailExists(val), 600);
+    document.getElementById('forgotLink').href = `/forgot.html?email=${encodeURIComponent(val)}`;
+  }
+
+  async function checkEmailExists(email) {
+    try {
+      const r = await fetch(`${API}/api/auth/check-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const d = await r.json();
+      if (d.email_exists) {
+        const ini = (d.prenom?.[0] || '') + (d.nom?.[0] || '');
+        document.getElementById('previewAvatar').textContent = ini;
+        document.getElementById('previewNom').textContent    = d.prenom + ' ' + d.nom;
+        document.getElementById('previewRole').textContent   = ROLE_LABELS[d.role] || d.role;
+        document.getElementById('userPreview').classList.add('show');
+      }
+    } catch(e) {}
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('msgErreur');
+    document.getElementById('errText').textContent = msg;
+    box.classList.add('show');
+  }
+  function hideError() {
+    document.getElementById('msgErreur').classList.remove('show');
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const email    = document.getElementById('inputEmail').value.trim();
+    const password = document.getElementById('inputPassword').value;
+    const btn      = document.getElementById('btnLogin');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Connexion...';
+    hideError();
+
+    try {
+      const r = await fetch(`${API}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await r.json();
+
+      if (data.success) {
+        if (data.token) setJwtToken(data.token);
+        const u = data.user;
+        localStorage.setItem('user_id',      u.id);
+        localStorage.setItem('user_nom',     u.nom);
+        localStorage.setItem('user_prenom',  u.prenom);
+        localStorage.setItem('user_email',   u.email);
+        localStorage.setItem('user_role',    u.role);
+        localStorage.setItem('dept_id',      u.departement_id || '');
+
+        if (u.role === 'chef_departement') localStorage.setItem('chef_id', u.id);
+        else if (u.role === 'encadrant')   localStorage.setItem('enc_id', u.id);
+        else if (u.role === 'administrateur') localStorage.setItem('admin_id', u.id);
+        else if (u.role === 'etudiant')    localStorage.setItem('etudiant_id', u.id);
+
+        btn.innerHTML = '<i class="fa fa-check"></i> Connecté !';
+        btn.style.background = 'linear-gradient(135deg,#059669,#10b981)';
+
+        setTimeout(() => {
+          window.location.href = ROLE_REDIRECT[u.role] || '/';
+        }, 650);
+
+      } else {
+        showError(data.message || 'Email ou mot de passe incorrect');
+        document.getElementById('loginForm').classList.add('shake');
+        setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-right-to-bracket"></i> Se connecter';
+      }
+    } catch(e) {
+      showError('Impossible de joindre le serveur. Vérifiez que le backend est démarré.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-right-to-bracket"></i> Se connecter';
+    }
+  });
+
+  localStorage.clear();
+</script>
+</body>
+</html>

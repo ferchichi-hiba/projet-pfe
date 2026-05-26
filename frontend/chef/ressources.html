@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ressources — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .drop-zone {
+      border: 2px dashed #c7d2e3; border-radius: 14px;
+      padding: 36px 20px; text-align: center; cursor: pointer;
+      transition: all .2s; background: #f8faff;
+    }
+    .drop-zone:hover, .drop-zone.dragover { border-color: #4f7cff; background: #eff3ff; }
+    .drop-zone.has-file { border-color: #10b981; background: #f0fdf7; }
+    .badge-stage {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: .68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .badge-tous       { background: #e0e7ff; color: #4338ca; }
+    .badge-initiation { background: #fef3c7; color: #92400e; }
+    .badge-perfectionnement { background: #dcfce7; color: #166534; }
+    .badge-fin_etude  { background: #fce7f3; color: #9d174d; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"    class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html"     class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html"  class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html"       class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html"    class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"  class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html"  class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"   class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"   class="nav-link active"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"       class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button onclick="logout()" class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
+             style="background:#0c2340">📚</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Ressources du département</h1>
+          <p class="text-xs text-gray-400">Envoyez des fichiers et documents à vos étudiants par type de stage</p>
+        </div>
+      </div>
+      <button onclick="openModal()"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+              style="background:#0c2340">
+        ➕ Ajouter une ressource
+      </button>
+    </div>
+
+    <div class="p-6 fade-in">
+
+      <!-- STATS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="statsGrid">
+        <div class="bg-white rounded-2xl p-4" style="border-top:3px solid #6366f1;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs">Total</p>
+          <p id="statTotal" class="text-3xl font-bold mt-1" style="color:#6366f1">--</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4" style="border-top:3px solid #f59e0b;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs">Initiation</p>
+          <p id="statInit" class="text-3xl font-bold mt-1" style="color:#f59e0b">--</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4" style="border-top:3px solid #10b981;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs">Perfectionnement</p>
+          <p id="statPerf" class="text-3xl font-bold mt-1" style="color:#10b981">--</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4" style="border-top:3px solid #ec4899;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs">PFE</p>
+          <p id="statPfe" class="text-3xl font-bold mt-1" style="color:#ec4899">--</p>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="bg-white rounded-2xl p-4 mb-5 flex flex-wrap gap-3 items-center"
+           style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <input id="searchInput" oninput="filtrer()" placeholder="🔍  Rechercher..."
+               class="border border-gray-200 rounded-xl px-4 py-2 text-sm flex-1 min-w-48 focus:outline-none focus:border-indigo-400">
+        <select id="filtreTypeStage" onchange="filtrer()"
+                class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les types de stage</option>
+          <option value="tous">Pour tous</option>
+          <option value="initiation">Initiation</option>
+          <option value="perfectionnement">Perfectionnement</option>
+          <option value="fin_etude">PFE</option>
+        </select>
+        <select id="filtreType" onchange="filtrer()"
+                class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les types de fichier</option>
+          <option value="rapport">Rapport</option>
+          <option value="guide">Guide</option>
+          <option value="template">Template</option>
+          <option value="autre">Autre</option>
+        </select>
+        <span id="compteur" class="text-sm text-gray-400 ml-auto"></span>
+      </div>
+
+      <!-- TABLE -->
+      <div class="bg-white rounded-2xl overflow-hidden" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="background:#f0f4fa">
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500 rounded-tl-2xl">Titre</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Type fichier</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Destinataires</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Taille</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500 rounded-tr-2xl">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableauRessources" class="divide-y divide-gray-100">
+            <tr><td colspan="6" class="text-center py-10 text-gray-400">⏳ Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══ MODAL AJOUT ═══ -->
+<div id="modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,.45)">
+  <div class="bg-white rounded-2xl w-full max-w-lg mx-4 overflow-hidden shadow-2xl">
+    <div class="flex justify-between items-center px-6 py-4" style="border-bottom:1px solid #eef2f7;background:#f8faff">
+      <h3 class="font-bold text-base" style="color:#0c2340">📤 Envoyer une ressource</h3>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+    </div>
+    <form id="formRessource" onsubmit="soumettre(event)" class="p-6 space-y-4">
+
+      <!-- Titre -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Titre <span class="text-red-500">*</span></label>
+        <input id="inputTitre" required placeholder="Ex: Guide de rédaction PFE 2025"
+               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400">
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+        <textarea id="inputDesc" rows="2" placeholder="Courte description du document..."
+                  class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 resize-none"></textarea>
+      </div>
+
+      <!-- Type fichier + Type stage -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Type de fichier</label>
+          <select id="inputType" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 bg-white">
+            <option value="guide">📖 Guide</option>
+            <option value="template">📄 Template</option>
+            <option value="rapport">📑 Rapport exemple</option>
+            <option value="autre">📁 Autre</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Destinataires <span class="text-red-500">*</span></label>
+          <select id="inputTypeStage" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-400 bg-white">
+            <option value="tous">🌐 Tous les étudiants</option>
+            <option value="initiation">🟡 Stage d'initiation</option>
+            <option value="perfectionnement">🟢 Perfectionnement</option>
+            <option value="fin_etude">🔴 PFE (fin d'études)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Fichier -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Fichier <span class="text-red-500">*</span></label>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('inputFichier').click()">
+          <div id="dropText">
+            <div class="text-3xl mb-2">📎</div>
+            <p class="text-sm text-gray-500 font-medium">Cliquez ou glissez un fichier ici</p>
+            <p class="text-xs text-gray-400 mt-1">PDF, Word, Excel, PowerPoint… max 20 Mo</p>
+          </div>
+          <div id="dropFileName" class="hidden text-sm font-semibold text-green-700 mt-1"></div>
+        </div>
+        <input id="inputFichier" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt" class="hidden"
+               onchange="onFileSelect(this)">
+      </div>
+
+      <!-- Boutons -->
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="closeModal()"
+                class="flex-1 border border-gray-200 rounded-xl py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+          Annuler
+        </button>
+        <button id="btnSoumettre" type="submit"
+                class="flex-1 rounded-xl py-2.5 text-sm font-semibold text-white"
+                style="background:#0c2340">
+          📤 Envoyer
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium text-white shadow-xl
+     transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none"
+     style="background:#0c2340"></div>
+
+<script>
+/* ── AUTH ── */
+const chefId   = parseInt(localStorage.getItem('user_id'));
+const chefNom  = localStorage.getItem('user_nom')    || '';
+const chefPrenom = localStorage.getItem('user_prenom') || '';
+if (!chefId || localStorage.getItem('user_role') !== 'chef_departement') {
+  localStorage.clear(); location.href = '/login.html';
+}
+
+/* ── DEPT via API ── */
+let deptId = null;
+let allRessources = [];
+
+document.getElementById('nomMenu').textContent = `${chefPrenom} ${chefNom}`;
+document.getElementById('avatarMenu').textContent =
+  (chefPrenom[0] || '') + (chefNom[0] || '');
+
+/* ── INIT ── */
+async function init() {
+  try {
+    const r = await fetch(`http://localhost:3000/profil-complet/${chefId}`);
+    const d = await r.json();
+    if (d.success) {
+      deptId = d.user.departement_id;
+      document.getElementById('nomDept').textContent = d.user.departement_nom || 'Département';
+    }
+  } catch(e) {}
+  await charger();
+}
+
+/* ── CHARGER RESSOURCES ── */
+async function charger() {
+  if (!deptId) return;
+  try {
+    const r = await fetch(`http://localhost:3000/ressources/${deptId}`);
+    const d = await r.json();
+    allRessources = d.success ? d.ressources : [];
+  } catch(e) { allRessources = []; }
+  updateStats();
+  filtrer();
+}
+
+/* ── STATS ── */
+function updateStats() {
+  document.getElementById('statTotal').textContent = allRessources.length;
+  document.getElementById('statInit').textContent  = allRessources.filter(r => r.type_stage === 'initiation' || r.type_stage === 'tous').length;
+  document.getElementById('statPerf').textContent  = allRessources.filter(r => r.type_stage === 'perfectionnement' || r.type_stage === 'tous').length;
+  document.getElementById('statPfe').textContent   = allRessources.filter(r => r.type_stage === 'fin_etude' || r.type_stage === 'tous').length;
+}
+
+/* ── FILTRER ── */
+function filtrer() {
+  const search   = document.getElementById('searchInput').value.toLowerCase();
+  const tsFilter = document.getElementById('filtreTypeStage').value;
+  const tyFilter = document.getElementById('filtreType').value;
+
+  let list = allRessources;
+  if (tsFilter) list = list.filter(r => r.type_stage === tsFilter);
+  if (tyFilter) list = list.filter(r => r.type === tyFilter);
+  if (search)   list = list.filter(r =>
+    r.titre.toLowerCase().includes(search) ||
+    (r.description||'').toLowerCase().includes(search)
+  );
+
+  document.getElementById('compteur').textContent = `${list.length} ressource${list.length !== 1 ? 's' : ''}`;
+  renderTable(list);
+}
+
+/* ── RENDER TABLE ── */
+function renderTable(list) {
+  const tbody = document.getElementById('tableauRessources');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-12 text-gray-400">
+      <div class="text-3xl mb-2">📂</div>
+      <p class="font-medium">Aucune ressource trouvée</p>
+      <p class="text-xs mt-1">Cliquez sur "+ Ajouter une ressource" pour commencer</p>
+    </td></tr>`;
+    return;
+  }
+
+  const typeFileIcons = { pdf:'📄', docx:'📝', doc:'📝', pptx:'📊', ppt:'📊', xlsx:'📈', xls:'📈', zip:'🗜️', rar:'🗜️' };
+
+  tbody.innerHTML = list.map(r => {
+    const ext  = (r.filename||'').split('.').pop().toLowerCase();
+    const icon = typeFileIcons[ext] || '📁';
+    const taille = r.taille ? fmtSize(r.taille) : '—';
+    const date   = new Date(r.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' });
+    const tsLabel = stageLabel(r.type_stage);
+    const tsBadge = stageBadge(r.type_stage);
+    const typeLabel2 = { rapport:'Rapport', guide:'Guide', template:'Template', autre:'Autre' }[r.type] || r.type;
+
+    return `<tr class="hover:bg-gray-50 transition-colors">
+      <td class="px-5 py-3">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">${icon}</span>
+          <div>
+            <p class="font-semibold text-gray-800 text-sm">${r.titre}</p>
+            ${r.description ? `<p class="text-xs text-gray-400 truncate max-w-xs">${r.description}</p>` : ''}
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-3">
+        <span class="inline-block px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold">${typeLabel2}</span>
+      </td>
+      <td class="px-4 py-3">
+        <span class="badge-stage ${tsBadge}">${tsLabel}</span>
+      </td>
+      <td class="px-4 py-3 text-gray-400 text-xs">${taille}</td>
+      <td class="px-4 py-3 text-gray-400 text-xs">${date}</td>
+      <td class="px-4 py-3">
+        <div class="flex gap-2">
+          <a href="http://localhost:3000/uploads/ressources/${r.filename}" target="_blank"
+             class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+             style="background:#4f7cff" title="Télécharger">
+            ⬇️ Voir
+          </a>
+          <button onclick="supprimer(${r.id},'${r.titre.replace(/'/g,'&#39;')}')"
+                  class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+                  style="background:#ef4444" title="Supprimer">
+            🗑️
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── SUPPRIMER ── */
+async function supprimer(id, titre) {
+  if (!confirm(`Supprimer "${titre}" ?\nCette action est irréversible.`)) return;
+  try {
+    const r = await fetch(`http://localhost:3000/ressources/${id}`, { method:'DELETE' });
+    const d = await r.json();
+    if (d.success) {
+      toast('✅ Ressource supprimée');
+      await charger();
+    } else {
+      toast('❌ Erreur lors de la suppression', true);
+    }
+  } catch(e) { toast('❌ Erreur réseau', true); }
+}
+
+/* ── MODAL ── */
+function openModal() {
+  document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('formRessource').reset();
+  document.getElementById('dropZone').classList.remove('has-file');
+  document.getElementById('dropText').classList.remove('hidden');
+  document.getElementById('dropFileName').classList.add('hidden');
+  document.getElementById('dropFileName').textContent = '';
+}
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+/* ── DRAG & DROP ── */
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('inputFichier').files = dt.files;
+    afficherFichier(file);
+  }
+});
+
+function onFileSelect(input) {
+  if (input.files[0]) afficherFichier(input.files[0]);
+}
+function afficherFichier(file) {
+  const zone = document.getElementById('dropZone');
+  zone.classList.add('has-file');
+  document.getElementById('dropText').classList.add('hidden');
+  const fn = document.getElementById('dropFileName');
+  fn.classList.remove('hidden');
+  fn.textContent = `✅ ${file.name} (${fmtSize(file.size)})`;
+}
+
+/* ── SOUMETTRE ── */
+async function soumettre(e) {
+  e.preventDefault();
+  const fichier = document.getElementById('inputFichier').files[0];
+  if (!fichier) { toast('⚠️ Veuillez sélectionner un fichier', true); return; }
+
+  const btn = document.getElementById('btnSoumettre');
+  btn.disabled = true;
+  btn.textContent = '⏳ Envoi en cours...';
+
+  const fd = new FormData();
+  fd.append('fichier',    fichier);
+  fd.append('titre',      document.getElementById('inputTitre').value.trim());
+  fd.append('description', document.getElementById('inputDesc').value.trim());
+  fd.append('type',       document.getElementById('inputType').value);
+  fd.append('type_stage', document.getElementById('inputTypeStage').value);
+  fd.append('chef_id',    chefId);
+
+  try {
+    const r = await fetch('http://localhost:3000/ressources', { method:'POST', body: fd });
+    const d = await r.json();
+    if (d.success) {
+      toast('✅ Ressource envoyée avec succès !');
+      closeModal();
+      await charger();
+    } else {
+      toast('❌ Erreur : ' + (d.message || 'inconnu'), true);
+    }
+  } catch(err) { toast('❌ Erreur réseau', true); }
+
+  btn.disabled = false;
+  btn.textContent = '📤 Envoyer';
+}
+
+/* ── HELPERS ── */
+function stageLabel(ts) {
+  return { tous:'🌐 Tous', initiation:'🟡 Initiation', perfectionnement:'🟢 Perfectionnement', fin_etude:'🔴 PFE' }[ts] || ts;
+}
+function stageBadge(ts) {
+  return { tous:'badge-tous', initiation:'badge-initiation', perfectionnement:'badge-perfectionnement', fin_etude:'badge-fin_etude' }[ts] || 'badge-tous';
+}
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(0) + ' KB';
+  return (b/1024/1024).toFixed(1) + ' MB';
+}
+
+/* ── TOAST ── */
+function toast(msg, isError=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = isError ? '#ef4444' : '#059669';
+  el.style.transform = 'translateY(0)';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.transform = 'translateY(80px)'; el.style.opacity = '0'; }, 3500);
+}
+
+function logout() { localStorage.clear(); location.href = '/login.html'; }
+
+/* ── START ── */
+init();
+</script>
+</body>
+</html>

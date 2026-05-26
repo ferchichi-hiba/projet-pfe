@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Soutenances — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Cards demandes */
+    .demande-card { background:#fff; border-radius:14px; box-shadow:0 2px 10px rgba(12,35,64,.08); overflow:hidden; transition:all .25s; }
+    .demande-card:hover { box-shadow:0 6px 24px rgba(12,35,64,.14); }
+
+    .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:.72rem; font-weight:700; }
+    .badge-wait    { background:#fef3c7; color:#b45309; }
+    .badge-ok      { background:#d1fae5; color:#065f46; }
+    .badge-no      { background:#fee2e2; color:#991b1b; }
+    .badge-expired { background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:50; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .modal-overlay.hidden { display:none; }
+    .modal-box { background:#fff; border-radius:16px; padding:28px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; }
+    .modal-title { font-size:1.05rem; font-weight:700; color:#0c2340; margin-bottom:18px; }
+
+    input, textarea, select { outline:none; transition:border-color .2s; }
+    input:focus, textarea:focus, select:focus { border-color:#0c2340 !important; }
+
+    .filter-btn { padding:7px 16px; border-radius:8px; font-size:.8rem; font-weight:600; cursor:pointer; border:1px solid #e2e8f0; background:#fff; color:#64748b; transition:all .18s; }
+    .filter-btn.active { background:#0c2340; color:#fff; border-color:#0c2340; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html"    class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html" class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html"      class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html"   class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html" class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link active"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"  class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"   class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"      class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button onclick="logout()" class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <!-- Topbar -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">🎓</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Demandes de soutenance en ligne</h1>
+          <p class="text-xs text-gray-400">Examinez et traitez les demandes des étudiants</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="notifications.html" class="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500">
+          🔔 <span id="badgeNotif" class="absolute -top-1 -right-1 w-4 h-4 rounded-full text-white text-xs items-center justify-center hidden" style="background:#ef4444;font-size:.6rem">0</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="p-6 fade-in">
+
+      <!-- Filtres -->
+      <div class="flex gap-3 mb-6">
+        <button class="filter-btn active" onclick="setFilter('all', this)">Toutes</button>
+        <button class="filter-btn" onclick="setFilter('en_attente', this)">⏳ En attente</button>
+        <button class="filter-btn" onclick="setFilter('acceptee', this)">✅ Acceptées</button>
+        <button class="filter-btn" onclick="setFilter('refusee', this)">❌ Refusées</button>
+      </div>
+
+      <!-- Stats rapides -->
+      <div class="grid grid-cols-3 gap-4 mb-6" id="statsGrid"></div>
+
+      <!-- Liste des demandes -->
+      <div id="demandesList" class="space-y-4"></div>
+
+      <!-- Vide -->
+      <div id="emptyState" class="hidden text-center py-16">
+        <div class="text-5xl mb-4">🎓</div>
+        <p class="text-gray-400 font-medium">Aucune demande de soutenance</p>
+        <p class="text-gray-300 text-sm mt-1">Les demandes des étudiants apparaîtront ici</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL ACCEPTER -->
+<div class="modal-overlay hidden" id="modalAccepter">
+  <div class="modal-box">
+    <div class="modal-title">✅ Accepter la demande de soutenance</div>
+
+    <div id="modalEtudiantInfo" class="mb-4 p-3 rounded-xl text-sm text-gray-600" style="background:#f0f4fa"></div>
+
+    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Date de la soutenance *</label>
+    <input type="date" id="accDate" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3">
+
+    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Heure *</label>
+    <input type="time" id="accHeure" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-3">
+
+    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Message pour l'étudiant</label>
+    <textarea id="accMessage" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-4"
+      placeholder="Ex: Pensez à préparer vos diapositives. Rejoignez la salle 10 minutes avant..."></textarea>
+
+    <div class="flex gap-3">
+      <button onclick="confirmerAcceptation()"
+        class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
+        style="background:#059669">✅ Confirmer l'acceptation</button>
+      <button onclick="fermerModal()"
+        class="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REFUSER -->
+<div class="modal-overlay hidden" id="modalRefuser">
+  <div class="modal-box">
+    <div class="modal-title">❌ Refuser la demande de soutenance</div>
+
+    <div id="modalRefusInfo" class="mb-4 p-3 rounded-xl text-sm text-gray-600" style="background:#fff1f2;border:1px solid #fecdd3"></div>
+
+    <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Motif du refus (recommandé)</label>
+    <textarea id="refusMotif" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-4"
+      placeholder="Ex: Date non disponible. Merci de proposer une date après le 15 juin."></textarea>
+
+    <div class="flex gap-3">
+      <button onclick="confirmerRefus()"
+        class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
+        style="background:#dc2626">❌ Confirmer le refus</button>
+      <button onclick="fermerModal()"
+        class="px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600">
+        Annuler
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastEl" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0c2340;color:#fff;padding:10px 22px;border-radius:10px;font-size:.82rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.2);opacity:0;transition:all .3s;z-index:999;white-space:nowrap"></div>
+
+<script>
+let chefData  = null;
+let demandes  = [];
+let filtreActif = 'all';
+let demandeEnCours = null;
+
+/* ══ AUTH ══ */
+
+/* Vérifie si une soutenance acceptée est expirée (> 4h après l'heure prévue) */
+function isSoutenanceExpiree(d) {
+  if (!d.date_soutenance || !d.heure_soutenance) return false;
+  var heure = d.heure_soutenance.length === 5 ? d.heure_soutenance + ':00' : d.heure_soutenance;
+  var dt = new Date(d.date_soutenance.substring(0, 10) + 'T' + heure);
+  return Date.now() > dt.getTime() + 4 * 60 * 60 * 1000;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuth('chef_departement');
+  chefData = JSON.parse(localStorage.getItem('chef_data') || '{}');
+  const nom = chefData.nom || localStorage.getItem('user_nom') || 'Chef';
+  const prenom = chefData.prenom || localStorage.getItem('user_prenom') || '';
+  const dept = chefData.nom_departement || localStorage.getItem('dept_nom') || 'Département';
+  const deptId = chefData.departement_id || localStorage.getItem('dept_id');
+
+  document.getElementById('nomMenu').textContent = prenom + ' ' + nom;
+  document.getElementById('nomDept').textContent = dept;
+  const initials = (prenom[0] || '') + (nom[0] || '');
+  document.getElementById('avatarMenu').textContent = initials.toUpperCase() || 'CH';
+
+  if (deptId) chargerDemandes(deptId);
+  else document.getElementById('emptyState').classList.remove('hidden');
+});
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/login.html';
+}
+
+/* ══ CHARGER DEMANDES ══ */
+async function chargerDemandes(deptId) {
+  try {
+    const res = await fetch('/api/chef/soutenance-demandes/' + deptId);
+    demandes = await res.json();
+    renderAll();
+  } catch(e) {
+    showToast('Erreur de chargement', true);
+  }
+}
+
+function renderAll() {
+  renderStats();
+  renderListe();
+}
+
+function renderStats() {
+  const total    = demandes.length;
+  const attente  = demandes.filter(d => d.statut === 'en_attente').length;
+  const acceptee = demandes.filter(d => d.statut === 'acceptee').length;
+
+  const card = function(bg, icon, count, label, color) {
+    return '<div class="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4">'
+      + '<div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style="background:' + bg + '">' + icon + '</div>'
+      + '<div><div class="text-2xl font-bold"' + (color ? ' style="color:' + color + '"' : '') + '>' + count + '</div>'
+      + '<div class="text-xs text-gray-400 font-medium">' + label + '</div></div></div>';
+  };
+
+  document.getElementById('statsGrid').innerHTML =
+    card('#eff6ff', '🎓', total,    'Total demandes', '') +
+    card('#fffbeb', '⏳', attente,  'En attente',    '#b45309') +
+    card('#f0fdf4', '✅', acceptee, 'Acceptées',     '#059669');
+}
+
+function setFilter(val, btn) {
+  filtreActif = val;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderListe();
+}
+
+function renderListe() {
+  const filtered = filtreActif === 'all' ? demandes : demandes.filter(d => d.statut === filtreActif);
+  const container = document.getElementById('demandesList');
+  const empty     = document.getElementById('emptyState');
+
+  if (!filtered.length) {
+    container.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  container.innerHTML = filtered.map(function(d) {
+    var dateStr = d.date_souhaitee
+      ? new Date(d.date_souhaitee).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })
+      : null;
+    var soumisStr = new Date(d.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    var badgeCls = d.statut === 'en_attente' ? 'badge-wait' : d.statut === 'acceptee' ? 'badge-ok' : 'badge-no';
+    var badgeTxt = d.statut === 'en_attente' ? '⏳ En attente' : d.statut === 'acceptee' ? '✅ Acceptée' : '❌ Refusée';
+
+    // Soutenance acceptée mais expirée
+    var expirée = (d.statut === 'acceptee') && isSoutenanceExpiree(d);
+    if (expirée) {
+      badgeCls = 'badge-expired';
+      badgeTxt = '⌛ Expirée';
+    }
+
+    var accepteeInfo = '';
+    if (d.statut === 'acceptee' && d.date_soutenance) {
+      var dateSout = new Date(d.date_soutenance).toLocaleDateString('fr-FR', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+      if (expirée) {
+        accepteeInfo = '<div class="mt-3 p-3 rounded-xl text-sm" style="background:#fafafa;border:1px solid #e5e7eb;opacity:.8">'
+          + '<div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">⌛ Session expirée</div>'
+          + '<span style="color:#6b7280">📅 Était prévue le <strong>' + dateSout + ' à ' + (d.heure_soutenance || '—') + '</strong></span>'
+          + (d.lien_jitsi ? '<div class="mt-1"><span style="color:#9ca3af;text-decoration:line-through;font-size:.75rem;cursor:not-allowed">🔗 Session non disponible</span></div>' : '')
+          + '</div>';
+      } else {
+        accepteeInfo = '<div class="mt-3 p-3 rounded-xl text-sm" style="background:#f0fdf4;border:1px solid #bbf7d0">'
+          + '<span class="font-semibold text-green-700">📅 Soutenance prévue le </span>'
+          + '<span class="text-green-700">' + dateSout + ' à ' + (d.heure_soutenance || '—') + '</span>'
+          + (d.lien_jitsi ? '<div class="mt-1"><a href="' + esc(d.lien_jitsi) + '" target="_blank" class="text-green-600 underline text-xs">🔗 Rejoindre la soutenance</a></div>' : '')
+          + '</div>';
+      }
+    }
+
+    var refusInfo = '';
+    if (d.statut === 'refusee' && d.message_chef) {
+      refusInfo = '<div class="mt-3 p-3 rounded-xl text-sm" style="background:#fff1f2;border:1px solid #fecdd3">'
+        + '<span class="font-semibold text-red-600">Motif : </span><span class="text-red-600">' + esc(d.message_chef) + '</span></div>';
+    }
+
+    var actions = '';
+    if (d.statut === 'en_attente') {
+      actions = '<div class="flex gap-2 mt-4 pt-4" style="border-top:1px solid #f1f5f9">'
+        + '<button onclick="ouvrirAccepter(' + d.id + ')" class="flex-1 py-2 rounded-xl text-sm font-bold text-white" style="background:#059669">✅ Accepter</button>'
+        + '<button onclick="ouvrirRefuser(' + d.id + ')" class="flex-1 py-2 rounded-xl text-sm font-bold text-white" style="background:#dc2626">❌ Refuser</button>'
+        + '</div>';
+    }
+
+    return '<div class="demande-card p-5">'
+      + '<div class="flex items-start justify-between gap-4 flex-wrap">'
+        + '<div>'
+          + '<div class="flex items-center gap-2 mb-1">'
+            + '<span class="font-bold text-gray-800">' + esc(d.etudiant_nom) + '</span>'
+            + '<span class="badge ' + badgeCls + '">' + badgeTxt + '</span>'
+          + '</div>'
+          + '<div class="text-xs text-gray-400">Soumis le ' + soumisStr + '</div>'
+          + (d.titre_stage ? '<div class="text-sm text-gray-600 mt-1">📋 <span class="font-medium">' + esc(d.titre_stage) + '</span></div>' : '')
+          + (d.etudiant_email ? '<div class="text-xs text-gray-400 mt-0.5">✉️ ' + esc(d.etudiant_email) + '</div>' : '')
+        + '</div>'
+        + (dateStr ? '<div class="text-right text-sm text-gray-500"><div class="text-xs text-gray-400">Date souhaitée</div>' + dateStr + '</div>' : '')
+      + '</div>'
+      + (d.sujet ? '<div class="mt-3 p-3 rounded-xl text-sm text-gray-600" style="background:#f8fafc;border:1px solid #e2e8f0">'
+          + '<div class="text-xs font-semibold text-gray-400 uppercase mb-1">Sujet</div>' + esc(d.sujet) + '</div>' : '')
+      + (d.message ? '<div class="mt-2 text-sm text-gray-500 italic">"' + esc(d.message) + '"</div>' : '')
+      + accepteeInfo + refusInfo + actions
+      + '</div>';
+  }).join('');
+}
+
+/* ══ ACCEPTER ══ */
+function ouvrirAccepter(id) {
+  demandeEnCours = demandes.find(d => d.id === id);
+  if (!demandeEnCours) return;
+  document.getElementById('modalEtudiantInfo').innerHTML =
+    '<strong>' + esc(demandeEnCours.etudiant_nom) + '</strong>' +
+    (demandeEnCours.titre_stage ? ' — ' + esc(demandeEnCours.titre_stage) : '') +
+    (demandeEnCours.date_souhaitee ? '<br><span style="color:#6b7280">Date souhaitée : ' + new Date(demandeEnCours.date_souhaitee).toLocaleDateString('fr-FR') + '</span>' : '');
+  document.getElementById('accDate').value = '';
+  document.getElementById('accHeure').value = '';
+  document.getElementById('accMessage').value = '';
+  document.getElementById('modalAccepter').classList.remove('hidden');
+}
+
+async function confirmerAcceptation() {
+  const date  = document.getElementById('accDate').value;
+  const heure = document.getElementById('accHeure').value;
+  const msg   = document.getElementById('accMessage').value.trim();
+  if (!date || !heure) return showToast('Date et heure obligatoires', true);
+
+  try {
+    const res = await fetch('/api/chef/soutenance-demande/' + demandeEnCours.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'acceptee', date_soutenance: date, heure_soutenance: heure, message_chef: msg || null })
+    });
+    const data = await res.json();
+    if (!res.ok) return showToast(data.message || 'Erreur', true);
+    fermerModal();
+    showToast('Soutenance acceptée ! L\'étudiant a été notifié.', false);
+    setTimeout(() => {
+      const deptId = (JSON.parse(localStorage.getItem('chef_data') || '{}')).departement_id || localStorage.getItem('dept_id');
+      chargerDemandes(deptId);
+    }, 800);
+  } catch(e) { showToast('Erreur réseau', true); }
+}
+
+/* ══ REFUSER ══ */
+function ouvrirRefuser(id) {
+  demandeEnCours = demandes.find(d => d.id === id);
+  if (!demandeEnCours) return;
+  document.getElementById('modalRefusInfo').innerHTML =
+    '<strong>' + esc(demandeEnCours.etudiant_nom) + '</strong>' +
+    (demandeEnCours.titre_stage ? ' — ' + esc(demandeEnCours.titre_stage) : '');
+  document.getElementById('refusMotif').value = '';
+  document.getElementById('modalRefuser').classList.remove('hidden');
+}
+
+async function confirmerRefus() {
+  const motif = document.getElementById('refusMotif').value.trim();
+  try {
+    const res = await fetch('/api/chef/soutenance-demande/' + demandeEnCours.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: 'refusee', message_chef: motif || null })
+    });
+    const data = await res.json();
+    if (!res.ok) return showToast(data.message || 'Erreur', true);
+    fermerModal();
+    showToast('Demande refusée. L\'étudiant a été notifié.', false);
+    setTimeout(() => {
+      const deptId = (JSON.parse(localStorage.getItem('chef_data') || '{}')).departement_id || localStorage.getItem('dept_id');
+      chargerDemandes(deptId);
+    }, 800);
+  } catch(e) { showToast('Erreur réseau', true); }
+}
+
+function fermerModal() {
+  document.getElementById('modalAccepter').classList.add('hidden');
+  document.getElementById('modalRefuser').classList.add('hidden');
+  demandeEnCours = null;
+}
+
+/* ══ UTILS ══ */
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg, isErr) {
+  const t = document.getElementById('toastEl');
+  t.style.background = isErr ? '#dc2626' : '#059669';
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(60px)';
+  }, 3200);
+}
+
+// Fermer modal en cliquant en dehors
+['modalAccepter','modalRefuser'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) fermerModal();
+  });
+});
+</script>
+</body>
+</html>

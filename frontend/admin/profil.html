@@ -1,0 +1,401 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Profil — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .carte { transition: all .25s; }
+    .carte:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(12,35,64,.14); }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"   class="nav-link"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"    class="nav-link"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"     class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html"  class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"        class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"        class="nav-link"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"         class="nav-link active"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">👤</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Mon Profil</h1>
+          <p class="text-xs text-gray-400">Consultez et modifiez vos informations</p>
+        </div>
+      </div>
+      
+    </div>
+    <div class="p-6 fade-in max-w-4xl mx-auto">
+      <div id="msgSucces" class="hidden mb-4 rounded-xl p-4 flex items-center gap-3" style="background:#f0fdf4;border:1.5px solid #86efac;color:#166534">
+        <span class="text-2xl">✅</span><p id="texteSucces" class="font-medium"></p>
+      </div>
+      <div id="msgErreur" class="hidden mb-4 rounded-xl p-4 flex items-center gap-3" style="background:#fff1f2;border:1.5px solid #fca5a5;color:#991b1b">
+        <span class="text-2xl">❌</span><p id="texteErreur" class="font-medium"></p>
+      </div>
+      <div class="bg-white rounded-2xl p-8 mb-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex items-center gap-6 mb-8 pb-8" style="border-bottom:1px solid #f0f4fa">
+          <label class="relative cursor-pointer group block flex-shrink-0" style="width:6rem;height:6rem" title="Changer la photo">
+            <div id="avatarGrand" class="w-24 h-24 rounded-full flex items-center justify-center font-bold text-3xl text-white overflow-hidden"
+                 style="background:linear-gradient(135deg,#0c2340,#163a5f)">AD</div>
+            <div class="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition pointer-events-none"
+                 style="background:rgba(0,0,0,0.4)">
+              <span class="text-white text-2xl">📷</span>
+            </div>
+            <input type="file" accept="image/*" class="hidden" onchange="uploadPhoto(this)">
+          </label>
+          <div>
+            <h2 id="nomComplet" class="text-2xl font-bold" style="color:#0c2340">--</h2>
+            <p class="font-medium mt-1" style="color:#c9930a">👑 Administrateur Système</p>
+            <p id="dateInscription" class="text-gray-400 text-sm mt-1">--</p>
+          </div>
+        </div>
+        <h3 class="font-bold mb-4 text-lg" style="color:#0c2340">✏️ Modifier mes informations</h3>
+
+        <!-- Informations actuelles enregistrées -->
+        <div class="mb-5 p-4 rounded-xl" style="background:#f8fafc;border:1.5px solid #e2e8f0">
+          <p class="text-xs font-semibold uppercase tracking-wide mb-3" style="color:#64748b">📋 Valeurs actuellement enregistrées</p>
+          <div class="grid grid-cols-2 gap-y-2 gap-x-6 text-sm">
+            <div class="flex gap-2"><span class="text-gray-400 w-20 flex-shrink-0">Prénom :</span><span id="actuelPrenom" class="font-medium text-gray-700">--</span></div>
+            <div class="flex gap-2"><span class="text-gray-400 w-20 flex-shrink-0">Nom :</span><span id="actuelNom" class="font-medium text-gray-700">--</span></div>
+            <div class="flex gap-2"><span class="text-gray-400 w-20 flex-shrink-0">Email :</span><span id="actuelEmail" class="font-medium text-gray-700 break-all">--</span></div>
+            <div class="flex gap-2"><span class="text-gray-400 w-20 flex-shrink-0">Téléphone :</span><span id="actuelTel" class="font-medium text-gray-700">--</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Prénom</label>
+            <input id="inputPrenom" type="text" oninput="verifierChamp('inputPrenom','errPrenom',validPrenom)"
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errPrenom" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Nom</label>
+            <input id="inputNom" type="text" oninput="verifierChamp('inputNom','errNom',validNom)"
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errNom" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Email</label>
+            <input id="inputEmail" type="email" oninput="verifierChamp('inputEmail','errEmail',validEmail)"
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errEmail" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Téléphone <span class="text-gray-400 font-normal">(optionnel)</span></label>
+            <input id="inputTel" type="text" placeholder="+216 XX XXX XXX" oninput="verifierChamp('inputTel','errTel',validTel)"
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errTel" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="sauvegarderProfil()" class="text-white px-6 py-3 rounded-xl font-medium text-sm transition" style="background:#0c2340">
+            💾 Sauvegarder les modifications
+          </button>
+          <button onclick="annulerModifs()" class="px-6 py-3 rounded-xl font-medium text-sm transition bg-gray-100 hover:bg-gray-200 text-gray-600">
+            ↩️ Annuler les modifications
+          </button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-8" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <h3 class="font-bold mb-4 text-lg" style="color:#0c2340">🔒 Changer le mot de passe</h3>
+        <div class="space-y-4 max-w-md">
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Ancien mot de passe</label>
+            <input id="inputAncien" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errAncien" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Nouveau mot de passe <span class="text-gray-400 font-normal">(min. 6 caractères)</span></label>
+            <input id="inputNouveau" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errNouveau" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+          <div>
+            <label class="text-sm font-medium text-gray-600 mb-1 block">Confirmer le mot de passe</label>
+            <input id="inputConfirm" type="password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none transition-colors"/>
+            <p id="errConfirm" class="hidden text-xs text-red-500 mt-1"></p>
+          </div>
+          <button onclick="changerPassword()" class="text-white px-6 py-3 rounded-xl font-medium text-sm transition" style="background:#163a5f">
+            🔒 Changer le mot de passe
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+  const ADMIN_ID = parseInt(localStorage.getItem('admin_id'));
+  let profilOriginal = null;
+
+  // ── Règles de validation ───────────────────────────────
+  const validPrenom = v => {
+    if (!v.trim())              return 'Le prénom est obligatoire.';
+    if (v.trim().length < 2)    return 'Le prénom doit contenir au moins 2 caractères.';
+    if (v.trim().length > 50)   return 'Le prénom ne doit pas dépasser 50 caractères.';
+    if (!/^[a-zA-ZÀ-ÿ\s\-']+$/.test(v.trim())) return 'Le prénom ne doit contenir que des lettres.';
+    return null;
+  };
+  const validNom = v => {
+    if (!v.trim())              return 'Le nom est obligatoire.';
+    if (v.trim().length < 2)    return 'Le nom doit contenir au moins 2 caractères.';
+    if (v.trim().length > 50)   return 'Le nom ne doit pas dépasser 50 caractères.';
+    if (!/^[a-zA-ZÀ-ÿ\s\-']+$/.test(v.trim())) return 'Le nom ne doit contenir que des lettres.';
+    return null;
+  };
+  const validEmail = v => {
+    if (!v.trim()) return 'L\'email est obligatoire.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) return 'Adresse email invalide.';
+    return null;
+  };
+  const validTel = v => {
+    if (!v.trim()) return null; // optionnel
+    const digits = v.replace(/[\s\-().+]/g, '');
+    if (!/^\d+$/.test(digits))     return 'Le numéro ne doit contenir que des chiffres.';
+    if (digits.length !== 8)       return 'Le numéro doit contenir exactement 8 chiffres.';
+    return null;
+  };
+
+  // ── Vérification en temps réel ─────────────────────────
+  function verifierChamp(inputId, errId, validFn) {
+    const input = document.getElementById(inputId);
+    const errEl = document.getElementById(errId);
+    const err   = validFn(input.value);
+    if (err) {
+      input.style.borderColor = '#f87171';
+      errEl.textContent = err;
+      errEl.classList.remove('hidden');
+      return false;
+    }
+    // Bordure ambre si la valeur a changé
+    if (profilOriginal) {
+      const map  = { inputPrenom:'prenom', inputNom:'nom', inputEmail:'email', inputTel:'telephone' };
+      const orig = profilOriginal[map[inputId]] || '';
+      input.style.borderColor = input.value.trim() !== orig.trim() ? '#f59e0b' : '#e5e7eb';
+    } else {
+      input.style.borderColor = '#e5e7eb';
+    }
+    errEl.classList.add('hidden');
+    return true;
+  }
+
+  // ── Chargement du profil ───────────────────────────────
+  async function chargerProfil() {
+    const reponse = await fetch(`${API}/api/admin/profil/${ADMIN_ID}`);
+    const user    = await reponse.json();
+    profilOriginal = user;
+
+    document.getElementById('nomComplet').textContent      = `${user.prenom} ${user.nom}`;
+    const initials = (user.prenom[0] + user.nom[0]).toUpperCase();
+    if (user.photo) {
+      document.getElementById('avatarGrand').innerHTML = '<img src="' + API + '/uploads/' + user.photo + '" class="w-full h-full object-cover rounded-full">';
+    } else {
+      document.getElementById('avatarGrand').textContent = initials;
+    }
+    document.getElementById('dateInscription').textContent = `Membre depuis ${new Date(user.created_at).toLocaleDateString('fr-FR')}`;
+
+    // Carte "valeurs actuelles"
+    document.getElementById('actuelPrenom').textContent = user.prenom;
+    document.getElementById('actuelNom').textContent    = user.nom;
+    document.getElementById('actuelEmail').textContent  = user.email;
+    document.getElementById('actuelTel').textContent    = user.telephone || '—';
+
+    // Formulaire
+    document.getElementById('inputPrenom').value = user.prenom;
+    document.getElementById('inputNom').value    = user.nom;
+    document.getElementById('inputEmail').value  = user.email;
+    document.getElementById('inputTel').value    = user.telephone || '';
+
+    // Réinitialiser les bordures et erreurs
+    ['inputPrenom','inputNom','inputEmail','inputTel'].forEach(id => {
+      document.getElementById(id).style.borderColor = '#e5e7eb';
+    });
+    ['errPrenom','errNom','errEmail','errTel'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+  }
+
+  // ── Annuler les modifications ──────────────────────────
+  function annulerModifs() {
+    if (!profilOriginal) return;
+    document.getElementById('inputPrenom').value = profilOriginal.prenom;
+    document.getElementById('inputNom').value    = profilOriginal.nom;
+    document.getElementById('inputEmail').value  = profilOriginal.email;
+    document.getElementById('inputTel').value    = profilOriginal.telephone || '';
+    ['inputPrenom','inputNom','inputEmail','inputTel'].forEach(id => {
+      document.getElementById(id).style.borderColor = '#e5e7eb';
+    });
+    ['errPrenom','errNom','errEmail','errTel'].forEach(id => {
+      document.getElementById(id).classList.add('hidden');
+    });
+  }
+
+  // ── Sauvegarder le profil ──────────────────────────────
+  async function sauvegarderProfil() {
+    const ok = [
+      verifierChamp('inputPrenom','errPrenom', validPrenom),
+      verifierChamp('inputNom','errNom', validNom),
+      verifierChamp('inputEmail','errEmail', validEmail),
+      verifierChamp('inputTel','errTel', validTel),
+    ];
+    if (ok.includes(false)) { afficherErreur('Veuillez corriger les erreurs indiquées.'); return; }
+
+    const prenom    = document.getElementById('inputPrenom').value.trim();
+    const nom       = document.getElementById('inputNom').value.trim();
+    const email     = document.getElementById('inputEmail').value.trim();
+    const telephone = document.getElementById('inputTel').value.trim();
+
+    if (profilOriginal &&
+        prenom    === profilOriginal.prenom &&
+        nom       === profilOriginal.nom &&
+        email     === profilOriginal.email &&
+        telephone === (profilOriginal.telephone || '')) {
+      afficherErreur('Aucune modification détectée.');
+      return;
+    }
+
+    const reponse = await fetch(`${API}/api/admin/profil/${ADMIN_ID}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenom, nom, email, telephone })
+    });
+    const data = await reponse.json();
+    if (reponse.ok) { afficherSucces(data.message || 'Profil mis à jour avec succès !'); chargerProfil(); }
+    else afficherErreur(data.message || 'Erreur lors de la sauvegarde.');
+  }
+
+  // ── Changer le mot de passe ────────────────────────────
+  function setPwErr(inputId, msg) {
+    const el = document.getElementById(inputId);
+    el.style.borderColor = '#f87171';
+    const err = document.getElementById('err' + inputId.replace('input',''));
+    if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+  }
+  function resetPw(inputId) {
+    document.getElementById(inputId).style.borderColor = '#e5e7eb';
+    const err = document.getElementById('err' + inputId.replace('input',''));
+    if (err) err.classList.add('hidden');
+  }
+
+  async function changerPassword() {
+    const ancien  = document.getElementById('inputAncien').value;
+    const nouveau = document.getElementById('inputNouveau').value;
+    const confirm = document.getElementById('inputConfirm').value;
+    let hasError = false;
+
+    if (!ancien)  { setPwErr('inputAncien',  'L\'ancien mot de passe est requis.'); hasError = true; } else resetPw('inputAncien');
+
+    if (!nouveau) { setPwErr('inputNouveau', 'Le nouveau mot de passe est requis.'); hasError = true; }
+    else if (nouveau.length < 6) { setPwErr('inputNouveau', 'Minimum 6 caractères requis.'); hasError = true; }
+    else if (nouveau === ancien) { setPwErr('inputNouveau', 'Le nouveau mot de passe doit être différent de l\'ancien.'); hasError = true; }
+    else resetPw('inputNouveau');
+
+    if (!confirm)          { setPwErr('inputConfirm', 'Veuillez confirmer le mot de passe.'); hasError = true; }
+    else if (nouveau !== confirm) { setPwErr('inputConfirm', 'Les mots de passe ne correspondent pas.'); hasError = true; }
+    else resetPw('inputConfirm');
+
+    if (hasError) return;
+
+    const reponse = await fetch(`${API}/api/admin/profil/${ADMIN_ID}/password`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ancien, nouveau })
+    });
+    const data = await reponse.json();
+    if (reponse.ok) {
+      afficherSucces(data.message || 'Mot de passe changé avec succès !');
+      ['inputAncien','inputNouveau','inputConfirm'].forEach(id => { document.getElementById(id).value = ''; resetPw(id); });
+    } else {
+      setPwErr('inputAncien', data.message || 'Ancien mot de passe incorrect.');
+      afficherErreur(data.message || 'Erreur lors du changement de mot de passe.');
+    }
+  }
+
+  // ── Notifications ──────────────────────────────────────
+  function afficherSucces(msg) {
+    document.getElementById('texteSucces').textContent = msg;
+    document.getElementById('msgSucces').classList.remove('hidden');
+    document.getElementById('msgErreur').classList.add('hidden');
+    setTimeout(() => document.getElementById('msgSucces').classList.add('hidden'), 4000);
+  }
+  function afficherErreur(msg) {
+    document.getElementById('texteErreur').textContent = msg;
+    document.getElementById('msgErreur').classList.remove('hidden');
+    document.getElementById('msgSucces').classList.add('hidden');
+    setTimeout(() => document.getElementById('msgErreur').classList.add('hidden'), 4000);
+  }
+
+  async function uploadPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('photo', file);
+    try {
+      const r = await fetch(`${API}/api/profil/${ADMIN_ID}/photo`, { method: 'PUT', body: fd });
+      const data = await r.json();
+      if (r.ok) {
+        document.getElementById('avatarGrand').innerHTML = '<img src="' + API + '/uploads/' + data.photo + '" class="w-full h-full object-cover rounded-full">';
+        afficherSucces(data.message || 'Photo mise à jour !');
+      } else {
+        afficherErreur(data.message || 'Erreur lors de l\'upload.');
+      }
+    } catch (e) {
+      afficherErreur('Erreur réseau lors de l\'upload.');
+    }
+  }
+
+  chargerProfil();
+</script>
+</body>
+</html>

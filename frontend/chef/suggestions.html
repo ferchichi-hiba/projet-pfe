@@ -1,0 +1,328 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Suggestions — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .carte { transition: all .25s; }
+    .carte:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(12,35,64,.14); }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html" class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html" class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html" class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html" class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"   class="nav-link active"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"    class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5"><span class="nav-icon">🚪</span> Déconnexion</button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">💡</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Suggestions de stages</h1>
+          <p class="text-xs text-gray-400">Publiez des sujets et gérez les propositions des encadrants</p>
+        </div>
+      </div>
+      <button onclick="ouvrirModal()" class="flex items-center gap-2 text-sm font-medium text-white px-4 py-2 rounded-xl transition" style="background:#0c2340">➕ Nouvelle suggestion</button>
+    </div>
+
+    <div class="p-6 fade-in">
+      <div id="msgSucces" class="hidden mb-4 rounded-xl p-4 flex items-center gap-3" style="background:#f0fdf4;border:1.5px solid #86efac;color:#166534">
+        <span class="text-2xl">✅</span><p id="texteSucces" class="font-medium"></p>
+      </div>
+
+      <!-- Suggestions encadrants en attente -->
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-4">
+          <h2 class="text-base font-bold" style="color:#0c2340">📨 Suggestions des encadrants</h2>
+          <span id="badgeAttente" class="hidden text-xs font-bold px-2 py-0.5 rounded-full text-white" style="background:#dc2626"></span>
+        </div>
+        <div id="listeEncadrants" class="grid grid-cols-2 gap-4">
+          <p class="text-sm text-gray-400 col-span-2">⏳ Chargement...</p>
+        </div>
+      </div>
+
+      <hr class="border-gray-200 mb-6"/>
+
+      <h2 class="text-base font-bold mb-4" style="color:#0c2340">📢 Mes suggestions publiées</h2>
+      <div class="bg-white rounded-2xl p-4 mb-6 flex gap-4 items-center" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <select id="filtreType" onchange="filtrer()" class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les types</option>
+          <option value="initiation">Initiation</option>
+          <option value="perfectionnement">Perfectionnement</option>
+          <option value="fin_etude">PFE</option>
+        </select>
+        <select id="filtreDisponible" onchange="filtrer()" class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les statuts</option>
+          <option value="1">Disponibles</option>
+          <option value="0">Désactivées</option>
+        </select>
+        <span id="compteur" class="ml-auto text-sm text-gray-400"></span>
+      </div>
+      <div id="listeSuggestions" class="grid grid-cols-2 gap-4">
+        <p class="text-center text-gray-400 py-8 col-span-2">⏳ Chargement...</p>
+      </div>
+    </div>
+
+    <!-- MODAL REJET -->
+    <div id="modalRejet" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold mb-4" style="color:#0c2340">❌ Rejeter la suggestion</h3>
+        <p class="text-sm text-gray-500 mb-3">Motif du rejet (optionnel) :</p>
+        <textarea id="inputMotif" rows="3" placeholder="Expliquez pourquoi..."
+                  class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none resize-none mb-4"></textarea>
+        <div class="flex gap-3">
+          <button onclick="fermerModalRejet()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-xl text-sm font-medium transition">Annuler</button>
+          <button onclick="confirmerRejet()" class="flex-1 text-white py-2 rounded-xl text-sm font-medium transition" style="background:#dc2626">❌ Rejeter</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL NOUVELLE SUGGESTION -->
+<div id="modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-bold" style="color:#0c2340">➕ Nouvelle suggestion</h3>
+      <button onclick="fermerModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+    </div>
+    <div class="space-y-4">
+      <div><label class="text-sm font-medium text-gray-600 mb-1 block">Titre du sujet</label>
+        <input id="inputTitre" type="text" placeholder="Ex: Application de gestion..." class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/></div>
+      <div><label class="text-sm font-medium text-gray-600 mb-1 block">Description</label>
+        <textarea id="inputDesc" rows="3" placeholder="Décrivez le sujet..." class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none resize-none"></textarea></div>
+      <div><label class="text-sm font-medium text-gray-600 mb-1 block">Technologies</label>
+        <input id="inputTech" type="text" placeholder="Ex: Node.js, React, MySQL" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/></div>
+      <div><label class="text-sm font-medium text-gray-600 mb-1 block">Type de stage</label>
+        <select id="inputType" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none">
+          <option value="initiation">Initiation (1ère année)</option>
+          <option value="perfectionnement">Perfectionnement (2ème année)</option>
+          <option value="fin_etude">PFE (3ème année)</option>
+        </select></div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm transition">Annuler</button>
+      <button onclick="publierSuggestion()" class="flex-1 text-white py-3 rounded-xl font-medium text-sm transition" style="background:#0c2340">📢 Publier</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  checkAuth('chef_departement');
+  const API     = 'http://localhost:3000';
+  const CHEF_ID = parseInt(localStorage.getItem('chef_id'));
+  const DEPT_ID = parseInt(localStorage.getItem('dept_id'));
+  let toutesLesSuggestions = [];
+  let suggestionARejeter = null;
+
+  async function chargerSuggestions() {
+    const r1   = await fetch(`${API}/api/admin/departements/${DEPT_ID}`);
+    const data = await r1.json();
+    document.getElementById('nomDept').textContent = data.dept.nom;
+
+    const r2 = await fetch(`${API}/api/chef/suggestions/${DEPT_ID}`);
+    toutesLesSuggestions = await r2.json();
+    const messuggestions = toutesLesSuggestions.filter(s => s.statut === 'approuvee' || s.statut == null || s.statut === undefined);
+    document.getElementById('compteur').textContent = `${messuggestions.length} suggestion(s)`;
+    afficherSuggestions(messuggestions);
+    await chargerSuggestionsEncadrants();
+  }
+
+  async function chargerSuggestionsEncadrants() {
+    const r = await fetch(`${API}/api/chef/suggestions-encadrants/${DEPT_ID}`);
+    const suggestions = await r.json();
+    const badge = document.getElementById('badgeAttente');
+    if (suggestions.length > 0) { badge.textContent = suggestions.length; badge.classList.remove('hidden'); }
+    else badge.classList.add('hidden');
+
+    const container = document.getElementById('listeEncadrants');
+    if (suggestions.length === 0) {
+      container.innerHTML = `<div class="bg-white rounded-2xl p-6 text-center col-span-2" style="box-shadow:0 2px 12px rgba(12,35,64,.07)"><p class="text-gray-400 text-sm">✅ Aucune suggestion en attente d'approbation.</p></div>`;
+      return;
+    }
+    container.innerHTML = suggestions.map(s => {
+      const techHtml = s.technologies ? s.technologies.split(',').map(t => `<span class="px-2 py-1 rounded-lg text-xs" style="background:#eef2f7;color:#0c2340">${t.trim()}</span>`).join('') : '';
+      return `<div class="bg-white rounded-2xl p-5" style="border-left:4px solid #c9930a;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex-1">
+            <h3 class="font-bold text-gray-800">${s.titre}</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Par ${s.auteur} · ${badgeType(s.type_stage)}</p>
+          </div>
+          <span class="text-xs font-semibold px-2 py-1 rounded-full ml-2" style="background:#fef3c7;color:#c9930a">⏳ En attente</span>
+        </div>
+        <p class="text-gray-500 text-sm mb-3">${s.description || '—'}</p>
+        ${techHtml ? `<div class="flex flex-wrap gap-2 mb-3">${techHtml}</div>` : ''}
+        <div class="flex gap-2 mt-2">
+          <button onclick="approuver(${s.id})" class="flex-1 text-white text-sm py-2 rounded-xl font-medium transition" style="background:#059669">✅ Approuver</button>
+          <button onclick="ouvrirModalRejet(${s.id})" class="flex-1 text-sm py-2 rounded-xl font-medium transition" style="background:#fff1f2;color:#dc2626;border:1px solid #fca5a5">❌ Rejeter</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function approuver(id) {
+    const r = await fetch(`${API}/api/chef/suggestions/${id}/approuver`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chef_id: CHEF_ID })
+    });
+    const data = await r.json();
+    afficherSucces(data.message);
+    chargerSuggestions();
+  }
+
+  function ouvrirModalRejet(id) {
+    suggestionARejeter = id;
+    document.getElementById('inputMotif').value = '';
+    document.getElementById('modalRejet').classList.remove('hidden');
+  }
+  function fermerModalRejet() { document.getElementById('modalRejet').classList.add('hidden'); suggestionARejeter = null; }
+
+  async function confirmerRejet() {
+    const motif = document.getElementById('inputMotif').value.trim();
+    const r = await fetch(`${API}/api/chef/suggestions/${suggestionARejeter}/rejeter`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ motif })
+    });
+    const data = await r.json();
+    fermerModalRejet();
+    afficherSucces(data.message);
+    chargerSuggestions();
+  }
+  document.getElementById('modalRejet').addEventListener('click', function(e) { if (e.target === this) fermerModalRejet(); });
+
+  function afficherSuggestions(suggestions) {
+    const container = document.getElementById('listeSuggestions');
+    container.innerHTML = '';
+    if (suggestions.length === 0) {
+      container.innerHTML = `<div class="bg-white rounded-2xl p-10 text-center col-span-2" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <p class="text-5xl mb-4">💡</p><p class="text-xl font-bold" style="color:#0c2340">Aucune suggestion</p>
+        <p class="text-gray-400 mt-2">Cliquez sur "Nouvelle suggestion" pour commencer</p></div>`;
+      return;
+    }
+    suggestions.forEach(s => {
+      container.innerHTML += `<div class="bg-white rounded-2xl p-6 carte" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex-1">
+            <h3 class="font-bold text-gray-800 text-lg">${s.titre}</h3>
+            <p class="text-xs text-gray-400 mt-1">Par ${s.auteur}</p>
+          </div>
+          <span class="px-2 py-1 rounded-full text-xs font-medium ml-2 ${s.est_disponible ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">${s.est_disponible ? '🟢 Disponible' : '🔴 Désactivée'}</span>
+        </div>
+        <p class="text-gray-600 text-sm mb-4">${s.description || '—'}</p>
+        ${s.technologies ? `<div class="flex flex-wrap gap-2 mb-4">${s.technologies.split(',').map(t => `<span class="px-2 py-1 rounded-lg text-xs" style="background:#eef2f7;color:#0c2340">${t.trim()}</span>`).join('')}</div>` : ''}
+        <div class="flex justify-between items-center">
+          ${badgeType(s.type_stage)}
+          <div class="flex gap-2">
+            <button onclick="toggleDisponible(${s.id}, ${s.est_disponible})" class="text-xs px-3 py-1 rounded-lg border transition ${s.est_disponible ? 'border-red-200 text-red-500 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}">${s.est_disponible ? '🔴 Désactiver' : '🟢 Activer'}</button>
+            <button onclick="supprimer(${s.id})" class="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  function filtrer() {
+    const type  = document.getElementById('filtreType').value;
+    const dispo = document.getElementById('filtreDisponible').value;
+    const result = toutesLesSuggestions.filter(s => {
+      const okType  = type  === '' || s.type_stage    === type;
+      const okDispo = dispo === '' || String(s.est_disponible) === dispo;
+      return okType && okDispo;
+    });
+    afficherSuggestions(result);
+  }
+
+  async function publierSuggestion() {
+    const body = { titre: document.getElementById('inputTitre').value, description: document.getElementById('inputDesc').value, technologies: document.getElementById('inputTech').value, type_stage: document.getElementById('inputType').value, dept_id: DEPT_ID, chef_id: CHEF_ID };
+    if (!body.titre) { alert('⚠️ Le titre est obligatoire !'); return; }
+    const reponse = await fetch(`${API}/api/chef/suggestions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await reponse.json();
+    fermerModal();
+    afficherSucces(data.message);
+    chargerSuggestions();
+  }
+
+  async function toggleDisponible(id, estDispo) {
+    await fetch(`${API}/api/chef/suggestions/${id}/disponible`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ est_disponible: estDispo ? 0 : 1 }) });
+    chargerSuggestions();
+  }
+
+  async function supprimer(id) {
+    if (!confirm('Supprimer cette suggestion ?')) return;
+    await fetch(`${API}/api/chef/suggestions/${id}`, { method: 'DELETE' });
+    afficherSucces('Suggestion supprimée !');
+    chargerSuggestions();
+  }
+
+  function ouvrirModal() { document.getElementById('modal').classList.remove('hidden'); document.getElementById('inputTitre').value = ''; document.getElementById('inputDesc').value = ''; document.getElementById('inputTech').value = ''; }
+  function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
+  document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) fermerModal(); });
+
+  function afficherSucces(msg) {
+    document.getElementById('texteSucces').textContent = msg;
+    document.getElementById('msgSucces').classList.remove('hidden');
+    setTimeout(() => document.getElementById('msgSucces').classList.add('hidden'), 3000);
+  }
+  function badgeType(type) {
+    const s = { initiation:'bg-green-100 text-green-600', perfectionnement:'bg-amber-100 text-amber-600', fin_etude:'bg-red-100 text-red-600' };
+    const l = { initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+    return `<span class="${s[type]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[type]||type}</span>`;
+  }
+  chargerSuggestions();
+</script>
+</body>
+</html>

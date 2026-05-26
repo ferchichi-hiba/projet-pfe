@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Notifications — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .notif-card { transition: all .25s; }
+    .notif-card:hover { transform: translateX(4px); }
+    .notif-card.dismissed { opacity: 0; transform: translateX(20px); transition: all .3s ease; pointer-events: none; }
+    .filtre-btn { transition: all .2s; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div>
+          <p class="text-white font-bold text-sm">Gestion Stages</p>
+          <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p>
+        </div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"  class="nav-link"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"   class="nav-link"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html" class="nav-link active"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"       class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"       class="nav-link"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">🔔</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Notifications</h1>
+          <p class="text-xs text-gray-400">Alertes et événements importants</p>
+        </div>
+      </div>
+      <button onclick="toutDismisser()"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition bg-gray-100 hover:bg-gray-200 text-gray-600">
+        ✅ Tout marquer comme lu
+      </button>
+    </div>
+
+    <div class="p-6 fade-in max-w-4xl mx-auto">
+
+      <!-- Compteurs rapides -->
+      <div id="compteursSection" class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="box-shadow:0 2px 12px rgba(12,35,64,.07);border-left:4px solid #3b82f6">
+          <span class="text-3xl">👤</span>
+          <div>
+            <p id="cptComptes" class="text-2xl font-bold" style="color:#0c2340">--</p>
+            <p class="text-xs text-gray-400">Nouveaux comptes (7j)</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="box-shadow:0 2px 12px rgba(12,35,64,.07);border-left:4px solid #f59e0b">
+          <span class="text-3xl">⏳</span>
+          <div>
+            <p id="cptStages" class="text-2xl font-bold" style="color:#0c2340">--</p>
+            <p class="text-xs text-gray-400">Stages en attente</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="box-shadow:0 2px 12px rgba(12,35,64,.07);border-left:4px solid #dc2626">
+          <span class="text-3xl">⛔</span>
+          <div>
+            <p id="cptSuspendus" class="text-2xl font-bold" style="color:#0c2340">--</p>
+            <p class="text-xs text-gray-400">Comptes suspendus</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtres -->
+      <div class="bg-white rounded-2xl p-4 mb-5 flex gap-2 flex-wrap"
+           style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <button onclick="filtrer('')"           id="f-tous"           class="filtre-btn px-4 py-2 rounded-xl text-sm font-medium text-white"    style="background:#0c2340">Tout afficher</button>
+        <button onclick="filtrer('nouveau_compte')" id="f-nouveau_compte"  class="filtre-btn px-4 py-2 rounded-xl text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100">👤 Nouveaux comptes</button>
+        <button onclick="filtrer('stage_attente')"  id="f-stage_attente"   class="filtre-btn px-4 py-2 rounded-xl text-sm font-medium bg-amber-50 text-amber-600 hover:bg-amber-100">⏳ Stages en attente</button>
+        <button onclick="filtrer('compte_suspendu')" id="f-compte_suspendu" class="filtre-btn px-4 py-2 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100">⛔ Comptes suspendus</button>
+      </div>
+
+      <!-- Liste des notifications -->
+      <div id="listeNotifs" class="space-y-3">
+        <div class="bg-white rounded-2xl p-8 text-center text-gray-400" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          ⏳ Chargement des notifications...
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+  let toutesNotifs = [];
+  let filtreActuel = '';
+
+  const couleurs = {
+    nouveau_compte: { bg:'bg-blue-100', text:'text-blue-600', border:'#3b82f6', badge:'bg-blue-500' },
+    stage_attente:  { bg:'bg-amber-100', text:'text-amber-600', border:'#f59e0b', badge:'bg-amber-500' },
+    compte_suspendu:{ bg:'bg-red-100', text:'text-red-600', border:'#dc2626', badge:'bg-red-500' },
+  };
+
+  async function chargerNotifications() {
+    const r = await fetch(`${API}/api/admin/notifications`);
+    toutesNotifs = await r.json();
+
+    const parType = {};
+    toutesNotifs.forEach(n => { parType[n.type] = (parType[n.type] || 0) + 1; });
+    document.getElementById('cptComptes').textContent   = parType['nouveau_compte']  || 0;
+    document.getElementById('cptStages').textContent    = parType['stage_attente']   || 0;
+    document.getElementById('cptSuspendus').textContent = parType['compte_suspendu'] || 0;
+
+    afficherNotifications(toutesNotifs);
+  }
+
+  function afficherNotifications(notifs) {
+    const container = document.getElementById('listeNotifs');
+    if (notifs.length === 0) {
+      container.innerHTML = `<div class="bg-white rounded-2xl p-12 text-center" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <p class="text-5xl mb-4">🎉</p>
+        <p class="font-semibold text-gray-500">Aucune notification</p>
+        <p class="text-sm text-gray-400 mt-1">Tout est à jour !</p>
+      </div>`;
+      return;
+    }
+    container.innerHTML = '';
+    notifs.forEach((n, i) => {
+      const c = couleurs[n.type] || { bg:'bg-gray-100', text:'text-gray-600', border:'#94a3b8', badge:'bg-gray-500' };
+      const card = document.createElement('div');
+      card.id = `notif-${i}`;
+      card.className = 'notif-card bg-white rounded-2xl p-5 flex items-start gap-4';
+      card.style = `box-shadow:0 2px 12px rgba(12,35,64,.07);border-left:4px solid ${c.border}`;
+      card.innerHTML = `
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${c.bg}">
+          ${n.icone}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="font-semibold text-gray-800">${escapeHtml(n.titre)}</p>
+              <p class="text-sm text-gray-500 mt-0.5">${escapeHtml(n.detail)}</p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              ${n.date ? `<p class="text-xs text-gray-400">${formatDate(n.date)}</p>` : ''}
+              <button onclick="dismissNotif(${i})"
+                      class="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition text-sm flex-shrink-0"
+                      title="Marquer comme lu">✕</button>
+            </div>
+          </div>
+          ${getAction(n)}
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  function getAction(n) {
+    if (n.type === 'stage_attente')
+      return `<a href="utilisateurs.html" class="inline-block mt-2 text-xs px-3 py-1 rounded-lg text-white font-medium" style="background:#f59e0b">Voir les stages →</a>`;
+    if (n.type === 'compte_suspendu')
+      return `<a href="utilisateurs.html" class="inline-block mt-2 text-xs px-3 py-1 rounded-lg text-white font-medium" style="background:#dc2626">Gérer les comptes →</a>`;
+    if (n.type === 'nouveau_compte')
+      return `<a href="utilisateurs.html" class="inline-block mt-2 text-xs px-3 py-1 rounded-lg text-white font-medium" style="background:#3b82f6">Voir l'utilisateur →</a>`;
+    return '';
+  }
+
+  function dismissNotif(index) {
+    const card = document.getElementById(`notif-${index}`);
+    if (card) {
+      card.classList.add('dismissed');
+      setTimeout(() => { if (card.parentNode) card.parentNode.removeChild(card); }, 300);
+    }
+  }
+
+  function toutDismisser() {
+    const cards = document.querySelectorAll('.notif-card:not(.dismissed)');
+    cards.forEach((card, i) => {
+      setTimeout(() => card.classList.add('dismissed'), i * 60);
+    });
+    setTimeout(() => {
+      const container = document.getElementById('listeNotifs');
+      container.innerHTML = `<div class="bg-white rounded-2xl p-12 text-center" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <p class="text-5xl mb-4">🎉</p>
+        <p class="font-semibold text-gray-500">Toutes les notifications ont été lues</p>
+        <button onclick="chargerNotifications()" class="mt-4 px-4 py-2 rounded-xl text-sm text-white" style="background:#0c2340">🔄 Recharger</button>
+      </div>`;
+    }, cards.length * 60 + 400);
+  }
+
+  function filtrer(type) {
+    filtreActuel = type;
+    // Update button styles
+    ['tous','nouveau_compte','stage_attente','compte_suspendu'].forEach(t => {
+      const btn = document.getElementById(`f-${t}`);
+      if (!btn) return;
+      if ((t === 'tous' && type === '') || t === type) {
+        btn.style.background = '#0c2340'; btn.style.color = '#fff';
+        btn.className = btn.className.replace(/bg-\w+-\d+\s|text-\w+-\d+\s|hover:bg-\w+-\d+\s/g, '');
+      } else {
+        btn.removeAttribute('style');
+        const map = { tous:'bg-gray-100 text-gray-600', nouveau_compte:'bg-blue-50 text-blue-600 hover:bg-blue-100', stage_attente:'bg-amber-50 text-amber-600 hover:bg-amber-100', compte_suspendu:'bg-red-50 text-red-600 hover:bg-red-100' };
+        btn.className = `filtre-btn px-4 py-2 rounded-xl text-sm font-medium ${map[t]}`;
+      }
+    });
+    const filtered = type === '' ? toutesNotifs : toutesNotifs.filter(n => n.type === type);
+    afficherNotifications(filtered);
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const diff = Date.now() - d;
+    if (diff < 60000)    return 'À l\'instant';
+    if (diff < 3600000)  return `Il y a ${Math.floor(diff/60000)} min`;
+    if (diff < 86400000) return `Il y a ${Math.floor(diff/3600000)}h`;
+    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  chargerNotifications();
+</script>
+</body>
+</html>

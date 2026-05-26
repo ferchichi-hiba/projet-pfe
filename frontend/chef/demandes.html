@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestion des Stages — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .carte { transition: all .25s; }
+    .carte:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(12,35,64,.14); }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html" class="nav-link active"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html" class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html" class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html" class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"   class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"    class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button onclick="logout()" class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">�️</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Gestion des Stages</h1>
+          <p class="text-xs text-gray-400">Demandes, affectations et suivi des stages de votre département</p>
+        </div>
+      </div>
+      
+    </div>
+    <div class="p-6 fade-in">
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #0c2340;box-shadow:0 2px 12px rgba(12,35,64,.07)"><p class="text-gray-500 text-xs">Total</p><p id="totalDemandes" class="text-3xl font-bold mt-1" style="color:#0c2340">--</p></div>
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #c9930a;box-shadow:0 2px 12px rgba(12,35,64,.07)"><p class="text-gray-500 text-xs">En attente</p><p id="nbAttente" class="text-3xl font-bold mt-1" style="color:#c9930a">--</p></div>
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #059669;box-shadow:0 2px 12px rgba(12,35,64,.07)"><p class="text-gray-500 text-xs">En cours</p><p id="nbEnCours" class="text-3xl font-bold mt-1" style="color:#059669">--</p></div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 mb-6 flex gap-4 items-center" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <select id="filtreStatut" onchange="filtrer()" class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les statuts</option>
+          <option value="en_attente">En attente</option>
+          <option value="accepte">Acceptée</option>
+          <option value="affecte">Affecté</option>
+          <option value="en_cours">En cours</option>
+          <option value="rapport_depose">Rapport déposé</option>
+          <option value="valide">Validé</option>
+          <option value="refuse">Refusé</option>
+        </select>
+        <select id="filtreType" onchange="filtrer()" class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les types</option>
+          <option value="initiation">Initiation</option>
+          <option value="perfectionnement">Perfectionnement</option>
+          <option value="fin_etude">PFE</option>
+        </select>
+        <span id="compteur" class="ml-auto text-sm text-gray-400"></span>
+      </div>
+      <div id="listeDemandes" class="space-y-4">
+        <p class="text-center text-gray-400 py-8">⏳ Chargement...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL DÉTAILS ÉTUDIANT/STAGE -->
+<div id="modalDetails" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto overflow-hidden">
+    <div class="flex justify-between items-center px-6 py-4" style="background:linear-gradient(135deg,#0c2340,#1e4d7b)">
+      <h3 class="text-lg font-bold text-white">📋 Détails du stage</h3>
+      <button onclick="fermerModalDetails()" class="text-white/70 hover:text-white text-2xl font-bold leading-none">×</button>
+    </div>
+    <div class="p-6 overflow-y-auto" style="max-height:75vh">
+      <!-- En-tête étudiant -->
+      <div class="flex items-center gap-4 mb-6 p-4 rounded-2xl" style="background:#f0f4fa">
+        <div id="detailAvatar" class="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-xl text-white flex-shrink-0" style="background:#0c2340"></div>
+        <div>
+          <p id="detailNom" class="text-xl font-bold" style="color:#0c2340"></p>
+          <p id="detailFiliereAnnee" class="text-sm text-gray-500 mt-0.5"></p>
+          <div class="flex gap-2 mt-2" id="detailBadges"></div>
+        </div>
+      </div>
+      <!-- Infos contact -->
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="p-4 rounded-xl" style="background:#f0f4fa">
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Email</p>
+          <p id="detailEmail" class="text-sm font-medium text-gray-700"></p>
+        </div>
+        <div class="p-4 rounded-xl" style="background:#f0f4fa">
+          <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Téléphone</p>
+          <p id="detailTel" class="text-sm font-medium text-gray-700"></p>
+        </div>
+      </div>
+      <!-- Infos stage -->
+      <div class="mb-4" style="border:1px solid #eef2f7;border-radius:16px;overflow:hidden">
+        <div class="px-5 py-3" style="background:#0c2340">
+          <p class="text-white font-semibold text-sm">📄 Informations du stage</p>
+        </div>
+        <div class="p-5 space-y-4">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Titre du stage</p>
+            <p id="detailTitre" class="text-sm font-semibold text-gray-800"></p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Entreprise</p>
+              <p id="detailEntreprise" class="text-sm text-gray-700"></p>
+            </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Encadrant assigné</p>
+              <p id="detailEncadrant" class="text-sm text-gray-700"></p>
+            </div>
+            <div id="detailBinomeRow" style="display:none">
+              <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color:#0369a1">👥 Binôme (PFE)</p>
+              <p id="detailBinome" class="text-sm font-medium" style="color:#0369a1"></p>
+            </div>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Description</p>
+            <p id="detailDescription" class="text-sm text-gray-600 leading-relaxed"></p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Date de dépôt</p>
+            <p id="detailDate" class="text-sm text-gray-700"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="px-6 py-4 flex justify-end" style="border-top:1px solid #eef2f7">
+      <button onclick="fermerModalDetails()" class="px-5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm transition">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  checkAuth('chef_departement');
+  const API     = 'http://localhost:3000';
+  const CHEF_ID = parseInt(localStorage.getItem('chef_id'));
+  const DEPT_ID = parseInt(localStorage.getItem('dept_id'));
+  let toutesLesDemandes = [];
+
+  async function chargerDemandes() {
+    // Sidebar chef
+    try {
+      const rp   = await fetch(`${API}/api/chef/profil/${CHEF_ID}`);
+      const chef = await rp.json();
+      document.getElementById('avatarMenu').textContent = (chef.prenom[0] + chef.nom[0]).toUpperCase();
+      document.getElementById('nomMenu').textContent    = `${chef.prenom} ${chef.nom}`;
+    } catch(e) {}
+
+    // Nom du département
+    try {
+      const rd   = await fetch(`${API}/api/admin/departements/${DEPT_ID}`);
+      const dept = await rd.json();
+      document.getElementById('nomDept').textContent = dept.dept.nom;
+    } catch(e) {}
+
+    // Demandes
+    const reponse = await fetch(`${API}/api/chef/demandes/${DEPT_ID}`);
+    toutesLesDemandes = await reponse.json();
+
+    document.getElementById('totalDemandes').textContent = toutesLesDemandes.length;
+    document.getElementById('nbAttente').textContent     = toutesLesDemandes.filter(d => d.statut === 'en_attente').length;
+    document.getElementById('nbEnCours').textContent     = toutesLesDemandes.filter(d => d.statut === 'en_cours').length;
+    document.getElementById('compteur').textContent      = `${toutesLesDemandes.length} demande(s)`;
+    afficherDemandes(toutesLesDemandes);
+  }
+
+  function initiales(nomComplet) {
+    const parts = (nomComplet || '').split(' ').filter(Boolean);
+    return parts.length >= 2
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : (nomComplet || '??').substring(0, 2).toUpperCase();
+  }
+
+  function afficherDemandes(demandes) {
+    const container = document.getElementById('listeDemandes');
+    container.innerHTML = '';
+    if (!demandes.length) {
+      container.innerHTML = `<div class="bg-white rounded-2xl p-10 text-center" style="box-shadow:0 2px 12px rgba(12,35,64,.07)"><p class="text-5xl mb-4">📭</p><p class="text-xl font-bold" style="color:#0c2340">Aucune demande</p></div>`;
+      return;
+    }
+    demandes.forEach(d => {
+      const date      = new Date(d.created_at).toLocaleDateString('fr-FR');
+      const ini = initiales(d.etudiant);
+      container.innerHTML += `
+        <div class="bg-white rounded-2xl p-5" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <div class="flex justify-between items-start">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-base text-white flex-shrink-0"
+                   style="background:#0c2340">${ini}</div>
+              <div class="min-w-0">
+                <p class="font-bold text-gray-800 text-base">${d.etudiant}</p>
+                <p class="text-gray-500 text-sm truncate">${d.titre}</p>
+                <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                  ${badgeType(d.type_stage)}
+                  ${badgeStatut(d.statut)}
+                  ${d.filiere ? `<span class="text-xs text-gray-400">• ${d.filiere} — ${d.annee_etude || ''}</span>` : ''}
+                  <span class="text-xs text-gray-400">• ${date}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 ml-4 flex-shrink-0">
+              <button onclick="ouvrirModalDetails(${d.id})"
+                      class="text-sm px-4 py-2 rounded-xl font-medium transition text-white"
+                      style="background:#0c2340">🔍 Détails</button>
+              ${d.statut === 'en_attente' ? `
+              <button onclick="accepterDemande(${d.id}, ${d.etudiant_id})"
+                      class="text-sm px-4 py-2 rounded-xl font-medium transition text-white"
+                      style="background:#059669">✅ Accepter</button>
+              <button onclick="refuserDemande(${d.id}, ${d.etudiant_id})"
+                      class="text-sm px-4 py-2 rounded-xl font-medium transition text-white"
+                      style="background:#dc2626">✗ Refuser</button>` : ''}
+              ${d.statut === 'accepte' ? `
+              <a href="affectation.html"
+                 class="text-sm px-4 py-2 rounded-xl font-medium transition text-white inline-flex items-center"
+                 style="background:#0891b2">🔗 Affecter</a>` : ''}
+            </div>
+          </div>
+          ${d.encadrant ? `<div class="mt-3 flex items-center gap-2 text-xs text-gray-500 pl-16">
+            <span>👨‍🏫 Encadrant :</span><span class="font-medium text-gray-700">${d.encadrant}</span>
+          </div>` : ''}
+          ${d.binome ? `<div class="flex items-center gap-2 text-xs pl-16 mt-1" style="color:#0369a1">
+            <span>👥 Binôme :</span><span class="font-medium">${d.binome}</span>
+          </div>` : ''}
+          ${d.entreprise ? `<div class="flex items-center gap-2 text-xs text-gray-500 pl-16 mt-1">
+            <span>🏢 Entreprise :</span><span class="font-medium text-gray-700">${d.entreprise}</span>
+          </div>` : ''}
+        </div>`;
+    });
+  }
+
+  function ouvrirModalDetails(id) {
+    const d = toutesLesDemandes.find(x => x.id === id);
+    if (!d) return;
+    const ini = initiales(d.etudiant);
+    document.getElementById('detailAvatar').textContent    = ini;
+    document.getElementById('detailNom').textContent       = d.etudiant;
+    document.getElementById('detailFiliereAnnee').textContent =
+      [d.filiere, d.annee_etude ? `${d.annee_etude}e année` : ''].filter(Boolean).join(' — ') || '—';
+    document.getElementById('detailBadges').innerHTML      = badgeType(d.type_stage) + ' ' + badgeStatut(d.statut);
+    document.getElementById('detailEmail').textContent     = d.email || '—';
+    document.getElementById('detailTel').textContent       = d.telephone || '—';
+    document.getElementById('detailTitre').textContent     = d.titre || '—';
+    document.getElementById('detailEntreprise').textContent = d.entreprise || 'Non précisée';
+    document.getElementById('detailEncadrant').textContent  = d.encadrant || 'Non affecté';
+    document.getElementById('detailDescription').textContent = d.description || 'Aucune description fournie.';
+    document.getElementById('detailDate').textContent       =
+      new Date(d.created_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    // Binôme PFE
+    const binomeRow = document.getElementById('detailBinomeRow');
+    if (d.binome && d.type_stage === 'fin_etude') {
+      document.getElementById('detailBinome').textContent = d.binome;
+      binomeRow.style.display = '';
+    } else {
+      binomeRow.style.display = 'none';
+    }
+
+
+    document.getElementById('modalDetails').classList.remove('hidden');
+  }
+  function fermerModalDetails() { document.getElementById('modalDetails').classList.add('hidden'); }
+
+  function filtrer() {
+    const statut = document.getElementById('filtreStatut').value;
+    const type   = document.getElementById('filtreType').value;
+    const res    = toutesLesDemandes.filter(d =>
+      (statut === '' || d.statut === statut) &&
+      (type   === '' || d.type_stage === type)
+    );
+    document.getElementById('compteur').textContent = `${res.length} demande(s)`;
+    afficherDemandes(res);
+  }
+
+  function badgeType(type) {
+    const s = { initiation:'bg-green-100 text-green-600', perfectionnement:'bg-amber-100 text-amber-600', fin_etude:'bg-red-100 text-red-600' };
+    const l = { initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+    return `<span class="${s[type]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[type]||type}</span>`;
+  }
+  function badgeStatut(statut) {
+    const s = { en_attente:'bg-amber-100 text-amber-600', accepte:'bg-teal-100 text-teal-600', affecte:'bg-blue-100 text-blue-600', en_cours:'bg-green-100 text-green-600', rapport_depose:'bg-purple-100 text-purple-600', valide:'bg-cyan-100 text-cyan-600', refuse:'bg-red-100 text-red-600' };
+    const l = { en_attente:'En attente', accepte:'Acceptée', affecte:'Affecté', en_cours:'En cours', rapport_depose:'Rapport déposé', valide:'Validé', refuse:'Refusé' };
+    return `<span class="${s[statut]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[statut]||statut}</span>`;
+  }
+
+  async function accepterDemande(id, etudiant_id) {
+    if (!confirm('Accepter cette demande de stage ?')) return;
+    const resp = await fetch(`${API}/api/chef/demandes/${id}/accepter`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ etudiant_id })
+    });
+    const data = await resp.json();
+    if (data.message) {
+      showToast('✅ Demande acceptée ! Vous pouvez maintenant affecter un encadrant.');
+      chargerDemandes();
+    }
+  }
+
+  async function refuserDemande(id, etudiant_id) {
+    const motif = prompt('Motif de refus (obligatoire) :');
+    if (motif === null) return;
+    const resp = await fetch(`${API}/api/chef/demandes/${id}/refuser`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ etudiant_id, motif: motif.trim() || 'Non précisé' })
+    });
+    const data = await resp.json();
+    if (data.message) {
+      showToast('Demande refusée.');
+      chargerDemandes();
+    }
+  }
+
+  function showToast(msg) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#0c2340;color:#fff;padding:14px 28px;border-radius:14px;font-size:.9rem;font-weight:500;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.25)';
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  chargerDemandes();
+</script>
+</body>
+</html>

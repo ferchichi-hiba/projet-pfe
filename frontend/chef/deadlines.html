@@ -1,0 +1,961 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Deadlines — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .carte { transition: all .25s; }
+    .carte:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(12,35,64,.14); }
+    /* Modal */
+    .modal-bg { background: rgba(12,35,64,.5); backdrop-filter: blur(4px); }
+    /* Deadline card */
+    .dl-card { transition: all .2s; }
+    .dl-card:hover { box-shadow: 0 6px 20px rgba(12,35,64,.12); }
+    .dl-card.expired {
+      opacity: .52;
+      filter: grayscale(55%);
+      border-left-color: #94a3b8 !important;
+      background: #f8fafc;
+    }
+    .dl-card.expired:hover {
+      opacity: .78;
+      filter: grayscale(25%);
+    }
+    .dl-card.expired .font-bold { color: #64748b !important; }
+    .dl-card.expired .text-gray-800 { color: #94a3b8 !important; }
+    /* Calendrier */
+    .cal-day { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .8rem; cursor: pointer; transition: background .15s; }
+    .cal-day:hover { background: #eef2f7; }
+    .cal-day.today { background: #0c2340; color: #f5d87e; font-weight: 700; }
+    .cal-day.has-deadline { position: relative; }
+    .cal-day.has-deadline::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:#c9930a; }
+    .cal-day.expired-deadline::after { background: #dc2626; }
+    /* Progress bar */
+    .prog-bar { height: 6px; border-radius: 9999px; background: #e5e7eb; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 9999px; transition: width .4s ease; }
+    /* Badge pill */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 9999px; font-size: .72rem; font-weight: 600; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html"      class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html"   class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html"        class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html"     class="nav-link active"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"   class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"    class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5"><span class="nav-icon">🚪</span> Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">⏰</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Gestion des Deadlines</h1>
+          <p class="text-xs text-gray-400" id="topSub">Suivi des échéances de votre département</p>
+        </div>
+      </div>
+      <button onclick="ouvrirModal()"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
+              style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">
+        <span class="text-base">＋</span> Nouvelle deadline
+      </button>
+    </div>
+
+    <div class="p-6 fade-in">
+
+      <!-- CARTES RÉSUMÉ -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #c9930a;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs mb-1">Total deadlines</p>
+          <p id="statTotal" class="text-3xl font-bold" style="color:#c9930a">—</p>
+          <p class="text-xs mt-3" style="color:#c9930a">📋 Toutes échéances</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #059669;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs mb-1">Actives</p>
+          <p id="statActives" class="text-3xl font-bold" style="color:#059669">—</p>
+          <p class="text-xs mt-3" style="color:#059669">✅ En cours</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #dc2626;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs mb-1">Expirées</p>
+          <p id="statExpirees" class="text-3xl font-bold" style="color:#dc2626">—</p>
+          <p class="text-xs mt-3" style="color:#dc2626">🔴 Date dépassée</p>
+        </div>
+        <div class="bg-white rounded-2xl p-5 carte" style="border-top:3px solid #0891b2;box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <p class="text-gray-500 text-xs mb-1">Dans 7 jours</p>
+          <p id="statAvenir" class="text-3xl font-bold" style="color:#0891b2">—</p>
+          <p class="text-xs mt-3" style="color:#0891b2">📅 À venir</p>
+        </div>
+      </div>
+
+      <!-- FILTRE + VUE -->
+      <div class="flex items-center justify-between mb-4 gap-4">
+        <div class="flex items-center gap-2">
+          <button id="btnTous"    onclick="filtrer('tous')"    class="filtre-btn px-4 py-1.5 rounded-xl text-sm font-semibold transition" style="background:#0c2340;color:#fff">Toutes</button>
+          <button id="btnActives" onclick="filtrer('actives')" class="filtre-btn px-4 py-1.5 rounded-xl text-sm font-semibold transition" style="background:#eef2f7;color:#64748b">Actives</button>
+          <button id="btnExpires" onclick="filtrer('expires')" class="filtre-btn px-4 py-1.5 rounded-xl text-sm font-semibold transition" style="background:#eef2f7;color:#64748b">Expirées</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btnVueListe" onclick="setVue('liste')"
+                  class="p-2 rounded-xl transition" style="background:#0c2340;color:#f5d87e" title="Vue liste">
+            ☰
+          </button>
+          <button id="btnVueCal" onclick="setVue('calendrier')"
+                  class="p-2 rounded-xl transition" style="background:#eef2f7;color:#64748b" title="Vue calendrier">
+            📅
+          </button>
+        </div>
+      </div>
+
+      <!-- VUE LISTE -->
+      <div id="vueListe">
+        <div id="listeDeadlines" class="space-y-4"></div>
+      </div>
+
+      <!-- VUE CALENDRIER -->
+      <div id="vueCalendrier" class="hidden">
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <div class="flex items-center justify-between mb-5">
+            <button onclick="changerMois(-1)" class="p-2 rounded-xl hover:bg-gray-100 transition">‹</button>
+            <h3 id="titreMois" class="font-bold text-gray-800"></h3>
+            <button onclick="changerMois(1)"  class="p-2 rounded-xl hover:bg-gray-100 transition">›</button>
+          </div>
+          <div class="grid grid-cols-7 gap-1 mb-2">
+            <div class="text-center text-xs text-gray-400 py-1">Lun</div>
+            <div class="text-center text-xs text-gray-400 py-1">Mar</div>
+            <div class="text-center text-xs text-gray-400 py-1">Mer</div>
+            <div class="text-center text-xs text-gray-400 py-1">Jeu</div>
+            <div class="text-center text-xs text-gray-400 py-1">Ven</div>
+            <div class="text-center text-xs text-gray-400 py-1">Sam</div>
+            <div class="text-center text-xs text-gray-400 py-1">Dim</div>
+          </div>
+          <div id="grilleCal" class="grid grid-cols-7 gap-1"></div>
+          <div id="detailJour" class="hidden mt-5 p-4 rounded-xl" style="background:#f0f4fa">
+            <p id="detailJourTitre" class="font-semibold text-gray-700 mb-3 text-sm"></p>
+            <div id="detailJourListe" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION ALERTES RETARDS -->
+      <div id="sectionRetards" class="hidden mt-6">
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm" style="background:#dc2626">🔴</div>
+            <div>
+              <h3 class="font-bold" style="color:#0c2340">Étudiants en retard</h3>
+              <p class="text-xs text-gray-400">Envoyez un rappel aux étudiants qui n'ont pas respecté les deadlines</p>
+            </div>
+          </div>
+          <div id="listeRetards" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- ══ PÉRIODES DE STAGE ══ -->
+      <div class="mt-8">
+        <div class="bg-white rounded-2xl shadow" style="border-top:3px solid #0891b2;box-shadow:0 2px 16px rgba(12,35,64,.09)">
+          <!-- En-tête -->
+          <div class="px-6 pt-5 pb-4 flex items-center justify-between" style="border-bottom:1px solid #eef2f7">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-base font-bold"
+                   style="background:linear-gradient(135deg,#0891b2,#06b6d4)">📅</div>
+              <div>
+                <h2 class="font-bold text-gray-800">Périodes de stage</h2>
+                <p class="text-xs text-gray-400">Définissez la fenêtre de dépôt des demandes pour chaque type de stage</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cartes par type -->
+          <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-5" id="cartesPeriodesContainer">
+            <!-- Initiation -->
+            <div class="rounded-xl p-5 border-2 transition" id="cardInit" style="border-color:#e5e7eb">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white"
+                      style="background:#6366f1">I</span>
+                <h3 class="font-semibold text-gray-800 text-sm">Stage d'initiation</h3>
+              </div>
+              <div id="infoInit" class="mb-3 text-xs text-gray-500">Aucune période définie</div>
+              <div class="space-y-2">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 mb-1">Début</label>
+                  <input type="date" id="pInitDebut" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 mb-1">Fin</label>
+                  <input type="date" id="pInitFin" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"/>
+                </div>
+                <button onclick="savePeriode('initiation')"
+                        class="w-full mt-1 py-2 rounded-lg text-xs font-semibold text-white transition hover:opacity-90"
+                        style="background:#6366f1">💾 Enregistrer</button>
+                <button onclick="deletePeriode('initiation')" id="btnDelInit"
+                        class="hidden w-full py-1.5 rounded-lg text-xs font-semibold text-red-500 border border-red-200 hover:bg-red-50 transition">
+                  🗑️ Supprimer la période
+                </button>
+              </div>
+            </div>
+
+            <!-- Perfectionnement -->
+            <div class="rounded-xl p-5 border-2 transition" id="cardPerf" style="border-color:#e5e7eb">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white"
+                      style="background:#059669">P</span>
+                <h3 class="font-semibold text-gray-800 text-sm">Stage de perfectionnement</h3>
+              </div>
+              <div id="infoPerf" class="mb-3 text-xs text-gray-500">Aucune période définie</div>
+              <div class="space-y-2">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 mb-1">Début</label>
+                  <input type="date" id="pPerfDebut" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 mb-1">Fin</label>
+                  <input type="date" id="pPerfFin" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"/>
+                </div>
+                <button onclick="savePeriode('perfectionnement')"
+                        class="w-full mt-1 py-2 rounded-lg text-xs font-semibold text-white transition hover:opacity-90"
+                        style="background:#059669">💾 Enregistrer</button>
+                <button onclick="deletePeriode('perfectionnement')" id="btnDelPerf"
+                        class="hidden w-full py-1.5 rounded-lg text-xs font-semibold text-red-500 border border-red-200 hover:bg-red-50 transition">
+                  🗑️ Supprimer la période
+                </button>
+              </div>
+            </div>
+
+            <!-- PFE -->
+            <div class="rounded-xl p-5 border-2 transition" id="cardPfe" style="border-color:#e5e7eb">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white"
+                      style="background:#c9930a">P</span>
+                <h3 class="font-semibold text-gray-800 text-sm">Stage de fin d'études (PFE)</h3>
+              </div>
+              <div id="infoPfe" class="mb-3 text-xs text-gray-500">Aucune période définie</div>
+              <div class="space-y-2">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 mb-1">Début</label>
+                  <input type="date" id="pPfeDebut" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 mb-1">Fin</label>
+                  <input type="date" id="pPfeFin" class="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"/>
+                </div>
+                <button onclick="savePeriode('fin_etude')"
+                        class="w-full mt-1 py-2 rounded-lg text-xs font-semibold text-white transition hover:opacity-90"
+                        style="background:#c9930a;color:#0c2340">💾 Enregistrer</button>
+                <button onclick="deletePeriode('fin_etude')" id="btnDelPfe"
+                        class="hidden w-full py-1.5 rounded-lg text-xs font-semibold text-red-500 border border-red-200 hover:bg-red-50 transition">
+                  🗑️ Supprimer la période
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Toast interne -->
+          <div id="toastPeriode" class="hidden mx-6 mb-5 px-4 py-3 rounded-xl text-sm font-medium"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ══ MODAL CRÉER / MODIFIER DEADLINE ══ -->
+<div id="modal" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
+    <div class="px-6 py-5 flex items-center justify-between" style="border-bottom:1px solid #eef2f7">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm" style="background:#0c2340">⏰</div>
+        <h2 id="modalTitre" class="font-bold text-gray-800">Nouvelle deadline</h2>
+      </div>
+      <button onclick="fermerModal()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+    </div>
+    <div class="px-6 py-5 space-y-4">
+      <input type="hidden" id="editId">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Titre *</label>
+        <input id="fTitre" type="text" placeholder="ex. Dépôt du rapport final"
+               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-yellow-500"/>
+        <p id="errTitre" class="text-red-500 text-xs mt-1 hidden">Le titre est obligatoire</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Type d'échéance</label>
+          <select id="fType" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none">
+            <option value="rapport">📄 Rapport</option>
+            <option value="soutenance">🎤 Soutenance</option>
+            <option value="convention">📝 Convention</option>
+            <option value="evaluation">⭐ Évaluation</option>
+            <option value="autre">📌 Autre</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Cible</label>
+          <select id="fCible" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none">
+            <option value="tous">Tous les étudiants</option>
+            <option value="initiation">Initiation uniquement</option>
+            <option value="perfectionnement">Perfectionnement uniquement</option>
+            <option value="fin_etude">PFE uniquement</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Date et heure limite *</label>
+        <input id="fDate" type="datetime-local"
+               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-yellow-500"/>
+        <p id="errDate" class="text-red-500 text-xs mt-1 hidden">La date est obligatoire</p>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Description (optionnel)</label>
+        <textarea id="fDesc" rows="3" placeholder="Informations supplémentaires pour les étudiants..."
+                  class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none resize-none"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 flex gap-3 justify-end" style="border-top:1px solid #eef2f7">
+      <button onclick="fermerModal()"
+              class="px-5 py-2 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition">
+        Annuler
+      </button>
+      <button onclick="sauvegarder()"
+              class="px-5 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
+              style="background:#0c2340">
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL DÉTAIL DEADLINE ══ -->
+<div id="modalDetail" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] flex flex-col">
+    <div class="px-6 py-5 flex items-center justify-between flex-shrink-0" style="border-bottom:1px solid #eef2f7">
+      <div>
+        <h2 id="detailTitre" class="font-bold text-gray-800"></h2>
+        <p id="detailSous" class="text-xs text-gray-400 mt-0.5"></p>
+      </div>
+      <button onclick="fermerDetail()" class="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+    </div>
+    <div class="overflow-y-auto flex-1 px-6 py-5">
+      <div id="detailListeEtu" class="space-y-3"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  checkAuth('chef_departement');
+  const API     = 'http://localhost:3000';
+  const CHEF_ID = parseInt(localStorage.getItem('chef_id'));
+
+  let toutesDeadlines = [];
+  let filtreActuel    = 'tous';
+  let vueActuelle     = 'liste';
+  let calDate         = new Date();
+
+  // ══ PROFIL ══════════════════════════════════
+  async function chargerProfil() {
+    try {
+      const r = await fetch(`${API}/api/chef/profil/${CHEF_ID}`);
+      const u = await r.json();
+      document.getElementById('avatarMenu').textContent = `${u.prenom[0]}${u.nom[0]}`;
+      document.getElementById('nomMenu').textContent    = `${u.prenom} ${u.nom}`;
+      document.getElementById('nomDept').textContent    = u.departement || '—';
+      localStorage.setItem('chef_id', u.id);
+    } catch(e) {}
+  }
+
+  // ══ CHARGER DONNÉES ═════════════════════════
+  async function chargerStats() {
+    try {
+      const r = await fetch(`${API}/api/chef/deadlines/${CHEF_ID}/stats`);
+      const s = await r.json();
+      document.getElementById('statTotal').textContent    = s.total;
+      document.getElementById('statActives').textContent  = s.actives;
+      document.getElementById('statExpirees').textContent = s.expirees;
+      document.getElementById('statAvenir').textContent   = s.avenir;
+    } catch(e) {}
+  }
+
+  async function chargerDeadlines() {
+    try {
+      const r = await fetch(`${API}/api/chef/deadlines/${CHEF_ID}`);
+      toutesDeadlines = await r.json();
+      afficher();
+      if (vueActuelle === 'calendrier') dessinerCalendrier();
+      afficherRetards();
+    } catch(e) {
+      document.getElementById('listeDeadlines').innerHTML =
+        '<p class="text-center text-gray-400 py-8">Aucune deadline trouvée</p>';
+    }
+  }
+
+  // ══ AFFICHER LISTE ═══════════════════════════
+  function afficher() {
+    const now  = new Date();
+    let data = [...toutesDeadlines];
+
+    if (filtreActuel === 'actives') data = data.filter(d => !d.expired);
+    if (filtreActuel === 'expires') data = data.filter(d => d.expired);
+
+    const container = document.getElementById('listeDeadlines');
+    if (!data.length) {
+      container.innerHTML = `<div class="bg-white rounded-2xl p-10 text-center" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <p class="text-5xl mb-4">📭</p>
+        <p class="font-semibold text-gray-500">Aucune deadline</p>
+        <p class="text-sm text-gray-400 mt-1">Créez votre première deadline avec le bouton en haut</p>
+      </div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    data.forEach(d => {
+      const limite = new Date(d.date_limite);
+      const diffMs = limite - now;
+      const diffJ  = Math.floor(diffMs / 86400000);
+      const pct    = d.nb_total > 0 ? Math.round((d.nb_completes / d.nb_total) * 100) : 0;
+
+      let tempsLabel = '';
+      let tempsCouleur = '#059669';
+      if (d.expired) {
+        const joursEcoul = Math.abs(diffJ);
+        tempsLabel = `Expiré il y a ${joursEcoul} jour${joursEcoul > 1 ? 's' : ''}`;
+        tempsCouleur = '#dc2626';
+      } else if (diffJ === 0) {
+        tempsLabel = 'Expire aujourd\'hui';
+        tempsCouleur = '#c9930a';
+      } else if (diffJ <= 3) {
+        tempsLabel = `Dans ${diffJ} jour${diffJ > 1 ? 's' : ''} ⚠️`;
+        tempsCouleur = '#c9930a';
+      } else {
+        tempsLabel = `Dans ${diffJ} jours`;
+      }
+
+      const typeIcones = { rapport:'📄', soutenance:'🎤', convention:'📝', evaluation:'⭐', autre:'📌' };
+      const cibleLabel = { tous:'Tous', initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+
+      const card = document.createElement('div');
+      card.className = 'dl-card bg-white rounded-2xl p-5' + (d.expired ? ' expired' : '');
+      card.style = 'box-shadow:0 2px 12px rgba(12,35,64,.07);border-left:4px solid ' + (d.expired ? '#94a3b8' : '#c9930a');
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-start gap-4 flex-1 min-w-0">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                 style="background:${d.expired ? '#f1f5f9' : '#fef3c7'}">
+              ${d.expired ? '🔒' : (typeIcones[d.type_deadline] || '📌')}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap mb-1">
+                <h3 class="font-bold text-gray-800">${escHtml(d.titre)}</h3>
+                <span class="badge" style="background:${d.expired ? '#f1f5f9' : '#fef3c7'};color:${tempsCouleur}">${tempsLabel}</span>
+                <span class="badge" style="background:#eef2f7;color:#64748b">${cibleLabel[d.type_stage] || d.type_stage}</span>
+              </div>
+              ${d.description ? `<p class="text-sm text-gray-500 mb-2">${escHtml(d.description)}</p>` : ''}
+              <p class="text-xs text-gray-400 mb-3">📅 Limite : ${formatDate(d.date_limite)}</p>
+
+              <!-- Barre de progression -->
+              <div class="mb-3">
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Progression — ${d.nb_completes}/${d.nb_total} étudiants</span>
+                  <span class="font-semibold">${pct}%</span>
+                </div>
+                <div class="prog-bar">
+                  <div class="prog-fill" style="width:${pct}%;background:${pct === 100 ? '#059669' : pct >= 50 ? '#c9930a' : '#dc2626'}"></div>
+                </div>
+              </div>
+
+              <!-- Mini-badges statuts -->
+              <div class="flex gap-2 flex-wrap">
+                <span class="badge" style="background:#dcfce7;color:#059669">✅ ${d.nb_completes} complétés</span>
+                ${d.nb_retard > 0 ? `<span class="badge" style="background:#fee2e2;color:#dc2626">🔴 ${d.nb_retard} en retard</span>` : ''}
+                ${d.nb_total - d.nb_completes - d.nb_retard > 0 ? `<span class="badge" style="background:#fef3c7;color:#c9930a">⏳ ${d.nb_total - d.nb_completes - d.nb_retard} en attente</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <!-- Actions -->
+          <div class="flex flex-col gap-2 flex-shrink-0">
+            <button onclick="voirDetail(${d.id})"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-80"
+                    style="background:#eef2f7;color:#0c2340">👥 Détails</button>
+            <button onclick="modifierDL(${d.id})"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-80"
+                    style="background:#fef3c7;color:#c9930a">✏️ Modifier</button>
+            <button onclick="supprimerDL(${d.id}, '${escHtml(d.titre).replace(/'/g, "\\\'")}')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition hover:opacity-80"
+                    style="background:#fee2e2;color:#dc2626">🗑 Supprimer</button>
+          </div>
+        </div>`;
+      container.appendChild(card);
+    });
+  }
+
+  // ══ SECTION RETARDS ═════════════════════════
+  function afficherRetards() {
+    const retards = [];
+    toutesDeadlines.forEach(d => {
+      if (d.nb_retard > 0) {
+        d.etudiants.filter(e => e.en_retard).forEach(e => {
+          retards.push({ ...e, deadline_titre: d.titre, deadline_id: d.id });
+        });
+      }
+    });
+
+    const section = document.getElementById('sectionRetards');
+    if (!retards.length) { section.classList.add('hidden'); return; }
+    section.classList.remove('hidden');
+
+    const container = document.getElementById('listeRetards');
+    container.innerHTML = '';
+    const vus = new Set();
+    retards.forEach(e => {
+      const key = e.id;
+      if (vus.has(key)) return;
+      vus.add(key);
+      const div = document.createElement('div');
+      div.className = 'flex items-center justify-between gap-4 p-4 rounded-xl';
+      div.style = 'background:#fef2f2;border:1px solid #fecaca';
+      div.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+               style="background:#dc2626">${e.prenom[0]}${e.nom[0]}</div>
+          <div>
+            <p class="font-semibold text-gray-800 text-sm">${escHtml(e.prenom)} ${escHtml(e.nom)}</p>
+            <p class="text-xs text-gray-500">📋 ${escHtml(e.stage_titre || '—')} · ${badgeTypeStage(e.type_stage)}</p>
+            <p class="text-xs text-red-500 mt-0.5">⏰ Deadline : ${escHtml(e.deadline_titre)}</p>
+          </div>
+        </div>
+        <button onclick="envoyerRappel(${e.id}, '${escHtml(e.prenom)} ${escHtml(e.nom)}')"
+                class="px-4 py-2 rounded-xl text-xs font-semibold text-white transition hover:opacity-80 flex-shrink-0"
+                style="background:#dc2626">
+          📨 Envoyer rappel
+        </button>`;
+      container.appendChild(div);
+    });
+  }
+
+  // ══ CALENDRIER ══════════════════════════════
+  function setVue(v) {
+    vueActuelle = v;
+    const isListe = v === 'liste';
+    document.getElementById('vueListe').classList.toggle('hidden', !isListe);
+    document.getElementById('vueCalendrier').classList.toggle('hidden', isListe);
+    document.getElementById('btnVueListe').style.background = isListe ? '#0c2340' : '#eef2f7';
+    document.getElementById('btnVueListe').style.color      = isListe ? '#f5d87e' : '#64748b';
+    document.getElementById('btnVueCal').style.background   = !isListe ? '#0c2340' : '#eef2f7';
+    document.getElementById('btnVueCal').style.color        = !isListe ? '#f5d87e' : '#64748b';
+    if (!isListe) dessinerCalendrier();
+  }
+
+  function changerMois(delta) {
+    calDate = new Date(calDate.getFullYear(), calDate.getMonth() + delta, 1);
+    dessinerCalendrier();
+  }
+
+  function dessinerCalendrier() {
+    const annee = calDate.getFullYear();
+    const mois  = calDate.getMonth();
+    const moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    document.getElementById('titreMois').textContent = `${moisNoms[mois]} ${annee}`;
+
+    // Jours du mois
+    const premier   = new Date(annee, mois, 1);
+    const dernier   = new Date(annee, mois + 1, 0);
+    const debutSem  = (premier.getDay() + 6) % 7; // lundi = 0
+
+    const grille = document.getElementById('grilleCal');
+    grille.innerHTML = '';
+
+    // Jours vides début
+    for (let i = 0; i < debutSem; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day text-gray-300';
+      grille.appendChild(el);
+    }
+
+    const now = new Date();
+    const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
+    // Indexer deadlines par jour
+    const dlParJour = {};
+    toutesDeadlines.forEach(d => {
+      const dl = new Date(d.date_limite);
+      if (dl.getFullYear() === annee && dl.getMonth() === mois) {
+        const k = dl.getDate();
+        if (!dlParJour[k]) dlParJour[k] = [];
+        dlParJour[k].push(d);
+      }
+    });
+
+    for (let jour = 1; jour <= dernier.getDate(); jour++) {
+      const el = document.createElement('div');
+      const jourStr = `${annee}-${mois}-${jour}`;
+      el.className = 'cal-day mx-auto';
+      if (jourStr === today) el.classList.add('today');
+      el.textContent = jour;
+
+      if (dlParJour[jour]) {
+        const expired = dlParJour[jour].some(d => d.expired);
+        el.classList.add(expired ? 'expired-deadline' : 'has-deadline');
+        el.onclick = () => afficherJour(jour, dlParJour[jour]);
+      }
+      grille.appendChild(el);
+    }
+
+    document.getElementById('detailJour').classList.add('hidden');
+  }
+
+  function afficherJour(jour, deadlines) {
+    const moisNoms = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    document.getElementById('detailJourTitre').textContent =
+      `${jour} ${moisNoms[calDate.getMonth()]} ${calDate.getFullYear()} — ${deadlines.length} deadline${deadlines.length > 1 ? 's' : ''}`;
+    const liste = document.getElementById('detailJourListe');
+    liste.innerHTML = deadlines.map(d => `
+      <div class="flex items-center gap-3 p-3 rounded-xl bg-white">
+        <span class="text-xl">⏰</span>
+        <div class="flex-1">
+          <p class="font-semibold text-gray-800 text-sm">${escHtml(d.titre)}</p>
+          <p class="text-xs text-gray-500">${formatDate(d.date_limite)}</p>
+        </div>
+        <span class="badge" style="background:${d.expired ? '#fee2e2' : '#dcfce7'};color:${d.expired ? '#dc2626' : '#059669'}">
+          ${d.expired ? 'Expirée' : 'Active'}
+        </span>
+      </div>`).join('');
+    document.getElementById('detailJour').classList.remove('hidden');
+  }
+
+  // ══ FILTRES ════════════════════════════════
+  function filtrer(f) {
+    filtreActuel = f;
+    const btns = { tous:'btnTous', actives:'btnActives', expires:'btnExpires' };
+    Object.entries(btns).forEach(([k, id]) => {
+      const btn = document.getElementById(id);
+      btn.style.background = k === f ? '#0c2340' : '#eef2f7';
+      btn.style.color      = k === f ? '#fff' : '#64748b';
+    });
+    afficher();
+  }
+
+  // ══ MODAL CRÉER/MODIFIER ════════════════════
+  function ouvrirModal(dl = null) {
+    document.getElementById('modalTitre').textContent = dl ? 'Modifier la deadline' : 'Nouvelle deadline';
+    document.getElementById('editId').value   = dl ? dl.id : '';
+    document.getElementById('fTitre').value   = dl ? dl.titre : '';
+    document.getElementById('fType').value    = dl ? dl.type_deadline : 'rapport';
+    document.getElementById('fCible').value   = dl ? dl.type_stage : 'tous';
+    document.getElementById('fDesc').value    = dl ? (dl.description || '') : '';
+    document.getElementById('fDate').value    = dl ? dl.date_limite.slice(0,16) : '';
+    document.getElementById('errTitre').classList.add('hidden');
+    document.getElementById('errDate').classList.add('hidden');
+    document.getElementById('modal').classList.remove('hidden');
+  }
+
+  function fermerModal() { document.getElementById('modal').classList.add('hidden'); }
+
+  async function sauvegarder() {
+    const titre = document.getElementById('fTitre').value.trim();
+    const date  = document.getElementById('fDate').value;
+    let ok = true;
+    if (!titre) { document.getElementById('errTitre').classList.remove('hidden'); ok = false; }
+    else document.getElementById('errTitre').classList.add('hidden');
+    if (!date)  { document.getElementById('errDate').classList.remove('hidden'); ok = false; }
+    else document.getElementById('errDate').classList.add('hidden');
+    if (!ok) return;
+
+    const body = {
+      titre,
+      description:   document.getElementById('fDesc').value.trim() || null,
+      type_deadline: document.getElementById('fType').value,
+      type_stage:    document.getElementById('fCible').value,
+      date_limite:   date
+    };
+
+    const editId = document.getElementById('editId').value;
+    if (editId) {
+      await fetch(`${API}/api/chef/deadlines/${CHEF_ID}/${editId}`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+    } else {
+      await fetch(`${API}/api/chef/deadlines/${CHEF_ID}`, {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+    }
+    fermerModal();
+    chargerDeadlines();
+    chargerStats();
+  }
+
+  function modifierDL(id) {
+    const dl = toutesDeadlines.find(d => d.id === id);
+    if (dl) ouvrirModal(dl);
+  }
+
+  async function supprimerDL(id, titre) {
+    if (!confirm(`Supprimer la deadline "${titre}" ?`)) return;
+    await fetch(`${API}/api/chef/deadlines/${CHEF_ID}/${id}`, { method: 'DELETE' });
+    chargerDeadlines();
+    chargerStats();
+  }
+
+  // ══ MODAL DÉTAIL ÉTUDIANTS ════════════════
+  function voirDetail(id) {
+    const dl = toutesDeadlines.find(d => d.id === id);
+    if (!dl) return;
+    document.getElementById('detailTitre').textContent = dl.titre;
+    document.getElementById('detailSous').textContent  = `${dl.nb_completes}/${dl.nb_total} étudiants ont respecté la deadline · Limite : ${formatDate(dl.date_limite)}`;
+
+    const liste = document.getElementById('detailListeEtu');
+    if (!dl.etudiants.length) {
+      liste.innerHTML = '<p class="text-center text-gray-400 py-6">Aucun étudiant concerné</p>';
+    } else {
+      liste.innerHTML = '';
+      dl.etudiants.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between gap-3 p-3 rounded-xl';
+        div.style.background = e.complete ? '#f0fdf4' : e.en_retard ? '#fef2f2' : '#fffbeb';
+        div.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
+                 style="background:${e.complete ? '#059669' : e.en_retard ? '#dc2626' : '#c9930a'}">
+              ${e.prenom[0]}${e.nom[0]}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-800 text-sm">${escHtml(e.prenom)} ${escHtml(e.nom)}</p>
+              <p class="text-xs text-gray-500">${escHtml(e.stage_titre||'—')} · ${badgeTypeStage(e.type_stage)}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="prog-bar w-20">
+              <div class="prog-fill" style="width:${e.progression||0}%;background:${e.complete ? '#059669' : '#c9930a'}"></div>
+            </div>
+            <span class="text-xs font-semibold w-8 text-right">${e.progression||0}%</span>
+            <span class="badge" style="background:${e.complete ? '#dcfce7' : e.en_retard ? '#fee2e2' : '#fef3c7'};color:${e.complete ? '#059669' : e.en_retard ? '#dc2626' : '#c9930a'}">
+              ${e.complete ? '✅ Complété' : e.en_retard ? '🔴 Retard' : '⏳ En attente'}
+            </span>
+            ${e.en_retard ? `<button onclick="envoyerRappel(${e.id},'${escHtml(e.prenom)} ${escHtml(e.nom)}')" class="px-2 py-1 rounded-lg text-xs font-semibold text-white" style="background:#dc2626">📨</button>` : ''}
+          </div>`;
+        liste.appendChild(div);
+      });
+    }
+    document.getElementById('modalDetail').classList.remove('hidden');
+  }
+
+  function fermerDetail() { document.getElementById('modalDetail').classList.add('hidden'); }
+
+  // ══ RAPPEL ═══════════════════════════════
+  async function envoyerRappel(etudiantId, nom) {
+    const contenu = `Rappel : une deadline de votre stage est dépassée. Merci de régulariser votre situation au plus vite.`;
+    await fetch(`${API}/api/chef/deadlines/rappel`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ chef_id: CHEF_ID, etudiant_id: etudiantId, contenu })
+    });
+    alert(`Rappel envoyé à ${nom}`);
+  }
+
+  // ══ UTILITAIRES ══════════════════════════
+  function escHtml(str) {
+    return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function formatDate(d) {
+    return new Date(d).toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function badgeTypeStage(t) {
+    const m = { initiation:'🟢 Initiation', perfectionnement:'🟡 Perfectionnement', fin_etude:'🔵 PFE' };
+    return m[t] || t;
+  }
+
+  // Fermer modals au clic extérieur
+  document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) fermerModal(); });
+  document.getElementById('modalDetail').addEventListener('click', e => { if (e.target === e.currentTarget) fermerDetail(); });
+
+  // ══ INIT ═════════════════════════════════
+  chargerProfil();
+  chargerStats();
+  chargerDeadlines();
+  chargerPeriodes();
+
+  // ══ PÉRIODES DE STAGE ════════════════════
+
+  const periodeIds = { initiation: null, perfectionnement: null, fin_etude: null };
+
+  async function chargerPeriodes() {
+    const chefId = localStorage.getItem('user_id');
+    if (!chefId) return;
+    try {
+      const resp = await fetch(`${API}/api/chef/periodes/${chefId}`);
+      if (!resp.ok) return;
+      const data = await resp.json();
+      const periodes = data.periodes || [];
+      const map = {};
+      periodes.forEach(p => { map[p.type_stage] = p; });
+
+      afficherPeriodeCard('initiation',       map['initiation'],       'pInitDebut', 'pInitFin', 'infoInit', 'btnDelInit', 'cardInit');
+      afficherPeriodeCard('perfectionnement', map['perfectionnement'], 'pPerfDebut', 'pPerfFin', 'infoPerf', 'btnDelPerf', 'cardPerf');
+      afficherPeriodeCard('fin_etude',        map['fin_etude'],        'pPfeDebut',  'pPfeFin',  'infoPfe',  'btnDelPfe',  'cardPfe');
+    } catch(e) {}
+  }
+
+  function afficherPeriodeCard(type, periode, idDebut, idFin, idInfo, idBtnDel, idCard) {
+    const infoEl   = document.getElementById(idInfo);
+    const inputDeb = document.getElementById(idDebut);
+    const inputFin = document.getElementById(idFin);
+    const btnDel   = document.getElementById(idBtnDel);
+    const card     = document.getElementById(idCard);
+
+    if (!periode) {
+      infoEl.textContent = 'Aucune période définie — les étudiants ne peuvent pas soumettre.';
+      infoEl.style.color = '#ef4444';
+      card.style.borderColor = '#fecaca';
+      btnDel && (btnDel.classList.add('hidden'));
+      periodeIds[type] = null;
+      return;
+    }
+
+    periodeIds[type] = periode.id;
+    const debut = periode.date_debut ? String(periode.date_debut).slice(0, 10) : '';
+    const fin   = periode.date_fin   ? String(periode.date_fin).slice(0, 10)   : '';
+    const today = new Date().toISOString().slice(0, 10);
+    const active = today >= debut && today <= fin;
+    const passe  = today > fin;
+
+    inputDeb.value = debut;
+    inputFin.value = fin;
+
+    if (active) {
+      infoEl.innerHTML = `<span style="color:#059669;font-weight:600">✅ Ouverte</span> — ${fmtDate(debut)} au ${fmtDate(fin)}`;
+      card.style.borderColor = '#6ee7b7';
+    } else if (passe) {
+      infoEl.innerHTML = `<span style="color:#dc2626;font-weight:600">⛔ Terminée</span> — ${fmtDate(debut)} au ${fmtDate(fin)}`;
+      card.style.borderColor = '#fecaca';
+    } else {
+      infoEl.innerHTML = `<span style="color:#f59e0b;font-weight:600">⏳ À venir</span> — ${fmtDate(debut)} au ${fmtDate(fin)}`;
+      card.style.borderColor = '#fde68a';
+    }
+    btnDel && btnDel.classList.remove('hidden');
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  async function savePeriode(type) {
+    const chefId = localStorage.getItem('user_id');
+    const map = {
+      initiation:       { debut: 'pInitDebut', fin: 'pInitFin' },
+      perfectionnement: { debut: 'pPerfDebut', fin: 'pPerfFin' },
+      fin_etude:        { debut: 'pPfeDebut',  fin: 'pPfeFin'  }
+    };
+    const { debut, fin } = map[type];
+    const date_debut = document.getElementById(debut).value;
+    const date_fin   = document.getElementById(fin).value;
+
+    if (!date_debut || !date_fin) {
+      showToastPeriode('Veuillez remplir les deux dates.', false);
+      return;
+    }
+    if (date_fin <= date_debut) {
+      showToastPeriode('La date de fin doit être après la date de début.', false);
+      return;
+    }
+
+    try {
+      const resp = await fetch(`${API}/api/chef/periodes/${chefId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type_stage: type, date_debut, date_fin })
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        showToastPeriode('Période enregistrée et étudiants notifiés ✅', true);
+        chargerPeriodes();
+      } else {
+        showToastPeriode(data.message || 'Erreur lors de l\'enregistrement.', false);
+      }
+    } catch(e) {
+      showToastPeriode('Erreur réseau.', false);
+    }
+  }
+
+  async function deletePeriode(type) {
+    if (!confirm('Supprimer cette période ? Les étudiants ne pourront plus soumettre de demande pour ce type de stage.')) return;
+    const chefId = localStorage.getItem('user_id');
+    const id = periodeIds[type];
+    if (!id) return;
+    try {
+      const resp = await fetch(`${API}/api/chef/periodes/${chefId}/${id}`, { method: 'DELETE' });
+      const data = await resp.json();
+      if (resp.ok) {
+        showToastPeriode('Période supprimée.', true);
+        chargerPeriodes();
+      } else {
+        showToastPeriode(data.message || 'Erreur.', false);
+      }
+    } catch(e) {
+      showToastPeriode('Erreur réseau.', false);
+    }
+  }
+
+  function showToastPeriode(msg, ok) {
+    const el = document.getElementById('toastPeriode');
+    el.textContent = msg;
+    el.style.background = ok ? '#dcfce7' : '#fee2e2';
+    el.style.color       = ok ? '#166534' : '#991b1b';
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 4000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Messagerie — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .chef-item { transition: background .15s; border-bottom: 1px solid #f0f4fa; }
+    .chef-item:hover { background: #f8fafc; }
+    .chef-item.active { background: #eef2f7; }
+    .msg-bubble-moi { background: #0c2340; color: #fff; border-radius: 18px 18px 4px 18px; }
+    .msg-bubble-lui { background: #fff; color: #1a2d45; border-radius: 18px 18px 18px 4px; box-shadow: 0 1px 4px rgba(12,35,64,.08); }
+    #chatMessages { scroll-behavior: smooth; }
+    .fade-in { animation: fadeIn .35s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .rec-dot { display:none; width:9px; height:9px; border-radius:50%; background:#ef4444; flex-shrink:0; animation:recBlink 1s infinite; }
+    .rec-dot.show { display:inline-block; }
+    @keyframes recBlink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .btn-vocal { background:#f0f4fa; color:#475569; transition:background .2s; }
+    .btn-vocal:hover { background:#e2e8f0; }
+    .btn-stop-vocal { background:#fee2e2; color:#dc2626; transition:background .2s; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div>
+          <p class="text-white font-bold text-sm">Gestion Stages</p>
+          <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p>
+        </div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"      class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"   class="nav-link"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"    class="nav-link"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"     class="nav-link active"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html"  class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"        class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"        class="nav-link"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"         class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 flex flex-col h-screen overflow-hidden">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 flex justify-between items-center flex-shrink-0"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">💬</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Messagerie</h1>
+          <p class="text-xs text-gray-400">Discutez avec les chefs de département</p>
+        </div>
+      </div>
+      <div id="badgeNonLus" class="hidden px-3 py-1 rounded-full text-xs font-semibold text-white" style="background:#dc2626"></div>
+    </div>
+
+    <!-- LAYOUT SPLIT -->
+    <div class="flex flex-1 overflow-hidden">
+
+      <!-- PANNEAU GAUCHE : liste des chefs -->
+      <div class="w-80 flex flex-col bg-white flex-shrink-0" style="border-right:2px solid #eef2f7">
+        <div class="p-4 flex-shrink-0" style="border-bottom:1px solid #eef2f7">
+          <p class="text-xs font-semibold uppercase tracking-wide" style="color:#64748b">Chefs de département</p>
+          <p id="compteurChefs" class="text-xs text-gray-400 mt-0.5"></p>
+        </div>
+        <div id="listeChefs" class="flex-1 overflow-y-auto">
+          <p class="text-center text-gray-400 p-8 text-sm">⏳ Chargement...</p>
+        </div>
+      </div>
+
+      <!-- PANNEAU DROIT : conversation -->
+      <div class="flex-1 flex flex-col overflow-hidden" style="background:#f0f4fa">
+
+        <!-- État vide -->
+        <div id="etatVide" class="flex-1 flex flex-col items-center justify-center gap-4">
+          <div class="w-20 h-20 rounded-full flex items-center justify-center text-4xl"
+               style="background:#eef2f7">💬</div>
+          <div class="text-center">
+            <p class="font-semibold text-gray-500">Aucune conversation sélectionnée</p>
+            <p class="text-sm text-gray-400 mt-1">Choisissez un chef de département à gauche</p>
+          </div>
+        </div>
+
+        <!-- Interface de chat -->
+        <div id="chatInterface" class="hidden flex-1 flex flex-col overflow-hidden">
+          <!-- Header du chat -->
+          <div class="bg-white px-5 py-4 flex items-center gap-4 flex-shrink-0"
+               style="border-bottom:1px solid #eef2f7;box-shadow:0 1px 4px rgba(12,35,64,.06)">
+            <div id="chatAvatar" class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0"
+                 style="background:#0c2340"></div>
+            <div>
+              <p id="chatNom" class="font-bold text-gray-800"></p>
+              <p id="chatSousTitre" class="text-xs text-gray-400"></p>
+            </div>
+            <div class="ml-auto flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-green-400"></div>
+              <span class="text-xs text-gray-400">En ligne</span>
+            </div>
+          </div>
+
+          <!-- Zone des messages -->
+          <div id="chatMessages" class="flex-1 overflow-y-auto p-5 space-y-3 fade-in">
+          </div>
+
+          <!-- Zone de saisie -->
+          <div class="bg-white p-4 flex-shrink-0" style="border-top:1px solid #eef2f7">
+            <div class="flex gap-3 items-center">
+              <input id="inputMsg" type="text"
+                     placeholder="Écrire un message à ce chef..."
+                     onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); envoyerMessage(); }"
+                     class="flex-1 border border-gray-200 rounded-2xl px-5 py-3 text-sm focus:outline-none transition-colors"
+                     style="focus-border-color:#c9930a"/>
+              <button onclick="envoyerMessage()"
+                      class="w-11 h-11 rounded-xl flex items-center justify-center text-white flex-shrink-0 transition"
+                      style="background:#0c2340">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
+              </button>
+              <div id="recDot_adm" class="rec-dot"></div>
+              <button id="btnRec_adm" onclick="startVocal()" title="Message vocal"
+                      class="btn-vocal w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg>
+              </button>
+              <button id="btnStop_adm" onclick="stopVocal()" title="Arrêter" class="hidden btn-stop-vocal w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+  const ADMIN_ID = parseInt(localStorage.getItem('admin_id'));
+  let chefActuel = null;
+  let intervalMsg = null;
+
+  // ── Charger la liste des chefs ─────────────────
+  async function chargerChefs() {
+    const r = await fetch(`${API}/api/admin/messagerie/chefs`);
+    const chefs = await r.json();
+    const container = document.getElementById('listeChefs');
+    const totalNonLus = chefs.reduce((acc, c) => acc + (c.non_lus || 0), 0);
+
+    const badge = document.getElementById('badgeNonLus');
+    if (totalNonLus > 0) {
+      badge.textContent = `${totalNonLus} non lu${totalNonLus > 1 ? 's' : ''}`;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+
+    document.getElementById('compteurChefs').textContent =
+      `${chefs.length} chef${chefs.length !== 1 ? 's' : ''}`;
+
+    container.innerHTML = '';
+    if (chefs.length === 0) {
+      container.innerHTML = `<div class="flex flex-col items-center justify-center p-10 gap-3">
+        <span class="text-4xl">👨‍💼</span>
+        <p class="text-gray-400 text-sm text-center">Aucun chef de département.<br>Promouvez d'abord un encadrant.</p>
+      </div>`;
+      return;
+    }
+
+    chefs.forEach(c => {
+      const div = document.createElement('div');
+      div.className = `chef-item px-4 py-4 cursor-pointer flex items-center gap-3 ${chefActuel && chefActuel.id === c.id ? 'active' : ''}`;
+      div.onclick = () => selectionnerChef(c);
+      div.innerHTML = `
+        <div class="relative flex-shrink-0">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm text-white"
+               style="background:${chefActuel && chefActuel.id === c.id ? '#c9930a' : '#0c2340'}">
+            ${c.prenom[0]}${c.nom[0]}
+          </div>
+          ${c.non_lus > 0 ? `<span class="absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs flex items-center justify-center text-white font-bold" style="background:#dc2626">${c.non_lus}</span>` : ''}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2">
+            <p class="font-semibold text-gray-800 text-sm truncate">${c.prenom} ${c.nom}</p>
+            ${c.date_dernier ? `<p class="text-xs text-gray-400 flex-shrink-0">${formatHeure(c.date_dernier)}</p>` : ''}
+          </div>
+          <p class="text-xs mt-0.5" style="color:#c9930a">${c.departement || '—'}</p>
+          <p class="text-xs text-gray-400 truncate mt-0.5">
+            ${c.dernier_message ? c.dernier_message : '<span class="italic">Aucun message</span>'}
+          </p>
+        </div>`;
+      container.appendChild(div);
+    });
+  }
+
+  // ── Sélectionner un chef ───────────────────────
+  async function selectionnerChef(chef) {
+    chefActuel = chef;
+    clearInterval(intervalMsg);
+
+    document.getElementById('etatVide').classList.add('hidden');
+    document.getElementById('chatInterface').classList.remove('hidden');
+
+    document.getElementById('chatAvatar').textContent = `${chef.prenom[0]}${chef.nom[0]}`;
+    document.getElementById('chatNom').textContent     = `${chef.prenom} ${chef.nom}`;
+    document.getElementById('chatSousTitre').textContent = chef.departement
+      ? `Chef — Dép. ${chef.departement}` : 'Chef de département';
+
+    await chargerMessages();
+    chargerChefs(); // refresh sidebar (clear badge)
+    intervalMsg = setInterval(chargerMessages, 5000);
+  }
+
+  // ── Charger les messages ───────────────────────
+  async function chargerMessages() {
+    if (!chefActuel) return;
+    const r = await fetch(`${API}/api/admin/messagerie/${chefActuel.id}`);
+    const messages = await r.json();
+    const container = document.getElementById('chatMessages');
+    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 60;
+
+    container.innerHTML = '';
+    if (messages.length === 0) {
+      container.innerHTML = `<div class="flex flex-col items-center justify-center h-full gap-3 py-16">
+        <span class="text-5xl">✉️</span>
+        <p class="text-gray-400 text-sm">Commencez la conversation avec ce chef !</p>
+      </div>`;
+      return;
+    }
+
+    let lastDate = '';
+    messages.forEach(m => {
+      const msgDate = new Date(m.date_envoi).toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+      if (msgDate !== lastDate) {
+        lastDate = msgDate;
+        const sep = document.createElement('div');
+        sep.className = 'flex items-center gap-3 my-2';
+        sep.innerHTML = `<div class="flex-1 h-px bg-gray-200"></div><p class="text-xs text-gray-400 flex-shrink-0 capitalize">${msgDate}</p><div class="flex-1 h-px bg-gray-200"></div>`;
+        container.appendChild(sep);
+      }
+
+      const estMoi = m.expediteur_id === ADMIN_ID;
+      const div = document.createElement('div');
+      div.className = `flex ${estMoi ? 'justify-end' : 'justify-start'}`;
+      div.innerHTML = `
+        <div class="max-w-xs lg:max-w-md xl:max-w-lg">
+          <div class="${estMoi ? 'msg-bubble-moi' : 'msg-bubble-lui'} px-4 py-3 text-sm leading-relaxed">
+            ${m.contenu && m.contenu.startsWith('audio/') ? '<audio controls style="max-width:200px;height:32px"><source src="' + API + '/uploads/' + m.contenu + '"></audio>' : escapeHtml(m.contenu)}
+          </div>
+          <p class="text-xs text-gray-400 mt-1 ${estMoi ? 'text-right' : 'text-left'} px-1">
+            ${formatDate(m.date_envoi)}${estMoi && m.est_lu ? ' · ✓✓' : ''}
+          </p>
+        </div>`;
+      container.appendChild(div);
+    });
+
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  }
+
+  // ── Envoyer un message ─────────────────────────
+  async function envoyerMessage() {
+    const input = document.getElementById('inputMsg');
+    const contenu = input.value.trim();
+    if (!contenu || !chefActuel) return;
+    input.value = '';
+    await fetch(`${API}/api/admin/messagerie/${chefActuel.id}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contenu })
+    });
+    await chargerMessages();
+    chargerChefs();
+  }
+
+  // ── Utilitaires ────────────────────────────────
+  function formatHeure(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const diff = Date.now() - d;
+    if (diff < 60000)    return 'À l\'instant';
+    if (diff < 3600000)  return `${Math.floor(diff / 60000)}min`;
+    if (diff < 86400000) return d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+    return d.toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+  }
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  }
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── MESSAGES VOCAUX ─────────────────────────── */
+  let _vRecorder = null, _vChunks = [], _vStream = null;
+
+  async function startVocal() {
+    if (!chefActuel) return;
+    try {
+      _vStream   = await navigator.mediaDevices.getUserMedia({ audio: true });
+      _vRecorder = new MediaRecorder(_vStream);
+      _vChunks   = [];
+      _vRecorder.ondataavailable = e => { if (e.data.size > 0) _vChunks.push(e.data); };
+      _vRecorder.start();
+      document.getElementById('btnRec_adm').classList.add('hidden');
+      document.getElementById('btnStop_adm').classList.remove('hidden');
+      document.getElementById('recDot_adm').classList.add('show');
+    } catch(e) { console.error('Micro non disponible', e); }
+  }
+
+  function stopVocal() {
+    if (!_vRecorder || !chefActuel) return;
+    _vRecorder.onstop = async () => {
+      const fd = new FormData();
+      fd.append('audio', new Blob(_vChunks, { type: 'audio/webm' }), 'voice.webm');
+      fd.append('expediteur_id',   ADMIN_ID);
+      fd.append('destinataire_id', chefActuel.id);
+      fd.append('stage_id',        '');
+      await fetch(API + '/send-audio', { method: 'POST', body: fd });
+      await chargerMessages();
+      chargerChefs();
+      if (_vStream) { _vStream.getTracks().forEach(t => t.stop()); _vStream = null; }
+    };
+    _vRecorder.stop();
+    document.getElementById('btnRec_adm').classList.remove('hidden');
+    document.getElementById('btnStop_adm').classList.add('hidden');
+    document.getElementById('recDot_adm').classList.remove('show');
+  }
+
+  chargerChefs();
+</script>
+</body>
+</html>

@@ -1,0 +1,499 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Utilisateurs — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+  <script src="/auth.js"></script>
+  <script src="/jwt.js"></script>
+</head>
+
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div>
+          <p class="text-white font-bold text-sm">Gestion Stages</p>
+          <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p>
+        </div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"   class="nav-link active"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"    class="nav-link"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"     class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html"  class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"        class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"        class="nav-link"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"         class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">👥</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Gestion des Utilisateurs</h1>
+          <p class="text-xs text-gray-400">Gérez les comptes de la plateforme</p>
+        </div>
+      </div>
+      <button onclick="ouvrirModal()"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold transition"
+              style="background:#0c2340">
+        ➕ Créer un compte
+      </button>
+    </div>
+
+    <div class="p-6 fade-in">
+
+      <!-- Filtres -->
+      <div class="bg-white rounded-2xl p-4 mb-6 flex gap-4 items-center"
+           style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <input id="recherche" type="text" placeholder="🔍 Rechercher un utilisateur..."
+               oninput="filtrer()"
+               class="border border-gray-200 rounded-xl px-4 py-2 text-sm flex-1 focus:outline-none focus:border-yellow-500"/>
+        <select id="filtreRole" onchange="filtrer()"
+                class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les rôles</option>
+          <option value="etudiant">Étudiants</option>
+          <option value="encadrant">Encadrants</option>
+          <option value="chef_departement">Chefs de département</option>
+          <option value="administrateur">Administrateurs</option>
+        </select>
+        <select id="filtreStatut" onchange="filtrer()"
+                class="border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-600 focus:outline-none bg-white">
+          <option value="">Tous les statuts</option>
+          <option value="1">Actifs</option>
+          <option value="0">Suspendus</option>
+        </select>
+      </div>
+
+      <!-- Tableau -->
+      <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold" style="color:#0c2340">
+            Liste des utilisateurs
+            <span id="compteur" class="text-sm font-normal text-gray-400 ml-2"></span>
+          </h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr style="background:#f0f4fa">
+                <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Nom</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Rôle</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Département</th>
+                <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Statut</th>
+                <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableauUsers" class="divide-y divide-gray-100">
+              <tr><td colspan="6" class="text-center py-8 text-gray-400">⏳ Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL PROMOTION -->
+<div id="modalPromotion" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4">
+    <div class="flex justify-between items-center mb-5">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold"
+             style="background:linear-gradient(135deg,#059669,#34d399)">⬆️</div>
+        <h3 class="text-lg font-bold" style="color:#0c2340">Promouvoir en Chef de Département</h3>
+      </div>
+      <button onclick="fermerModalPromotion()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+    </div>
+    <!-- Info encadrant -->
+    <div id="promoInfoUser" class="flex items-center gap-3 p-4 rounded-2xl mb-5" style="background:#f0f4fa">
+      <div id="promoAvatar" class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg text-white flex-shrink-0" style="background:#0c2340"></div>
+      <div>
+        <p id="promoNom" class="font-bold text-gray-800"></p>
+        <p class="text-xs text-gray-500 mt-0.5">Actuellement : <span class="text-amber-600 font-medium">👨‍🏫 Encadrant</span></p>
+        <p id="promoDeptActuel" class="text-xs text-gray-400 mt-0.5"></p>
+      </div>
+    </div>
+    <div class="mb-5">
+      <label class="text-sm font-semibold text-gray-700 mb-2 block">Département assigné</label>
+      <select id="promoDept" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-white">
+        <option value="">-- Sélectionner un département --</option>
+      </select>
+      <p class="text-xs text-gray-400 mt-1.5">Le département est pré-sélectionné selon le département actuel de l'encadrant.</p>
+    </div>
+    <div class="p-4 rounded-xl mb-5 flex gap-3" style="background:#fef3c7;border:1px solid #fcd34d">
+      <span class="text-xl flex-shrink-0">⚠️</span>
+      <p class="text-sm text-amber-800">L'encadrant conserve ses étudiants encadrés. Il prendra en plus les responsabilités de chef de département.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="fermerModalPromotion()"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm transition">
+        Annuler
+      </button>
+      <button onclick="confirmerPromotion()"
+              class="flex-1 text-white py-3 rounded-xl font-medium text-sm transition"
+              style="background:linear-gradient(135deg,#059669,#047857)">
+        ✅ Confirmer la promotion
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CRÉER UN COMPTE -->
+<div id="modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg mx-4">
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold"
+             style="background:#0c2340">➕</div>
+        <h3 class="text-lg font-bold" style="color:#0c2340">Créer un nouveau compte</h3>
+      </div>
+      <button onclick="fermerModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold">×</button>
+    </div>
+    <div id="modalErreur" class="hidden mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm"></div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-1 block">Prénom</label>
+          <input id="cPrenom" type="text" placeholder="Prénom"
+                 class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-1 block">Nom</label>
+          <input id="cNom" type="text" placeholder="Nom"
+                 class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Email</label>
+        <input id="cEmail" type="email" placeholder="email@exemple.com"
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Mot de passe</label>
+        <input id="cPassword" type="password" placeholder="Minimum 6 caractères"
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-1 block">Rôle</label>
+          <select id="cRole" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-white">
+            <option value="etudiant">🎓 Étudiant</option>
+            <option value="encadrant">👨‍🏫 Encadrant</option>
+            <option value="chef_departement">👨‍💼 Chef département</option>
+            <option value="administrateur">👑 Administrateur</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium text-gray-600 mb-1 block">Département</label>
+          <select id="cDept" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none bg-white">
+            <option value="">-- Aucun --</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-sm font-medium text-gray-600 mb-1 block">Téléphone (optionnel)</label>
+        <input id="cTel" type="text" placeholder="+216 XX XXX XXX"
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none"/>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerModal()"
+              class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-medium text-sm transition">
+        Annuler
+      </button>
+      <button onclick="creerCompte()"
+              class="flex-1 text-white py-3 rounded-xl font-medium text-sm transition"
+              style="background:#0c2340">
+        ✅ Créer le compte
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+  let tousLesUsers = [];
+
+  async function chargerUsers() {
+    const reponse = await jwtFetch(`${API}/api/admin/utilisateurs`);
+    tousLesUsers  = await reponse.json();
+    afficherUsers(tousLesUsers);
+  }
+
+  function afficherUsers(users) {
+    const tbody = document.getElementById('tableauUsers');
+    document.getElementById('compteur').textContent = `(${users.length})`;
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-400">Aucun utilisateur trouvé</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = '';
+    users.forEach(u => {
+      tbody.innerHTML += `
+        <tr class="hover:bg-gray-50 transition">
+          <td class="px-4 py-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs text-white ${couleurRole(u.role)}">
+                ${u.prenom[0]}${u.nom[0]}
+              </div>
+              <div>
+                <p class="font-medium text-gray-800">${u.prenom} ${u.nom}</p>
+                <p class="text-xs text-gray-400">${u.telephone || ''}</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-4 text-gray-600">${u.email}</td>
+          <td class="px-4 py-4"><span class="px-2 py-1 rounded-full text-xs font-medium ${badgeRole(u.role)}">${labelRole(u.role)}</span></td>
+          <td class="px-4 py-4 text-gray-600">${u.departement || '—'}</td>
+          <td class="px-4 py-4">
+            <span class="px-2 py-1 rounded-full text-xs font-medium ${u.est_actif ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}">
+              ${u.est_actif ? '✅ Actif' : '⛔ Suspendu'}
+            </span>
+          </td>
+          <td class="px-4 py-4">
+            <div class="flex gap-2 flex-wrap">
+              <button onclick="toggleActif(${u.id}, ${u.est_actif})"
+                      class="text-xs px-3 py-1 rounded-lg border ${u.est_actif ? 'border-red-200 text-red-500 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}">
+                ${u.est_actif ? '⛔ Suspendre' : '✅ Activer'}
+              </button>
+              ${u.role === 'encadrant' ? `<button onclick="ouvrirModalPromotion(${u.id})" class="text-xs px-3 py-1 rounded-lg border border-amber-200 text-amber-600 hover:bg-amber-50">⬆️ Chef</button>` : ''}
+              ${u.role === 'chef_departement' ? `<button onclick="retrograder(${u.id})" class="text-xs px-3 py-1 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50">⬇️ Encadrant</button>` : ''}
+              <button onclick="supprimer(${u.id})"
+                      class="text-xs px-3 py-1 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    });
+  }
+
+  function filtrer() {
+    const recherche = document.getElementById('recherche').value.toLowerCase();
+    const role      = document.getElementById('filtreRole').value;
+    const statut    = document.getElementById('filtreStatut').value;
+    const resultats = tousLesUsers.filter(u => {
+      const nomComplet = `${u.prenom} ${u.nom} ${u.email}`.toLowerCase();
+      return nomComplet.includes(recherche) &&
+             (role   === '' || u.role === role) &&
+             (statut === '' || String(u.est_actif ? 1 : 0) === statut);
+    });
+    afficherUsers(resultats);
+  }
+
+  async function toggleActif(id, estActif) {
+    const nouvelEtat = estActif ? 0 : 1;
+    await jwtFetch(`${API}/api/admin/utilisateurs/${id}/activer`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ est_actif: nouvelEtat })
+    });
+    chargerUsers();
+  }
+
+  async function supprimer(id) {
+    const u = tousLesUsers.find(x => x.id === id);
+    const nom = u ? `${u.prenom} ${u.nom}` : `#${id}`;
+    if (!confirm(`Supprimer ${nom} ?`)) return;
+    await jwtFetch(`${API}/api/admin/utilisateurs/${id}`, { method: 'DELETE' });
+    chargerUsers();
+  }
+
+  function couleurRole(role) {
+    if (role === 'etudiant')          return 'bg-blue-500';
+    if (role === 'encadrant')         return 'bg-amber-500';
+    if (role === 'chef_departement')  return 'bg-green-600';
+    if (role === 'administrateur')    return 'bg-purple-500';
+    return 'bg-gray-500';
+  }
+  function badgeRole(role) {
+    if (role === 'etudiant')          return 'bg-blue-100 text-blue-600';
+    if (role === 'encadrant')         return 'bg-amber-100 text-amber-600';
+    if (role === 'chef_departement')  return 'bg-green-100 text-green-700';
+    if (role === 'administrateur')    return 'bg-purple-100 text-purple-600';
+    return 'bg-gray-100 text-gray-600';
+  }
+  function labelRole(role) {
+    if (role === 'etudiant')          return '🎓 Étudiant';
+    if (role === 'encadrant')         return '👨‍🏫 Encadrant';
+    if (role === 'chef_departement')  return '👨‍💼 Chef Dép.';
+    if (role === 'administrateur')    return '👑 Admin';
+    return role;
+  }
+
+  chargerUsers();
+
+  // ── Promotion ────────────────────────────
+  let userAPromouvoir = null;
+
+  async function ouvrirModalPromotion(id) {
+    userAPromouvoir = tousLesUsers.find(u => u.id === id);
+    if (!userAPromouvoir) return;
+    const u = userAPromouvoir;
+    const ini = (u.prenom[0] + u.nom[0]).toUpperCase();
+    document.getElementById('promoAvatar').textContent    = ini;
+    document.getElementById('promoNom').textContent       = `${u.prenom} ${u.nom}`;
+    document.getElementById('promoDeptActuel').textContent = u.departement ? `Département : ${u.departement}` : 'Aucun département';
+
+    // Charger les départements
+    const r = await fetch(`${API}/api/admin/departements`);
+    const depts = await r.json();
+    const select = document.getElementById('promoDept');
+    select.innerHTML = '<option value="">-- Sélectionner un département --</option>';
+    depts.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.nom;
+      if (u.departement_id && u.departement_id == d.id) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    document.getElementById('modalPromotion').classList.remove('hidden');
+  }
+
+  function fermerModalPromotion() {
+    document.getElementById('modalPromotion').classList.add('hidden');
+    userAPromouvoir = null;
+  }
+
+  async function confirmerPromotion() {
+    const dept = document.getElementById('promoDept').value;
+    if (!dept) { alert('Veuillez sélectionner un département.'); return; }
+    const r = await jwtFetch(`${API}/api/admin/utilisateurs/${userAPromouvoir.id}/role`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'chef_departement', departement_id: dept })
+    });
+    const data = await r.json();
+    if (r.ok) { fermerModalPromotion(); chargerUsers(); }
+    else alert(`Erreur : ${data.message}`);
+  }
+
+  async function retrograder(id) {
+    const u = tousLesUsers.find(x => x.id === id);
+    if (!u) return;
+    if (!confirm(`Rétrograder ${u.prenom} ${u.nom} en encadrant ?`)) return;
+    const r = await jwtFetch(`${API}/api/admin/utilisateurs/${id}/role`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'encadrant' })
+    });
+    if (r.ok) chargerUsers();
+    else { const d = await r.json(); alert(`Erreur : ${d.message}`); }
+  }
+
+  document.getElementById('modalPromotion').addEventListener('click', function(e) {
+    if (e.target === this) fermerModalPromotion();
+  });
+
+  function ouvrirModal() {
+    document.getElementById('modal').classList.remove('hidden');
+    ['cPrenom','cNom','cEmail','cPassword','cTel'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('modalErreur').classList.add('hidden');
+    // Charger les départements depuis l'API
+    fetch(`${API}/api/admin/departements`).then(r => r.json()).then(depts => {
+      const sel = document.getElementById('cDept');
+      sel.innerHTML = '<option value="">-- Aucun --</option>';
+      depts.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d.id; o.textContent = d.nom;
+        sel.appendChild(o);
+      });
+    }).catch(() => {});
+  }
+
+  function fermerModal() {
+    document.getElementById('modal').classList.add('hidden');
+  }
+
+  async function creerCompte() {
+    const body = {
+      prenom        : document.getElementById('cPrenom').value,
+      nom           : document.getElementById('cNom').value,
+      email         : document.getElementById('cEmail').value,
+      password      : document.getElementById('cPassword').value,
+      role          : document.getElementById('cRole').value,
+      departement_id: document.getElementById('cDept').value || null,
+      telephone     : document.getElementById('cTel').value,
+    };
+    if (!body.prenom || !body.nom || !body.email || !body.password) {
+      document.getElementById('modalErreur').textContent = '⚠️ Veuillez remplir tous les champs !';
+      document.getElementById('modalErreur').classList.remove('hidden');
+      return;
+    }
+    if (body.password.length < 6) {
+      document.getElementById('modalErreur').textContent = '⚠️ Mot de passe trop court (min 6 caractères) !';
+      document.getElementById('modalErreur').classList.remove('hidden');
+      return;
+    }
+    const reponse = await jwtFetch(`${API}/api/admin/utilisateurs`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await reponse.json();
+    if (reponse.ok) { fermerModal(); chargerUsers(); }
+    else {
+      document.getElementById('modalErreur').textContent = `⚠️ ${data.message}`;
+      document.getElementById('modalErreur').classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('modal').addEventListener('click', function(e) {
+    if (e.target === this) fermerModal();
+  });
+
+</script>
+</body>
+</html>

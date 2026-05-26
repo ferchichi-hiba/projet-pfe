@@ -1,0 +1,319 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Chef de Département</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .stat-card { background:#fff; border-radius:18px; padding:22px; position:relative; overflow:hidden; box-shadow:0 2px 16px rgba(12,35,64,.08); transition:transform .3s, box-shadow .3s; }
+    .stat-card:hover { transform:translateY(-6px); box-shadow:0 16px 36px rgba(12,35,64,.15); }
+    .stat-card::after { content:''; position:absolute; bottom:-18px; right:-18px; width:80px; height:80px; border-radius:50%; background:currentColor; opacity:.04; }
+    .stat-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; margin-bottom:18px; flex-shrink:0; }
+    .stat-val { font-size:2.6rem; font-weight:900; line-height:1; margin-bottom:4px; }
+    .stat-lbl { font-size:.84rem; font-weight:700; color:#1f2937; }
+    .stat-sub { font-size:.72rem; color:#9ca3af; margin-top:3px; }
+    .stat-bar { height:3px; border-radius:99px; margin-top:20px; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">CH</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Chef</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="nomDept">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html" class="nav-link active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="demandes.html" class="nav-link"><span class="nav-icon">📩</span> Demandes</a>
+      <a href="affectation.html" class="nav-link"><span class="nav-icon">🔗</span> Affectation</a>
+      <a href="stages.html" class="nav-link"><span class="nav-icon">📋</span> Stages</a>
+      <a href="deadlines.html" class="nav-link"><span class="nav-icon">⏰</span> Deadlines</a>
+      <a href="suggestions.html"   class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="soutenances.html" class="nav-link"><span class="nav-icon">🎓</span> Soutenances</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="ressources.html"    class="nav-link"><span class="nav-icon">📚</span> Ressources</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">📊</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Dashboard Chef de Département</h1>
+          <p class="text-xs text-gray-400"><span id="sousTitre">Chargement...</span></p>
+        </div>
+      </div>
+      <!-- Icônes messagerie + notifications -->
+      <div class="flex items-center gap-1">
+        <a href="messagerie.html" title="Messagerie"
+           class="relative p-2 rounded-xl hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="#0c2340" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <span id="badgeMsg" class="hidden absolute -top-1 -right-1 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style="background:#c9930a"></span>
+        </a>
+        <a href="notifications.html" title="Notifications"
+           class="relative p-2 rounded-xl hover:bg-gray-100 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="#0c2340" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+          <span id="badgeNotif" class="hidden absolute -top-1 -right-1 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold" style="background:#dc2626"></span>
+        </a>
+      </div>
+    </div>
+    <div class="p-6 fade-in">
+      <div class="rounded-2xl p-6 mb-6 text-white relative overflow-hidden"
+           style="background:linear-gradient(135deg,#0c2340,#1e4d7b)">
+        <div class="absolute right-6 top-2 text-8xl opacity-10 select-none">🏛️</div>
+        <p class="text-sm mb-1" style="color:rgba(201,147,10,.9)">Vous gérez le département</p>
+        <h2 id="titreBanniere" class="text-3xl font-bold">--</h2>
+        <p id="descBanniere" class="text-sm mt-2" style="color:rgba(255,255,255,.7)">--</p>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#eef2f7">📋</div>
+          <p class="stat-val" style="color:#0c2340" id="totalStages">--</p>
+          <p class="stat-lbl">Total Stages</p>
+          <p class="stat-sub">En cours + Validés</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#0c2340,#1e4d7b)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#fef3c7">⏳</div>
+          <p class="stat-val" style="color:#c9930a" id="enAttente">--</p>
+          <p class="stat-lbl">En attente</p>
+          <p class="stat-sub">Décision requise</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#c9930a,#f5d87e)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#d1fae5">🟢</div>
+          <p class="stat-val" style="color:#059669" id="enCours">--</p>
+          <p class="stat-lbl">En cours</p>
+          <p class="stat-sub">Stages actifs</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#059669,#34d399)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#cffafe">🎓</div>
+          <p class="stat-val" style="color:#0891b2" id="nbEtudiants">--</p>
+          <p class="stat-lbl">Étudiants</p>
+          <p class="stat-sub">Inscrits</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#0891b2,#22d3ee)"></div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background:#ede9fe">👨‍🏫</div>
+          <p class="stat-val" style="color:#7c3aed" id="nbEncadrants">--</p>
+          <p class="stat-lbl">Encadrants</p>
+          <p class="stat-sub">Actifs</p>
+          <div class="stat-bar" style="background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div>
+        </div>
+
+      </div>
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h3 class="font-bold mb-4" style="color:#0c2340">📊 Stages par statut</h3>
+          <canvas id="graphStatut" height="220"></canvas>
+        </div>
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h3 class="font-bold mb-4" style="color:#0c2340">👨‍🏫 Charge des encadrants</h3>
+          <canvas id="graphEncadrants" height="220"></canvas>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-6 mb-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="font-bold" style="color:#0c2340">📋 Stages récents</h3>
+          <a href="stages.html" class="text-sm font-medium hover:underline" style="color:#c9930a">Voir tous →</a>
+        </div>
+        <table class="w-full text-sm">
+          <thead><tr style="background:#f0f4fa">
+            <th class="px-4 py-3 text-left rounded-l-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Étudiant</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Type</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Sujet</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Encadrant</th>
+            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Progression</th>
+            <th class="px-4 py-3 text-left rounded-r-xl text-xs font-bold uppercase tracking-wide" style="color:#1a2d45">Statut</th>
+          </tr></thead>
+          <tbody id="tableauStages" class="divide-y divide-gray-100">
+            <tr><td colspan="6" class="text-center py-6 text-gray-400">⏳ Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <h3 class="font-bold mb-4" style="color:#0c2340">👨‍🏫 Disponibilité des encadrants</h3>
+        <div id="listeEncadrants" class="grid grid-cols-2 gap-4"></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  checkAuth('chef_departement');
+  const API     = 'http://localhost:3000';
+  const DEPT_ID = parseInt(localStorage.getItem('dept_id'));
+  const CHEF_ID = parseInt(localStorage.getItem('chef_id'));
+
+  async function chargerDashboard() {
+    // Charger le profil du chef pour la sidebar
+    try {
+      const rp = await fetch(`${API}/api/chef/profil/${CHEF_ID}`);
+      const chef = await rp.json();
+      const initiales = (chef.prenom[0] + chef.nom[0]).toUpperCase();
+      document.getElementById('avatarMenu').textContent = initiales;
+      document.getElementById('nomMenu').textContent    = `${chef.prenom} ${chef.nom}`;
+      localStorage.setItem('chef_id', chef.id);
+    } catch(e) {}
+    // Badges messagerie & notifications
+    try {
+      const rm = await fetch(`${API}/api/chef/messagerie/${CHEF_ID}/non-lus`);
+      const { nb } = await rm.json();
+      const badgeMsg = document.getElementById('badgeMsg');
+      if (nb > 0) { badgeMsg.textContent = nb > 9 ? '9+' : nb; badgeMsg.classList.remove('hidden'); }
+    } catch(e) {}
+    try {
+      const rn = await fetch(`${API}/api/chef/notifications/${CHEF_ID}`);
+      const { nb_non_lues } = await rn.json();
+      const badgeNotif = document.getElementById('badgeNotif');
+      if (nb_non_lues > 0) { badgeNotif.textContent = nb_non_lues > 9 ? '9+' : nb_non_lues; badgeNotif.classList.remove('hidden'); }
+    } catch(e) {}
+
+    // Charger les données du dashboard
+    const reponse = await fetch(`${API}/api/chef/dashboard/${DEPT_ID}`);
+    const data    = await reponse.json();
+
+    // Bannière
+    document.getElementById('titreBanniere').textContent = `🏛️ ${data.dept.nom}`;
+    document.getElementById('descBanniere').textContent  = data.dept.description || '';
+    document.getElementById('sousTitre').textContent     = `Département ${data.dept.nom}`;
+    document.getElementById('nomDept').textContent       = data.dept.nom;
+
+    // Statistiques — backend retourne : totaux, nb_etudiants, nb_encadrants
+    const t = data.totaux || {};
+    document.getElementById('totalStages').textContent  = (Number(t.en_cours) || 0) + (Number(t.valides) || 0);
+    document.getElementById('enAttente').textContent    = Number(t.en_attente)       || 0;
+    document.getElementById('enCours').textContent      = Number(t.en_cours)         || 0;
+    document.getElementById('nbEtudiants').textContent  = Number(data.nb_etudiants)  || 0;
+    document.getElementById('nbEncadrants').textContent = Number(data.nb_encadrants) || 0;
+
+    // Graphique statuts
+    new Chart(document.getElementById('graphStatut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['En attente','✔ Acceptée','Affecté','En cours','Rapport déposé','Validé','Non validé'],
+        datasets: [{ data: [t.en_attente||0, t.acceptes_sans_enc||0, t.affectes||0, t.en_cours||0, t.rapports_deposes||0, t.valides||0, t.non_valides||0], backgroundColor: ['#c9930a','#0d9488','#0891b2','#059669','#7c3aed','#0c2340','#dc2626'], borderWidth:3, borderColor:'#fff' }]
+      },
+      options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Tableau stages récents — backend retourne : stagesRecents
+    const tbody = document.getElementById('tableauStages');
+    tbody.innerHTML = '';
+    const stages = data.stagesRecents || [];
+    if (!stages.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-gray-400">Aucun stage</td></tr>';
+    } else {
+      stages.slice(0,8).forEach(s => {
+        tbody.innerHTML += `<tr class="hover:bg-gray-50 transition">
+          <td class="px-4 py-4 font-medium text-gray-800">${s.etudiant}</td>
+          <td class="px-4 py-4">${badgeType(s.type_stage)}</td>
+          <td class="px-4 py-4 text-gray-600">${s.titre}</td>
+          <td class="px-4 py-4 text-gray-600">${s.encadrant||'—'}</td>
+          <td class="px-4 py-4"><div class="flex items-center gap-2"><div class="w-20 bg-gray-200 rounded-full h-2"><div class="h-2 rounded-full" style="width:${s.progression}%;background:#0c2340"></div></div><span class="text-xs text-gray-600">${s.progression}%</span></div></td>
+          <td class="px-4 py-4">${badgeStatut(s.statut)}</td>
+        </tr>`;
+      });
+    }
+
+    // Graphique encadrants — backend retourne : encadrants[{ nom, nb_etudiants_actuel, nb_etudiants_max }]
+    const encadrants = data.encadrants || [];
+    const encLabels  = encadrants.slice(0,6).map(e => e.nom);
+    const encData    = encadrants.slice(0,6).map(e => e.nb_etudiants_actuel);
+    new Chart(document.getElementById('graphEncadrants'), {
+      type: 'bar',
+      data: { labels: encLabels, datasets: [{ label: 'Étudiants', data: encData, backgroundColor: '#0c2340', borderRadius: 8 }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    // Liste encadrants
+    const listeEnc = document.getElementById('listeEncadrants');
+    listeEnc.innerHTML = '';
+    if (!encadrants.length) {
+      listeEnc.innerHTML = '<p class="col-span-2 text-center text-gray-400 py-4">Aucun encadrant</p>';
+    } else {
+      encadrants.forEach(e => {
+        const pct = e.nb_etudiants_max > 0 ? Math.round((e.nb_etudiants_actuel / e.nb_etudiants_max) * 100) : 0;
+        // e.nom est le nom complet (CONCAT du backend)
+        const parts    = e.nom.split(' ');
+        const initials = parts.map(p => p[0]).join('').substring(0,2).toUpperCase();
+        listeEnc.innerHTML += `<div class="bg-white rounded-2xl p-4" style="border:1px solid #eef2f7">
+          <div class="flex justify-between items-start mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm text-white" style="background:#0c2340">${initials}</div>
+              <div><p class="font-semibold text-gray-800 text-sm">${e.nom}</p></div>
+            </div>
+            <span class="text-xs font-semibold px-2 py-1 rounded-full" style="background:#eef2f7;color:#0c2340">${e.nb_etudiants_actuel} étudiant(s)</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div class="h-2 rounded-full" style="width:${pct}%;background:${pct>=100?'#c9930a':'#0c2340'}"></div>
+          </div>
+        </div>`;
+      });
+    }
+  }
+  function badgeType(type) {
+    const s = { initiation:'bg-green-100 text-green-600', perfectionnement:'bg-amber-100 text-amber-600', fin_etude:'bg-red-100 text-red-600' };
+    const l = { initiation:'Initiation', perfectionnement:'Perfectionnement', fin_etude:'PFE' };
+    return `<span class="${s[type]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[type]||type}</span>`;
+  }
+  function badgeStatut(statut) {
+    const s = { en_attente:'bg-amber-100 text-amber-600', accepte:'bg-teal-100 text-teal-600', affecte:'bg-blue-100 text-blue-600', en_cours:'bg-green-100 text-green-600', valide:'bg-cyan-100 text-cyan-600', refuse:'bg-red-100 text-red-600', non_valide:'bg-red-200 text-red-700' };
+    const l = { en_attente:'En attente', accepte:'Acceptée', affecte:'Affecté', en_cours:'En cours', valide:'Validé', refuse:'Refusé', non_valide:'Non validé ⛔' };
+    return `<span class="${s[statut]||'bg-gray-100 text-gray-600'} px-2 py-1 rounded-full text-xs font-medium">${l[statut]||statut}</span>`;
+  }
+  chargerDashboard();
+</script>
+</body>
+</html>

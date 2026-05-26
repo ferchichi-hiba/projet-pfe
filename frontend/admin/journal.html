@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Journal d'activité — Administration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    .timeline-line { position: absolute; left: 19px; top: 0; bottom: 0; width: 2px; background: #eef2f7; }
+    .timeline-dot { position: relative; z-index: 1; }
+    .entry-card { transition: all .2s; }
+    .entry-card:hover { transform: translateX(4px); }
+    .filtre-btn { transition: all .15s; }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div>
+          <p class="text-white font-bold text-sm">Gestion Stages</p>
+          <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p>
+        </div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340">AD</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold">Administrateur</p>
+          <p class="text-xs" style="color:#c9930a">Super Admin</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="utilisateurs.html"  class="nav-link"><span class="nav-icon">👥</span> Utilisateurs</a>
+      <a href="departement.html"   class="nav-link"><span class="nav-icon">🏛️</span> Départements</a>
+      <a href="messagerie.html"    class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="reunion.html"       class="nav-link"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="journal.html"       class="nav-link active"><span class="nav-icon">🗂️</span> Journal</a>
+      <a href="profil.html"        class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+
+    <!-- TOPBAR -->
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">🗂️</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Journal d'activité</h1>
+          <p class="text-xs text-gray-400">Historique des événements de la plateforme</p>
+        </div>
+      </div>
+      <button onclick="chargerJournal()"
+              class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 transition">
+        🔄 Actualiser
+      </button>
+    </div>
+
+    <div class="p-6 fade-in max-w-4xl mx-auto">
+
+      <!-- Statistiques rapides -->
+      <div id="statsSection" class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="box-shadow:0 2px 12px rgba(12,35,64,.07);border-top:3px solid #3b82f6">
+          <span class="text-3xl">👤</span>
+          <div><p id="cptUsers" class="text-2xl font-bold" style="color:#0c2340">--</p><p class="text-xs text-gray-400">Utilisateurs enregistrés</p></div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="box-shadow:0 2px 12px rgba(12,35,64,.07);border-top:3px solid #059669">
+          <span class="text-3xl">📋</span>
+          <div><p id="cptStages" class="text-2xl font-bold" style="color:#0c2340">--</p><p class="text-xs text-gray-400">Stages enregistrés</p></div>
+        </div>
+        <div class="bg-white rounded-2xl p-5 flex items-center gap-4" style="box-shadow:0 2px 12px rgba(12,35,64,.07);border-top:3px solid #7c3aed">
+          <span class="text-3xl">🏛️</span>
+          <div><p id="cptDepts" class="text-2xl font-bold" style="color:#0c2340">--</p><p class="text-xs text-gray-400">Départements</p></div>
+        </div>
+      </div>
+
+      <!-- Filtres + recherche -->
+      <div class="bg-white rounded-2xl p-4 mb-5 flex gap-3 flex-wrap items-center"
+           style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <input id="recherche" type="text" placeholder="🔍 Rechercher dans le journal..."
+               oninput="filtrer()"
+               class="border border-gray-200 rounded-xl px-4 py-2 text-sm flex-1 focus:outline-none min-w-40"/>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="setFiltre('')"            id="fb-"            class="filtre-btn px-3 py-2 rounded-xl text-sm font-medium text-white" style="background:#0c2340">Tous</button>
+          <button onclick="setFiltre('utilisateur')" id="fb-utilisateur" class="filtre-btn px-3 py-2 rounded-xl text-sm font-medium bg-blue-50 text-blue-600 hover:bg-blue-100">👤 Comptes</button>
+          <button onclick="setFiltre('stage')"       id="fb-stage"       class="filtre-btn px-3 py-2 rounded-xl text-sm font-medium bg-green-50 text-green-600 hover:bg-green-100">📋 Stages</button>
+          <button onclick="setFiltre('departement')" id="fb-departement" class="filtre-btn px-3 py-2 rounded-xl text-sm font-medium bg-purple-50 text-purple-600 hover:bg-purple-100">🏛️ Départements</button>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div id="journalContainer" class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+        <div class="flex justify-between items-center mb-5">
+          <h2 class="font-bold text-lg" style="color:#0c2340">Activités récentes</h2>
+          <p id="compteurEntries" class="text-sm text-gray-400"></p>
+        </div>
+        <div id="timeline" class="relative">
+          <p class="text-center text-gray-400 py-8">⏳ Chargement...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('administrateur');
+  const API = 'http://localhost:3000';
+  let toutesActivites = [];
+  let filtreType = '';
+
+  const config = {
+    utilisateur:  { couleur:'#3b82f6', bg:'#eff6ff', label:'Utilisateur' },
+    stage:        { couleur:'#059669', bg:'#f0fdf4', label:'Stage' },
+    departement:  { couleur:'#7c3aed', bg:'#f5f3ff', label:'Département' },
+  };
+
+  const roleLabel = r => ({ etudiant:'Étudiant', encadrant:'Encadrant', chef_departement:'Chef Dép.', administrateur:'Admin' }[r] || r);
+
+  async function chargerJournal() {
+    const r = await fetch(`${API}/api/admin/journal`);
+    toutesActivites = await r.json();
+
+    const parType = {};
+    toutesActivites.forEach(a => { parType[a.type] = (parType[a.type] || 0) + 1; });
+    document.getElementById('cptUsers').textContent  = parType['utilisateur']  || 0;
+    document.getElementById('cptStages').textContent = parType['stage']        || 0;
+    document.getElementById('cptDepts').textContent  = parType['departement']  || 0;
+
+    filtrer();
+  }
+
+  function setFiltre(type) {
+    filtreType = type;
+    const keys = ['', 'utilisateur', 'stage', 'departement'];
+    keys.forEach(k => {
+      const btn = document.getElementById(`fb-${k}`);
+      if (!btn) return;
+      const isActive = k === type;
+      if (isActive) {
+        btn.style.background = '#0c2340';
+        btn.style.color = '#fff';
+        btn.className = 'filtre-btn px-3 py-2 rounded-xl text-sm font-medium';
+      } else {
+        btn.removeAttribute('style');
+        const bgMap = { '':'bg-gray-100 text-gray-600', utilisateur:'bg-blue-50 text-blue-600 hover:bg-blue-100', stage:'bg-green-50 text-green-600 hover:bg-green-100', departement:'bg-purple-50 text-purple-600 hover:bg-purple-100' };
+        btn.className = `filtre-btn px-3 py-2 rounded-xl text-sm font-medium ${bgMap[k]}`;
+      }
+    });
+    filtrer();
+  }
+
+  function filtrer() {
+    const recherche = (document.getElementById('recherche').value || '').toLowerCase();
+    const actives = toutesActivites.filter(a => {
+      const matchType = filtreType === '' || a.type === filtreType;
+      const matchRecherche = !recherche ||
+        (a.nom && a.nom.toLowerCase().includes(recherche)) ||
+        (a.action && a.action.toLowerCase().includes(recherche)) ||
+        (a.detail && a.detail.toLowerCase().includes(recherche));
+      return matchType && matchRecherche;
+    });
+    afficherTimeline(actives);
+  }
+
+  function afficherTimeline(activites) {
+    const container = document.getElementById('timeline');
+    document.getElementById('compteurEntries').textContent = `${activites.length} entrée${activites.length > 1 ? 's' : ''}`;
+
+    if (activites.length === 0) {
+      container.innerHTML = `<div class="flex flex-col items-center gap-3 py-12">
+        <span class="text-4xl">🔍</span>
+        <p class="text-gray-400">Aucune activité trouvée</p>
+      </div>`;
+      return;
+    }
+
+    // Grouper par date
+    const grouped = {};
+    activites.forEach(a => {
+      const key = a.date
+        ? new Date(a.date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+        : 'Date inconnue';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(a);
+    });
+
+    container.innerHTML = '';
+    Object.entries(grouped).forEach(([dateLabel, items]) => {
+      // Date header
+      const header = document.createElement('div');
+      header.className = 'flex items-center gap-3 mb-4 mt-6 first:mt-0';
+      header.innerHTML = `
+        <div class="px-3 py-1 rounded-lg text-xs font-semibold capitalize" style="background:#0c2340;color:#f5d87e">${dateLabel}</div>
+        <div class="flex-1 h-px bg-gray-100"></div>`;
+      container.appendChild(header);
+
+      // Entries for this date
+      const group = document.createElement('div');
+      group.className = 'relative pl-12 space-y-3 mb-2';
+      // Vertical line
+      const line = document.createElement('div');
+      line.className = 'timeline-line';
+      group.appendChild(line);
+
+      items.forEach(a => {
+        const cfg = config[a.type] || { couleur:'#94a3b8', bg:'#f8fafc', label:a.type };
+        const entry = document.createElement('div');
+        entry.className = 'entry-card relative flex items-start gap-4';
+        entry.innerHTML = `
+          <div class="timeline-dot w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0 -ml-[2.35rem]"
+               style="background:${cfg.bg};border:2px solid ${cfg.couleur}">
+            ${a.icone}
+          </div>
+          <div class="flex-1 bg-white rounded-xl p-4 min-w-0" style="box-shadow:0 1px 6px rgba(12,35,64,.07)">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:${cfg.bg};color:${cfg.couleur}">${cfg.label}</span>
+                  <p class="text-sm font-semibold text-gray-800">${escapeHtml(a.action)}</p>
+                </div>
+                <p class="text-sm font-medium text-gray-700 mt-1 truncate">${escapeHtml(a.nom || '')}</p>
+                ${a.detail ? `<p class="text-xs text-gray-400 mt-0.5">${escapeHtml(a.type === 'utilisateur' ? roleLabel(a.detail) : a.detail)}</p>` : ''}
+              </div>
+              ${a.date ? `<p class="text-xs text-gray-400 flex-shrink-0">${formatHeure(a.date)}</p>` : ''}
+            </div>
+          </div>`;
+        group.appendChild(entry);
+      });
+      container.appendChild(group);
+    });
+  }
+
+  function formatHeure(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  chargerJournal();
+</script>
+</body>
+</html>

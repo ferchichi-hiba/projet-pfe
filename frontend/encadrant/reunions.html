@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Réunions en ligne — Encadrant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4fa; margin: 0; }
+    .sidebar { background: linear-gradient(180deg, #0c2340 0%, #163a5f 100%); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(255,255,255,0.65); font-size: .875rem; font-weight: 500;
+      text-decoration: none; transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+    .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+    .nav-link.active { background: rgba(201,147,10,.2); color: #f5d87e; border-left-color: #c9930a; }
+    .nav-icon { width: 22px; text-align: center; }
+    .fade-in { animation: fadeIn .4s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    input, textarea, select {
+      width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      padding: 10px 14px; font-size: .875rem; font-family: inherit;
+      outline: none; transition: border .2s; background: #fff;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #c9930a; }
+    .reunion-card { transition: all .25s; }
+    .reunion-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(12,35,64,.12); }
+  </style>
+  <script src="/auth.js"></script>
+</head>
+<body>
+<div class="flex h-screen">
+  <!-- SIDEBAR -->
+  <aside class="sidebar w-64 flex flex-col fixed h-full z-30">
+    <div class="px-5 py-5" style="border-bottom:1px solid rgba(255,255,255,.1)">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340">🎓</div>
+        <div><p class="text-white font-bold text-sm">Gestion Stages</p>
+        <p class="text-xs" style="color:rgba(255,255,255,.45)">Plateforme Universitaire</p></div>
+      </div>
+    </div>
+    <div class="mx-3 my-3 p-3 rounded-xl" style="background:rgba(255,255,255,.08)">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+             style="background:#c9930a;color:#0c2340" id="avatarMenu">EN</div>
+        <div class="min-w-0">
+          <p class="text-white text-sm font-semibold" id="nomMenu">Encadrant</p>
+          <p class="text-xs truncate" style="color:#c9930a" id="deptMenu">Département</p>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-2 space-y-0.5 overflow-y-auto">
+      <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="etudiants.html" class="nav-link"><span class="nav-icon">👥</span> Mes Étudiants</a>
+      <a href="messagerie.html" class="nav-link"><span class="nav-icon">💬</span> Messagerie</a>
+      <a href="rapports.html" class="nav-link"><span class="nav-icon">📄</span> Rapports</a>
+      <a href="suggestions.html" class="nav-link"><span class="nav-icon">💡</span> Suggestions</a>
+      <a href="reunions.html" class="nav-link active"><span class="nav-icon">📹</span> Réunions</a>
+      <a href="profil.html" class="nav-link"><span class="nav-icon">👤</span> Mon Profil</a>
+    </nav>
+    <div class="px-3 pb-4 pt-2" style="border-top:1px solid rgba(255,255,255,.1)">
+      <button onclick="localStorage.clear();location.href='/login.html'" class="nav-link w-full text-left" style="color:#fca5a5">
+        <span class="nav-icon">🚪</span> Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="ml-64 flex-1 overflow-y-auto">
+    <div class="bg-white px-6 py-4 sticky top-0 z-20 flex justify-between items-center"
+         style="border-bottom:2px solid #eef2f7;box-shadow:0 2px 8px rgba(12,35,64,.06)">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+             style="background:#0c2340">📹</div>
+        <div>
+          <h1 class="text-base font-bold" style="color:#0c2340">Réunions en ligne</h1>
+          <p class="text-xs text-gray-400">Planifiez des réunions Jitsi Meet avec vos étudiants</p>
+        </div>
+      </div>
+      <a href="profil.html" class="flex items-center gap-2 hover:opacity-80 transition">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm"
+             style="background:linear-gradient(135deg,#c9930a,#f5d87e);color:#0c2340" id="avatarTop">EN</div>
+        <div class="hidden md:block">
+          <p class="text-sm font-semibold text-gray-800" id="nomTop">--</p>
+          <p class="text-xs font-medium" style="color:#c9930a">Encadrant</p>
+        </div>
+      </a>
+    </div>
+
+    <div class="p-6 fade-in">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- FORMULAIRE -->
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h2 class="font-bold text-lg mb-5" style="color:#0c2340">📅 Planifier une réunion</h2>
+
+          <div id="alertBox" class="hidden mb-4 p-4 rounded-xl text-sm font-medium"></div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold mb-1.5" style="color:#1a2d45">Étudiant *</label>
+              <select id="selEtudiant">
+                <option value="">— Chargement des étudiants… —</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1.5" style="color:#1a2d45">Titre de la réunion *</label>
+              <input type="text" id="fTitre" placeholder="ex: Point d'avancement rapport final" maxlength="120">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color:#1a2d45">Date *</label>
+                <input type="date" id="fDate">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color:#1a2d45">Heure *</label>
+                <input type="time" id="fHeure">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold mb-1.5" style="color:#1a2d45">Description (optionnelle)</label>
+              <textarea id="fDesc" rows="3" placeholder="Ordre du jour, points à aborder…"></textarea>
+            </div>
+            <button onclick="creerReunion()" id="btnCreer"
+              class="w-full py-3 rounded-xl text-white font-bold text-sm transition"
+              style="background:linear-gradient(135deg,#0c2340,#163a5f)">
+              📹 Créer la réunion et notifier l'étudiant
+            </button>
+          </div>
+
+          <!-- Résultat succès -->
+          <div id="successBlock" class="hidden mt-5 p-5 rounded-2xl" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac">
+            <p class="font-bold text-green-800 mb-2">✅ Réunion créée avec succès !</p>
+            <p class="text-sm text-green-700 mb-3">L'étudiant a reçu une notification pour rejoindre la réunion.</p>
+            <div class="bg-white rounded-xl p-3 mb-3" style="border:1px solid #86efac">
+              <p class="text-xs text-gray-400 mb-1">Lien Jitsi Meet :</p>
+              <a id="lienJitsi" href="#" target="_blank"
+                 class="text-sm font-semibold break-all" style="color:#059669">--</a>
+            </div>
+            <div class="flex gap-2">
+              <a id="btnRejoindre" href="#" target="_blank"
+                 class="flex-1 text-center py-2.5 rounded-xl text-white font-bold text-sm"
+                 style="background:#059669">📹 Rejoindre maintenant</a>
+              <button onclick="document.getElementById('successBlock').classList.add('hidden')"
+                      class="px-4 py-2.5 rounded-xl text-sm font-medium" style="background:#f0f4fa;color:#0c2340">
+                Nouvelle réunion
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- LISTE DES RÉUNIONS -->
+        <div class="bg-white rounded-2xl p-6" style="box-shadow:0 2px 12px rgba(12,35,64,.07)">
+          <h2 class="font-bold text-lg mb-5" style="color:#0c2340">🗓️ Mes réunions planifiées</h2>
+          <div id="listeReunions" class="space-y-3">
+            <p class="text-center text-gray-400 py-8">⏳ Chargement…</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  checkAuth('encadrant');
+  const API    = 'http://localhost:3000';
+  const ENC_ID = parseInt(localStorage.getItem('enc_id'));
+
+  // Fixer date min = aujourd'hui
+  document.getElementById('fDate').min = new Date().toISOString().split('T')[0];
+
+  async function chargerProfil() {
+    try {
+      const r = await fetch(`${API}/api/encadrant/profil/${ENC_ID}`);
+      const u = await r.json();
+      const ini = `${u.prenom[0]}${u.nom[0]}`;
+      document.getElementById('nomMenu').textContent  = `${u.prenom} ${u.nom}`;
+      document.getElementById('nomTop').textContent   = `${u.prenom} ${u.nom}`;
+      document.getElementById('deptMenu').textContent = u.departement || '';
+      document.getElementById('avatarMenu').textContent = ini;
+      document.getElementById('avatarTop').textContent  = ini;
+    } catch(e) {}
+  }
+
+  async function chargerEtudiants() {
+    try {
+      const r = await fetch(`${API}/api/encadrant/etudiants/${ENC_ID}`);
+      const etudiants = await r.json();
+      const sel = document.getElementById('selEtudiant');
+      if (!etudiants.length) {
+        sel.innerHTML = '<option value="">— Aucun étudiant encadré —</option>';
+        return;
+      }
+      sel.innerHTML = '<option value="">— Choisir un étudiant —</option>' +
+        etudiants.map(e =>
+          `<option value="${e.etudiant_id}" data-nom="${e.prenom} ${e.nom}">
+            ${e.prenom} ${e.nom} — ${e.titre || 'Stage en cours'}
+          </option>`
+        ).join('');
+    } catch(e) {
+      document.getElementById('selEtudiant').innerHTML = '<option value="">— Erreur de chargement —</option>';
+    }
+  }
+
+  async function chargerReunions() {
+    try {
+      const r = await fetch(`${API}/api/encadrant/reunions/${ENC_ID}`);
+      const reunions = await r.json();
+      const container = document.getElementById('listeReunions');
+      if (!reunions.length) {
+        container.innerHTML = `<div class="text-center py-12">
+          <p class="text-4xl mb-3">📭</p>
+          <p class="text-gray-400 text-sm">Aucune réunion planifiée</p>
+        </div>`;
+        return;
+      }
+      const today = new Date().toISOString().split('T')[0];
+      container.innerHTML = reunions.map(r => {
+        const dateStr = new Date(r.date_reunion).toISOString().split('T')[0];
+        const isPast    = dateStr < today;
+        const isToday   = dateStr === today;
+        const badge = isPast
+          ? `<span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:#f1f5f9;color:#64748b">Passée</span>`
+          : isToday
+          ? `<span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:#fef3cd;color:#c9930a">Aujourd'hui</span>`
+          : `<span class="text-xs px-2 py-0.5 rounded-full font-semibold" style="background:#dcfce7;color:#059669">À venir</span>`;
+        const dateAff = new Date(r.date_reunion).toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' });
+        return `
+          <div class="reunion-card rounded-xl p-4" style="border:1.5px solid #eef2f7">
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <p class="font-semibold text-sm" style="color:#0c2340">${escapeHtml(r.titre)}</p>
+              ${badge}
+            </div>
+            <p class="text-xs text-gray-400 mb-3">📅 ${dateAff} à ${r.heure_reunion}</p>
+            ${r.description ? `<p class="text-xs text-gray-500 mb-3 italic">${escapeHtml(r.description)}</p>` : ''}
+            <a href="/reunion-live.html?id=${r.id}" target="_blank"
+               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white"
+               style="background:linear-gradient(135deg,#0c2340,#163a5f)">
+              📹 Rejoindre
+            </a>
+          </div>`;
+      }).join('');
+    } catch(e) {}
+  }
+
+  async function creerReunion() {
+    const etudiantSelect = document.getElementById('selEtudiant');
+    const etudiant_user_id = etudiantSelect.value;
+    const titre       = document.getElementById('fTitre').value.trim();
+    const date_reunion = document.getElementById('fDate').value;
+    const heure_reunion = document.getElementById('fHeure').value;
+    const description = document.getElementById('fDesc').value.trim();
+
+    if (!etudiant_user_id || !titre || !date_reunion || !heure_reunion) {
+      showAlert('Veuillez remplir tous les champs obligatoires.', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('btnCreer');
+    btn.disabled = true;
+    btn.textContent = '⏳ Création en cours…';
+
+    try {
+      const r = await fetch(`${API}/api/encadrant/reunion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enc_id: ENC_ID, etudiant_user_id: parseInt(etudiant_user_id), titre, date_reunion, heure_reunion, description })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.message);
+
+      document.getElementById('lienJitsi').href = data.lien_jitsi;
+      document.getElementById('lienJitsi').textContent = data.lien_jitsi;
+      document.getElementById('btnRejoindre').href = `/reunion-live.html?lien=${encodeURIComponent(data.lien_jitsi)}`;
+      document.getElementById('successBlock').classList.remove('hidden');
+
+      // Reset form
+      document.getElementById('fTitre').value = '';
+      document.getElementById('fDate').value  = '';
+      document.getElementById('fHeure').value = '';
+      document.getElementById('fDesc').value  = '';
+      etudiantSelect.value = '';
+
+      chargerReunions();
+    } catch(err) {
+      showAlert(err.message || 'Une erreur est survenue.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📹 Créer la réunion et notifier l\'étudiant';
+    }
+  }
+
+  function showAlert(msg, type) {
+    const box = document.getElementById('alertBox');
+    box.textContent = msg;
+    box.className = type === 'error'
+      ? 'mb-4 p-4 rounded-xl text-sm font-medium bg-red-50 text-red-700 border border-red-200'
+      : 'mb-4 p-4 rounded-xl text-sm font-medium bg-green-50 text-green-700 border border-green-200';
+    box.classList.remove('hidden');
+    setTimeout(() => box.classList.add('hidden'), 4000);
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  chargerProfil();
+  chargerEtudiants();
+  chargerReunions();
+</script>
+</body>
+</html>
