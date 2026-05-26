@@ -1,0 +1,406 @@
+/* ═══════════════════════════════════════════════════════
+   THÈME ÉTUDIANT — Design Indigo / Violet
+   Injecté dans toutes les pages gestion-de-stage/
+   ═══════════════════════════════════════════════════════ */
+
+/* Variables globales */
+:root {
+  --accent:    #4f46e5;
+  --accent2:   #7c3aed;
+  --sidebar-w: 260px;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w) !important;
+  background: linear-gradient(180deg, #0f0c29 0%, #1e1b4b 60%, #2d2b6b 100%) !important;
+  border-right: none !important;
+  overflow: hidden !important;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.18) !important;
+}
+
+.main { margin-left: var(--sidebar-w) !important; }
+
+/* Rendre le nav scrollable pour que sidebar-bottom reste visible */
+.sidebar > nav,
+.sidebar nav {
+  flex: 1 !important;
+  overflow-y: auto !important;
+}
+.sidebar > nav::-webkit-scrollbar { width: 3px; }
+.sidebar > nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+/* ══ LOGO ══ */
+.logo {
+  color: #fff !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 6px !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem !important;
+}
+.logo span { color: #818cf8 !important; }
+.logo-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+/* ══ SECTION LABEL ══ */
+.nav-section-label {
+  font-size: 0.64rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  color: rgba(255,255,255,0.3) !important;
+  padding: 14px 12px 5px !important;
+  display: block;
+  user-select: none;
+}
+
+/* ══ NAV ITEMS ══ */
+.nav-item {
+  color: rgba(255,255,255,0.65) !important;
+  border-radius: 10px;
+  font-size: 0.845rem;
+  margin-bottom: 1px;
+  position: relative;
+}
+.nav-item i {
+  color: rgba(255,255,255,0.4) !important;
+  width: 18px !important;
+  text-align: center;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+}
+.nav-item:hover i { color: #818cf8 !important; }
+
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(79,70,229,0.22), rgba(79,70,229,0.08)) !important;
+  color: #818cf8 !important;
+  font-weight: 600;
+  border-left: 3px solid #4f46e5;
+}
+.nav-item.active i { color: #818cf8 !important; }
+
+/* ══ SECTION PLUS (collapsible) ══ */
+.nav-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 6px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 10px;
+  transition: background 0.18s;
+}
+.nav-section-toggle:hover { background: rgba(255,255,255,0.05) !important; }
+.nav-section-toggle .toggle-label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav-section-toggle .toggle-label i { font-size: 0.6rem; color: rgba(255,255,255,0.3) !important; width: auto !important; }
+.nav-section-toggle .toggle-arrow {
+  font-size: 0.65rem;
+  color: rgba(255,255,255,0.3);
+  transition: transform 0.25s ease;
+}
+.nav-section-toggle.open .toggle-arrow { transform: rotate(180deg); }
+
+.nav-extra {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease;
+}
+.nav-extra.open { max-height: 500px; }
+
+/* badge NEW sur items extras */
+.nav-badge-new {
+  margin-left: auto;
+  font-size: 0.58rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* séparateur horizontal */
+.nav-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 8px 12px;
+}
+
+/* ══ SIDEBAR BOTTOM ══ */
+.sidebar-bottom {
+  border-top: 1px solid rgba(255,255,255,0.08) !important;
+  padding: 12px 0 0 !important;
+}
+
+.user-chip {
+  background: rgba(255,255,255,0.07) !important;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background 0.18s;
+}
+.user-chip:hover { background: rgba(255,255,255,0.1) !important; }
+.user-chip-name { color: #fff !important; font-size: 0.83rem !important; }
+.user-chip-role {
+  color: rgba(255,255,255,0.45) !important;
+  font-size: 0.68rem !important;
+}
+
+/* ══ AVATAR ══ */
+.avatar-circle {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+}
+
+/* ══ BOUTON DÉCONNEXION ══ */
+.sidebar a[onclick*="logout"],
+.sidebar button[onclick*="logout"],
+.sidebar-bottom a[onclick*="logout"],
+.sidebar-bottom button[onclick*="logout"] {
+  background: rgba(239,68,68,0.12) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239,68,68,0.25) !important;
+  border-radius: 10px !important;
+  margin-top: 6px;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  transition: all 0.18s;
+}
+.sidebar a[onclick*="logout"]:hover,
+.sidebar button[onclick*="logout"]:hover,
+.sidebar-bottom a[onclick*="logout"]:hover,
+.sidebar-bottom button[onclick*="logout"]:hover {
+  background: rgba(239,68,68,0.25) !important;
+  color: #fff !important;
+  border-color: #ef4444 !important;
+}
+
+/* ══ TOPBAR ══ */
+.topbar {
+  border-bottom: 2px solid #e5e9f2 !important;
+  box-shadow: 0 2px 8px rgba(10,31,28,0.06) !important;
+}
+
+/* ══ STAT CARDS accent ══ */
+.stat-card.green .stat-icon { background: rgba(79,70,229,0.1) !important; color: #4f46e5 !important; }
+.stat-card.blue .stat-icon  { background: rgba(79,70,229,0.1) !important; color: #4f46e5 !important; }
+
+/* Badges */
+.msg-badge { background: #ef4444 !important; }
+
+/* Bouton principal (submit, action) */
+button[type="submit"], .btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  border-color: #4f46e5 !important;
+}
+button[type="submit"]:hover, .btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  background: linear-gradient(180deg, #0f0c29 0%, #1e1b4b 60%, #2d2b6b 100%) !important;
+  border-right: none !important;
+  overflow: hidden !important;
+}
+
+/* Rendre le nav scrollable pour que sidebar-bottom reste visible */
+.sidebar > nav,
+.sidebar nav {
+  flex: 1 !important;
+  overflow-y: auto !important;
+}
+.sidebar > nav::-webkit-scrollbar { width: 3px; }
+.sidebar > nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.logo {
+  color: #fff !important;
+  border-bottom-color: rgba(255,255,255,0.1) !important;
+}
+.logo span { color: #818cf8 !important; }
+
+.nav-item {
+  color: rgba(255,255,255,0.6) !important;
+  border-radius: 10px;
+  font-size: 0.845rem;
+}
+.nav-item i { color: rgba(255,255,255,0.5) !important; }
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+}
+.nav-item:hover i { color: #818cf8 !important; }
+
+.nav-item.active {
+  background: rgba(79,70,229,0.18) !important;
+  color: #818cf8 !important;
+  font-weight: 600;
+  border-left: 3px solid #4f46e5;
+}
+.nav-item.active i { color: #818cf8 !important; }
+
+/* ══ SIDEBAR BOTTOM ══ */
+.sidebar-bottom {
+  border-top-color: rgba(255,255,255,0.1) !important;
+}
+
+.user-chip {
+  background: rgba(255,255,255,0.07) !important;
+  border-radius: 12px;
+}
+.user-chip-name { color: #fff !important; }
+.user-chip-role { color: rgba(255,255,255,0.5) !important; }
+
+/* ══ AVATAR ══ */
+.avatar-circle {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+}
+
+/* ══ BOUTON DÉCONNEXION ══ */
+/* Cible tous les nav-item avec onclick logout, qu'ils soient <a> ou <button> */
+.sidebar a[onclick*="logout"],
+.sidebar button[onclick*="logout"],
+.sidebar-bottom a[onclick*="logout"],
+.sidebar-bottom button[onclick*="logout"] {
+  background: rgba(239,68,68,0.15) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239,68,68,0.3) !important;
+  border-radius: 10px !important;
+  margin-top: 8px;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  transition: all 0.18s;
+}
+.sidebar a[onclick*="logout"]:hover,
+.sidebar button[onclick*="logout"]:hover,
+.sidebar-bottom a[onclick*="logout"]:hover,
+.sidebar-bottom button[onclick*="logout"]:hover {
+  background: rgba(239,68,68,0.28) !important;
+  color: #fff !important;
+  border-color: #ef4444 !important;
+  transform: translateX(2px);
+}
+
+/* ══ TOPBAR ══ */
+.topbar {
+  border-bottom: 2px solid #e5e9f2 !important;
+  box-shadow: 0 2px 8px rgba(10,31,28,0.06) !important;
+}
+
+/* ══ STAT CARDS accent ══ */
+.stat-card.green .stat-icon { background: rgba(79,70,229,0.1) !important; color: #4f46e5 !important; }
+.stat-card.blue .stat-icon  { background: rgba(79,70,229,0.1) !important; color: #4f46e5 !important; }
+
+/* Badges */
+.msg-badge { background: #ef4444 !important; }
+
+/* Bouton principal (submit, action) */
+button[type="submit"], .btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  border-color: #4f46e5 !important;
+}
+button[type="submit"]:hover, .btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #4f46e5; }
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE — Pages étudiant (html.dark)
+   Les variables CSS (--bg, --white, etc.) sont overridées
+   via JS dans theme.js → document.documentElement.style
+   Ces règles couvrent les éléments codés en dur en couleur.
+══════════════════════════════════════════════════════════ */
+
+/* Transitions douces */
+body, .topbar, .card, .stage-card, .section-card, .info-card,
+input, select, textarea, table, th, td {
+  transition: background-color 0.3s, border-color 0.3s, color 0.25s;
+}
+
+html.dark body { background: #0f172a !important; color: #e2e8f0 !important; }
+
+/* Topbar */
+html.dark .topbar {
+  background: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+html.dark .topbar h2,
+html.dark .topbar span:not([style*="color:#"]) { color: #e2e8f0 !important; }
+
+/* Cards */
+html.dark .card,
+html.dark .stage-card,
+html.dark .section-card,
+html.dark .info-card,
+html.dark .ressource-card,
+html.dark .resource-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+/* Tables */
+html.dark table { border-color: #334155 !important; }
+html.dark thead th { background: #0f172a !important; color: #94a3b8 !important; border-color: #334155 !important; }
+html.dark tbody tr { border-color: #334155 !important; }
+html.dark tbody tr:hover { background: #1e2d45 !important; }
+html.dark td { border-color: #334155 !important; }
+
+/* Formulaires */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html.dark select,
+html.dark textarea {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #475569 !important;
+}
+html.dark input::placeholder, html.dark textarea::placeholder { color: #64748b !important; }
+html.dark label { color: #cbd5e1 !important; }
+html.dark option { background: #1e293b; color: #e2e8f0; }
+
+/* Messagerie */
+html.dark .msg-area, html.dark .chat-area { background: #0f172a !important; }
+html.dark .conv-item { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .conv-item:hover { background: #263348 !important; }
+html.dark .msg-bubble:not(.me) { background: #263348 !important; color: #e2e8f0 !important; }
+
+/* Scrollbar dark */
+html.dark ::-webkit-scrollbar-track { background: #0f172a; }
+html.dark ::-webkit-scrollbar-thumb { background: #475569; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }

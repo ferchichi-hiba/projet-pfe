@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demande de stage | Gestion de Stage</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/etudiant-theme.css">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f4f6fb;
+  --white:     #ffffff;
+  --border:    #e5e9f2;
+  --accent:    #4f7cff;
+  --accent2:   #7c5cfc;
+  --green:     #10b981;
+  --orange:    #f59e0b;
+  --red:       #ef4444;
+  --text:      #1a1d2e;
+  --muted:     #8892a4;
+  --sidebar-w: 240px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 14px;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  overflow: hidden;
+}
+nav { flex: 1; overflow-y: auto; }
+.logo {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.35rem;
+  color: var(--text); padding: 0 8px 22px;
+  border-bottom: 1px solid var(--border); margin-bottom: 18px;
+}
+.logo span { color: var(--accent); }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 10px;
+  color: var(--muted); text-decoration: none;
+  font-size: 0.875rem; font-weight: 500;
+  transition: all 0.18s; margin-bottom: 2px;
+  cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left;
+}
+.nav-item:hover  { background: var(--bg); color: var(--text); }
+.nav-item.active { background: rgba(79,124,255,0.1); color: var(--accent); font-weight: 600; }
+.nav-item i      { width: 16px; text-align: center; font-size: 0.85rem; }
+
+.sidebar-bottom { margin-top: auto; border-top: 1px solid var(--border); padding-top: 14px; }
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--bg);
+  border-radius: 10px; margin-bottom: 6px;
+}
+.avatar-circle {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.8rem; color: #fff; flex-shrink: 0;
+  overflow: hidden;
+}
+.user-chip-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+.user-chip-role { font-size: 0.7rem; color: var(--muted); }
+
+/* ══ MAIN ══ */
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+
+/* ══ TOPBAR ══ */
+.topbar {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  padding: 0 28px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar-title span { color: var(--accent); }
+.user-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 6px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 20px;
+  font-size: 0.82rem; font-weight: 500; color: var(--text);
+}
+.user-pill .avatar-circle { width: 26px; height: 26px; font-size: 0.7rem; }
+
+/* ══ CONTENT ══ */
+.content { padding: 28px; flex: 1; }
+
+/* ══ CARD ══ */
+.card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 22px;
+  animation: fadeUp 0.4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══ FORM ══ */
+.form-section {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 36px;
+  max-width: 700px; margin: 0 auto;
+  animation: fadeUp 0.4s ease both;
+}
+.form-section h2 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1.4rem; color: var(--text); margin-bottom: 6px;
+}
+.form-section .sub { color: var(--muted); font-size: 0.875rem; margin-bottom: 30px; line-height: 1.6; }
+.form-group { margin-bottom: 20px; }
+.form-group label {
+  display: block; font-size: 0.8rem; font-weight: 600;
+  color: var(--text); margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.form-group label .req { color: var(--red); }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.875rem;
+  color: var(--text); background: var(--bg);
+  outline: none; transition: border-color 0.2s, background 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--accent); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(79,124,255,0.08);
+}
+.form-group textarea { resize: vertical; min-height: 100px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.btn-submit {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff; border: none; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  margin-top: 10px;
+}
+.btn-submit:hover    { opacity: 0.88; }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.error-box {
+  display: none; color: var(--red); font-size: 0.82rem;
+  padding: 11px 14px; background: rgba(239,68,68,0.07);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 8px; margin-bottom: 14px;
+}
+
+/* ══ BANNER RÉSULTAT ══ */
+.result-banner {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 32px 36px;
+  text-align: center; animation: fadeUp 0.4s ease both;
+  margin: 0 auto 28px; max-width: 700px;
+}
+.result-banner.valide { border-top: 4px solid var(--green); }
+.result-banner.refuse { border-top: 4px solid var(--red); }
+
+/* ══ WAITING CARD ══ */
+.waiting-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 48px 36px;
+  text-align: center; animation: fadeUp 0.4s ease both;
+  max-width: 700px; margin: 0 auto;
+}
+.waiting-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(245,158,11,0.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; margin: 0 auto 20px;
+}
+.waiting-card h2 {
+  font-family: 'Syne', sans-serif; font-size: 1.3rem;
+  font-weight: 800; color: var(--text); margin-bottom: 10px;
+}
+.waiting-card p {
+  color: var(--muted); font-size: 0.875rem;
+  line-height: 1.7; max-width: 440px; margin: 0 auto 24px;
+}
+.waiting-detail {
+  background: var(--bg); border-radius: 12px; padding: 18px 24px;
+  display: inline-block; text-align: left; min-width: 360px;
+  margin-bottom: 24px; border: 1px solid var(--border);
+}
+.waiting-detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.83rem; padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.waiting-detail-row:last-child { border-bottom: none; }
+.waiting-detail-row .wlabel { color: var(--muted); }
+.waiting-detail-row .wval   { color: var(--text); font-weight: 600; }
+
+.btn-annuler {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(239,68,68,0.08); color: var(--red);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 9px; padding: 9px 20px;
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; transition: background 0.2s;
+  margin-top: 8px;
+}
+.btn-annuler:hover { background: rgba(239,68,68,0.14); }
+
+/* ══ REDIRECT CARD ══ */
+.redirect-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-top: 4px solid var(--green);
+  border-radius: 16px; padding: 48px 36px;
+  text-align: center; animation: fadeUp 0.4s ease both;
+  max-width: 700px; margin: 0 auto;
+}
+.redirect-card h2 {
+  font-family: 'Syne', sans-serif; font-size: 1.3rem;
+  font-weight: 800; color: var(--green); margin-bottom: 10px;
+}
+
+/* ══ TOAST ══ */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--text); color: #fff;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 0.875rem; font-weight: 500;
+  opacity: 0; transform: translateY(8px);
+  transition: all 0.3s; pointer-events: none; z-index: 9999;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error   { background: var(--red); }
+</style>
+</head>
+
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Gestion<span> Stages</span><span class="logo-badge">Étudiant</span></div>
+  <nav>
+    <span class="nav-section-label">Principal</span>
+    <a class="nav-item" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Mon Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon Stage</a>
+    <a class="nav-item active" href="demande-stage.html"><i class="fa fa-paper-plane"></i> Demande de stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="archive.html"><i class="fa fa-box-archive"></i> Mes Archives</a>
+    <span class="nav-section-label">Communication</span>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <div class="nav-divider"></div>
+    <div class="nav-section-toggle" onclick="toggleExtra(this)">
+      <span class="toggle-label"><i class="fa fa-sparkles"></i> Fonctionnalités +</span>
+      <i class="fa fa-chevron-down toggle-arrow"></i>
+    </div>
+    <div class="nav-extra">
+      <a class="nav-item" href="cv.html"><i class="fa fa-file-user"></i> CV Generator</a>
+      <a class="nav-item" href="document.html"><i class="fa fa-file-contract"></i> Documents officiels</a>
+      <a class="nav-item" href="carte-etudiant.html"><i class="fa fa-id-card"></i> Ma carte étudiant</a>
+      <a class="nav-item" href="planning.html"><i class="fa fa-calendar-days"></i> Planning de stage</a>
+      <a class="nav-item" href="rendez-vous.html"><i class="fa fa-calendar-check"></i> Rendez-vous</a>
+      <a class="nav-item" href="soutenance.html"><i class="fa fa-graduation-cap"></i> Soutenance en ligne</a>
+      <a class="nav-item" href="ressource.html"><i class="fa fa-book-bookmark"></i> Ressources</a>
+      <a class="nav-item" href="carte-stagiaires.html"><i class="fa fa-map-location-dot"></i> Carte des stagiaires</a>
+      <a class="nav-item" href="chatbot.html"><i class="fa fa-robot"></i> Assistant IA</a>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">📋 Demande de <span>Stage</span></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="notifications.html" style="position:relative;color:var(--text);font-size:1.15rem" title="Notifications">
+        <i class="fa fa-bell"></i>
+        <span id="notifBadge" style="display:none;position:absolute;top:-6px;right:-7px;background:#ef4444;color:#fff;font-size:0.6rem;font-weight:700;width:16px;height:16px;border-radius:50%;text-align:center;line-height:16px"></span>
+      </a>
+      <div class="user-pill">
+        <div class="avatar-circle" id="topAvatar">?</div>
+        <span id="topNom">...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── BANNIÈRE RÉSULTAT (refus / félicitations) ── -->
+    <div id="bannerContainer"></div>
+
+    <!-- ── BANDEAU PÉRIODES DE STAGE ── -->
+    <div id="bandeauPeriodes" style="display:none;max-width:700px;margin:0 auto 22px;border-radius:14px;overflow:hidden;border:1px solid var(--border)">
+      <div style="background:linear-gradient(135deg,#0369a1,#0891b2);color:#fff;padding:12px 18px;display:flex;align-items:center;gap:10px">
+        <i class="fa fa-calendar-check" style="font-size:1.1rem"></i>
+        <span style="font-weight:700;font-size:0.9rem">Périodes de stage — Année 2024-2025</span>
+      </div>
+      <div id="listePeriodes" style="display:grid;grid-template-columns:repeat(3,1fr);background:#fff;padding:14px 16px;gap:10px"></div>
+    </div>
+
+    <!-- ── VUE : FORMULAIRE ── -->
+    <div id="viewForm" style="display:none">
+      <div class="form-section">
+        <h2>📋 Nouvelle demande de stage</h2>
+        <p class="sub">Remplissez ce formulaire pour soumettre votre demande. Le chef de département la recevra et prendra une décision.</p>
+
+        <div class="form-group">
+          <label>Titre du stage <span class="req">*</span></label>
+          <input type="text" id="fTitre" placeholder="Ex : Développement d'une application web de gestion…" maxlength="200"/>
+        </div>
+
+        <div class="form-group">
+          <label>Type de stage <span class="req">*</span></label>
+          <select id="fType">
+            <option value="">-- Sélectionnez --</option>
+            <option value="initiation">Stage d'initiation</option>
+            <option value="perfectionnement">Stage de perfectionnement</option>
+            <option value="fin_etude">Stage de fin d'études (PFE)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description / Objectifs <span class="req">*</span></label>
+          <textarea id="fDesc" placeholder="Décrivez les objectifs, les tâches prévues et le contexte du stage…"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Entreprise / Structure</label>
+            <input type="text" id="fEntreprise" placeholder="Ex : TechCorp Tunisie"/>
+          </div>
+          <div class="form-group">
+            <label>Ville</label>
+            <input type="text" id="fVille" placeholder="Ex : Tunis, Sfax…"/>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date de début souhaitée</label>
+            <input type="date" id="fDebut"/>
+          </div>
+          <div class="form-group">
+            <label>Date de fin prévue</label>
+            <input type="date" id="fFin"/>
+          </div>
+        </div>
+
+        <div class="error-box" id="formError"></div>
+
+        <!-- ── BINÔME PFE ── -->
+        <div id="binomeSection" style="display:none;margin-bottom:20px;background:#f0f9ff;border:1.5px solid #0ea5e9;border-radius:12px;padding:16px 18px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+            <span style="font-size:1.3rem">👥</span>
+            <strong style="font-size:0.95rem;color:#0369a1">Binôme (optionnel)</strong>
+          </div>
+          <p style="font-size:0.8rem;color:#0369a1;margin:0 0 12px">Vous pouvez réaliser votre PFE seul ou en binôme. Si vous choisissez un partenaire, il doit avoir validé initiation + perfectionnement et être disponible.</p>
+          <select id="fBinome" style="width:100%;padding:10px 14px;border:1.5px solid #bae6fd;border-radius:8px;font-size:0.9rem;background:#fff">
+            <option value="">— Sans binôme (individuel) —</option>
+          </select>
+        </div>
+
+        <button class="btn-submit" id="btnSoumettre" onclick="soumettre()">
+          <i class="fa fa-paper-plane"></i> Envoyer la demande
+        </button>
+      </div>
+    </div>
+
+    <!-- ── VUE : EN ATTENTE DE DÉCISION ── -->
+    <div id="viewWaiting" style="display:none">
+      <div class="waiting-card">
+        <div class="waiting-icon">⏳</div>
+        <h2>Demande en cours d'examen</h2>
+        <p>Votre demande de stage a bien été transmise au chef de département. Vous serez notifié(e) dès qu'une décision sera prise.</p>
+        <div class="waiting-detail" id="waitingDetail">
+          <div style="text-align:center;color:var(--muted)"><i class="fa fa-spinner fa-spin"></i></div>
+        </div>
+        <p style="font-size:0.78rem;color:var(--muted);margin-bottom:20px">
+          <i class="fa fa-bell" style="margin-right:5px;color:var(--orange)"></i>
+          Vous recevrez une notification lors de la validation ou du refus.
+        </p>
+        <button class="btn-annuler" onclick="annulerDemande()" id="btnAnnuler">
+          <i class="fa fa-times-circle"></i> Annuler ma demande
+        </button>
+      </div>
+    </div>
+
+    <!-- ── VUE : STAGE DÉJÀ ACTIF ── -->
+    <div id="viewActif" style="display:none">
+      <div class="redirect-card">
+        <div style="font-size:3rem;margin-bottom:16px">✅</div>
+        <h2>Vous avez déjà un stage en cours !</h2>
+        <p style="color:var(--muted);font-size:0.875rem;line-height:1.7;margin-bottom:28px">
+          Votre demande a été acceptée et un encadrant vous a été affecté.<br>
+          Consultez la page <strong>Mon stage</strong> pour voir tous les détails.
+        </p>
+        <a href="stage.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:12px 28px;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none">
+          <i class="fa fa-briefcase"></i> Voir mon stage
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* ══ AUTH ══ */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  role:   localStorage.getItem("user_role")   || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+if (localStorage.getItem("user_role") !== "etudiant") {
+  // Mauvais rôle — déconnexion et retour login
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+const API = "http://localhost:3000";
+let stageEnAttente = null;
+
+const typeLabel = {
+  initiation: "Stage d'initiation",
+  perfectionnement: "Stage de perfectionnement",
+  fin_etude: "Stage de fin d'études (PFE)"
+};
+
+/* ══ SWITCH VUES ══ */
+function showView(name) {
+  ["viewForm","viewWaiting","viewActif"].forEach(id => {
+    document.getElementById(id).style.display = (id === name) ? "" : "none";
+  });
+}
+
+/* ══ CHARGEMENT DE L'ÉTAT ══ */
+function chargerEtat() {
+  fetch(`${API}/mes-stages/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      const stages  = (data.success && data.stages) ? data.stages : [];
+      const actif   = stages.find(s => ["affecte","en_cours","rapport_depose"].includes(s.statut));
+      const accepte = stages.find(s => s.statut === "accepte");
+      const attente = stages.find(s => s.statut === "en_attente");
+      const dernier = stages[0];
+
+      if (actif) {
+        // Stage avec encadrant → rediriger vers stage.html
+        showView("viewActif");
+        return;
+      }
+
+      if (accepte) {
+        // Demande acceptée par le chef, en attente d'affectation encadrant
+        stageEnAttente = accepte;
+        showView("viewWaiting");
+        const d = accepte;
+        document.getElementById("waitingDetail").innerHTML = `
+          <div class="waiting-detail-row"><span class="wlabel">Titre</span><span class="wval">${d.titre}</span></div>
+          <div class="waiting-detail-row"><span class="wlabel">Type</span><span class="wval">${typeLabel[d.type_stage]||d.type_stage}</span></div>
+          ${d.entreprise ? `<div class="waiting-detail-row"><span class="wlabel">Entreprise</span><span class="wval">${d.entreprise}</span></div>` : ""}
+          ${d.ville ? `<div class="waiting-detail-row"><span class="wlabel">Ville</span><span class="wval">${d.ville}</span></div>` : ""}
+          <div class="waiting-detail-row"><span class="wlabel">Soumise le</span><span class="wval">${new Date(d.created_at||d.date_debut||Date.now()).toLocaleDateString("fr-FR")}</span></div>
+          <div class="waiting-detail-row"><span class="wlabel">Statut</span><span class="wval" style="color:#059669">✅ Acceptée — en attente d'affectation d'un encadrant</span></div>`;
+        // Masquer le bouton d'annulation (chef a déjà accepté)
+        const btnAnnuler = document.getElementById("btnAnnuler");
+        if (btnAnnuler) btnAnnuler.style.display = "none";
+        return;
+      }
+
+      if (attente) {
+        // En attente de décision chef
+        stageEnAttente = attente;
+        showView("viewWaiting");
+        const d = attente;
+        document.getElementById("waitingDetail").innerHTML = `
+          <div class="waiting-detail-row"><span class="wlabel">Titre</span><span class="wval">${d.titre}</span></div>
+          <div class="waiting-detail-row"><span class="wlabel">Type</span><span class="wval">${typeLabel[d.type_stage]||d.type_stage}</span></div>
+          ${d.entreprise ? `<div class="waiting-detail-row"><span class="wlabel">Entreprise</span><span class="wval">${d.entreprise}</span></div>` : ""}
+          ${d.ville ? `<div class="waiting-detail-row"><span class="wlabel">Ville</span><span class="wval">${d.ville}</span></div>` : ""}
+          <div class="waiting-detail-row"><span class="wlabel">Soumise le</span><span class="wval">${new Date(d.created_at||d.date_debut||Date.now()).toLocaleDateString("fr-FR")}</span></div>
+          <div class="waiting-detail-row"><span class="wlabel">Statut</span><span class="wval" style="color:var(--orange)">⏳ En attente de validation</span></div>`;
+        return;
+      }
+
+      // Pas de stage actif → afficher formulaire (avec éventuelle bannière)
+      showView("viewForm");
+
+      // Masquer les types de stage déjà validés dans le select
+      const typesValides = stages.filter(s => s.statut === "valide").map(s => s.type_stage);
+      ["initiation","perfectionnement","fin_etude"].forEach(t => {
+        const opt = document.querySelector(`#fType option[value="${t}"]`);
+        if (opt) opt.style.display = typesValides.includes(t) ? "none" : "";
+      });
+      // Réinitialiser la sélection si la valeur actuelle est désormais masquée
+      const sel = document.getElementById("fType");
+      if (sel && typesValides.includes(sel.value)) sel.value = "";
+      if (dernier && dernier.statut === "valide") {
+        const typeTermine = { initiation:"d'initiation", perfectionnement:"de perfectionnement", fin_etude:"de fin d'études (PFE)" };
+        document.getElementById("bannerContainer").innerHTML = `
+          <div class="result-banner valide" style="max-width:700px;margin:0 auto 28px;text-align:center;padding:32px 28px">
+            <div style="font-size:3.5rem;margin-bottom:14px">🎓🎉</div>
+            <h2 style="font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--green);margin-bottom:10px">
+              Félicitations ! Votre stage est terminé !
+            </h2>
+            <p style="color:var(--muted);font-size:0.9rem;line-height:1.7;margin-bottom:16px">
+              Votre rapport de stage ${typeTermine[dernier.type_stage]||''} a été validé par votre encadrant.<br>
+              Vous avez brillamment complété ce stage avec <strong style="color:var(--green)">100% de progression</strong>.
+            </p>
+            <div style="background:var(--bg);border-radius:10px;padding:10px 18px;display:inline-flex;align-items:center;gap:10px;margin-bottom:18px">
+              <span style="font-size:0.85rem;color:var(--muted)">Progression</span>
+              <div style="width:140px;height:8px;background:#e5e9f2;border-radius:99px;overflow:hidden">
+                <div style="width:100%;height:100%;background:linear-gradient(90deg,var(--green),#34d399);border-radius:99px"></div>
+              </div>
+              <span style="font-weight:700;font-size:0.9rem;color:var(--green)">100%</span>
+            </div>
+            <p style="color:var(--muted);font-size:0.82rem">
+              Stage validé : <b style="color:var(--text)">${dernier.titre}</b>
+            </p>
+            <p style="margin-top:14px;font-size:0.88rem;color:var(--accent);font-weight:600">
+              ↓ Vous pouvez maintenant soumettre une nouvelle demande de stage ci-dessous
+            </p>
+          </div>`;
+      } else if (dernier && dernier.statut === "refuse") {
+        document.getElementById("bannerContainer").innerHTML = `
+          <div class="result-banner refuse" style="max-width:700px;margin:0 auto 28px">
+            <div style="font-size:2.8rem;margin-bottom:12px">❌</div>
+            <h2 style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--red);margin-bottom:8px">Demande refusée</h2>
+            <p style="color:var(--muted);font-size:0.875rem;line-height:1.6">Votre précédente demande a été refusée par le chef de département. Vous pouvez soumettre une nouvelle demande.</p>
+            <div style="margin-top:12px;font-size:0.8rem;color:var(--muted)">
+              Demande : <b style="color:var(--text)">${dernier.titre}</b>
+            </div>
+          </div>`;
+      }
+    });
+}
+
+/* ══ SOUMETTRE ══ */
+async function soumettre() {
+  const titre = document.getElementById("fTitre").value.trim();
+  const type  = document.getElementById("fType").value;
+  const desc  = document.getElementById("fDesc").value.trim();
+  const errEl = document.getElementById("formError");
+
+  if (!titre || !type || !desc) {
+    errEl.style.display = "block";
+    errEl.innerHTML = "<i class='fa fa-triangle-exclamation'></i> Le titre, le type et la description sont obligatoires.";
+    return;
+  }
+
+  // Binôme optionnel pour PFE
+  let binome_id = null;
+  if (type === "fin_etude") {
+    const bVal = document.getElementById("fBinome").value;
+    binome_id = bVal ? parseInt(bVal) : null;
+  }
+
+  // Vérification de la période côté client
+  const periodeMsg = verifierPeriodeOuverte(type);
+  if (periodeMsg) {
+    errEl.style.display = "block";
+    errEl.innerHTML = `<i class='fa fa-calendar-xmark'></i> ${periodeMsg}`;
+    return;
+  }
+
+  errEl.style.display = "none";
+
+  const btn = document.getElementById("btnSoumettre");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Envoi en cours…`;
+
+  try {
+    const r = await fetch(`${API}/demande-stage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        etudiant_id: currentUser.id,
+        titre,
+        type_stage:  type,
+        description: desc,
+        entreprise:  document.getElementById("fEntreprise").value.trim() || null,
+        ville:       document.getElementById("fVille").value.trim()      || null,
+        date_debut:  document.getElementById("fDebut").value             || null,
+        date_fin:    document.getElementById("fFin").value               || null,
+        binome_id:   binome_id ? parseInt(binome_id) : null,
+      })
+    });
+    const data = await r.json();
+
+    if (data.success) {
+      showToast("✅ Demande envoyée ! Le chef de département va l'examiner.", "success");
+      setTimeout(() => chargerEtat(), 1000);
+    } else {
+      errEl.style.display = "block";
+      errEl.innerHTML = "<i class='fa fa-circle-xmark'></i> " + (data.message || "Erreur lors de l'envoi.");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa fa-paper-plane"></i> Envoyer la demande`;
+    }
+  } catch {
+    errEl.style.display = "block";
+    errEl.textContent = "Erreur réseau, vérifiez votre connexion.";
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa fa-paper-plane"></i> Envoyer la demande`;
+  }
+}
+
+/* ══ ANNULER DEMANDE ══ */
+async function annulerDemande() {
+  if (!stageEnAttente) return;
+  if (!confirm("Voulez-vous vraiment annuler votre demande de stage ?")) return;
+
+  const btn = document.getElementById("btnAnnuler");
+  btn.disabled = true;
+  btn.innerHTML = `<i class="fa fa-spinner fa-spin"></i> Annulation…`;
+
+  const r = await fetch(`${API}/annuler-demande/${stageEnAttente.id}`, { method: "DELETE" });
+  const data = await r.json();
+
+  if (data.success) {
+    showToast("Demande annulée.", "success");
+    stageEnAttente = null;
+    setTimeout(() => chargerEtat(), 800);
+  } else {
+    showToast(data.message || "Impossible d'annuler.", "error");
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fa fa-times-circle"></i> Annuler ma demande`;
+  }
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3500);
+}
+
+function logout() { localStorage.clear(); window.location.href = "/login.html"; }
+
+/* ══ INIT ══ */
+chargerEtat();
+
+// Badge + toasts notifications
+let _dernieresNotifsVues = null;
+
+function chargerBadgeNotifs() {
+  fetch(`${API}/notifications/${currentUser.id}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+      const notifs = data.notifications || [];
+      const nonLues = notifs.filter(n => !n.est_lue);
+      const nb = nonLues.length;
+
+      // Badge
+      const badge = document.getElementById("notifBadge");
+      if (nb > 0) { badge.textContent = nb > 9 ? "9+" : nb; badge.style.display = "block"; }
+      else badge.style.display = "none";
+
+      // Toasts : comparer avec la liste précédente pour détecter les nouvelles
+      if (_dernieresNotifsVues !== null) {
+        const nouvelles = nonLues.filter(n => !_dernieresNotifsVues.includes(n.id));
+        nouvelles.forEach(n => afficherToastNotif(n));
+        // Si une notif de statut/affectation arrive → recharger la vue
+        if (nouvelles.some(n => n.type === 'statut' || n.type === 'affectation')) {
+          chargerEtat();
+        }
+      }
+      _dernieresNotifsVues = nonLues.map(n => n.id);
+    }).catch(() => {});
+}
+
+function afficherToastNotif(notif) {
+  const icones = {
+    statut:      { emoji: '📋', couleur: '#0d9488' },
+    affectation: { emoji: '👨‍🏫', couleur: '#0891b2' },
+    message:     { emoji: '💬', couleur: '#7c3aed' },
+    deadline:    { emoji: '⏰', couleur: '#dc2626' },
+    rapport:     { emoji: '📄', couleur: '#059669' },
+    compte:      { emoji: '👤', couleur: '#6b7280' },
+  };
+  const cfg = icones[notif.type] || { emoji: '🔔', couleur: '#0c2340' };
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position:fixed; bottom:28px; right:24px; z-index:9999;
+    background:#fff; border-left:4px solid ${cfg.couleur};
+    border-radius:14px; padding:16px 20px;
+    box-shadow:0 8px 32px rgba(0,0,0,.18);
+    display:flex; align-items:flex-start; gap:12px;
+    max-width:360px; animation:slideIn .35s ease;
+    font-family:inherit;
+  `;
+  toast.innerHTML = `
+    <span style="font-size:1.5rem;line-height:1">${cfg.emoji}</span>
+    <div style="flex:1">
+      <p style="font-size:.85rem;font-weight:700;color:#0c2340;margin:0 0 4px">Nouvelle notification</p>
+      <p style="font-size:.8rem;color:#64748b;margin:0;line-height:1.45">${notif.message}</p>
+      <a href="notifications.html" style="display:inline-block;margin-top:8px;font-size:.75rem;font-weight:600;color:${cfg.couleur};text-decoration:none">Voir toutes les notifications →</a>
+    </div>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:1.1rem;line-height:1;padding:0;margin-left:4px">×</button>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.remove(); }, 7000);
+}
+
+// Ajouter animation CSS si pas déjà présente
+if (!document.getElementById('toast-anim-style')) {
+  const s = document.createElement('style');
+  s.id = 'toast-anim-style';
+  s.textContent = '@keyframes slideIn{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}';
+  document.head.appendChild(s);
+}
+
+chargerBadgeNotifs();
+setInterval(chargerBadgeNotifs, 10000);
+
+/* ══ PÉRIODES DE STAGE ══ */
+let periodMap = {};
+
+async function chargerPeriodes() {
+  try {
+    const resp = await fetch(`${API}/api/periodes-stage-etudiant/${currentUser.id}`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const periodes = data.periodes || [];
+    periodes.forEach(p => { periodMap[p.type_stage] = p; });
+    afficherBandeauPeriodes(periodes);
+  } catch(e) {}
+}
+
+function afficherBandeauPeriodes(periodes) {
+  if (!periodes.length) return;
+  const bandeau = document.getElementById("bandeauPeriodes");
+  const liste   = document.getElementById("listePeriodes");
+  const today   = new Date().toISOString().slice(0, 10);
+
+  const labels = {
+    initiation:       { nom: "Initiation",       couleur: "#6366f1" },
+    perfectionnement: { nom: "Perfectionnement", couleur: "#059669" },
+    fin_etude:        { nom: "PFE",              couleur: "#c9930a" }
+  };
+
+  liste.innerHTML = periodes.map(p => {
+    const debut  = String(p.date_debut).slice(0, 10);
+    const fin    = String(p.date_fin).slice(0, 10);
+    const cfg    = labels[p.type_stage] || { nom: p.type_stage, couleur: "#64748b" };
+    const active = today >= debut && today <= fin;
+    const passe  = today > fin;
+    const statut = active ? {icon:"✅", txt:"Ouverte", c:"#059669"} : passe ? {icon:"⛔", txt:"Fermée", c:"#dc2626"} : {icon:"⏳", txt:"À venir", c:"#f59e0b"};
+    return `<div style="border:1px solid ${cfg.couleur}30;border-radius:10px;padding:10px 12px;background:${cfg.couleur}08">
+      <div style="font-weight:700;font-size:.8rem;color:${cfg.couleur};margin-bottom:4px">${cfg.nom}</div>
+      <div style="font-size:.75rem;color:#475569;margin-bottom:4px">
+        ${new Date(debut+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}
+        → ${new Date(fin+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}
+      </div>
+      <div style="font-size:.72rem;font-weight:600;color:${statut.c}">${statut.icon} ${statut.txt}</div>
+    </div>`;
+  }).join('');
+
+  bandeau.style.display = "block";
+}
+
+// Vérifier si la période est ouverte avant de laisser soumettre
+function verifierPeriodeOuverte(type_stage) {
+  const p = periodMap[type_stage];
+  if (!p) return null; // pas de période définie → le backend refusera
+  const today = new Date().toISOString().slice(0, 10);
+  const debut = String(p.date_debut).slice(0, 10);
+  const fin   = String(p.date_fin).slice(0, 10);
+  if (today < debut) {
+    const d = new Date(debut+'T00:00:00').toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+    return `La période de stage n'est pas encore ouverte. Elle débute le ${d}.`;
+  }
+  if (today > fin) {
+    const d = new Date(fin+'T00:00:00').toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+    return `La période de stage est terminée (fin le ${d}). Contactez votre chef de département.`;
+  }
+  return null; // OK
+}
+
+// Connecter la vérification au changement de type
+document.getElementById("fType").addEventListener("change", function() {
+  const type = this.value;
+  const errEl = document.getElementById("formError");
+  if (!type) return;
+  const msg = verifierPeriodeOuverte(type);
+  if (msg) {
+    errEl.style.display = "block";
+    errEl.innerHTML = `<i class='fa fa-calendar-xmark'></i> ${msg}`;
+    document.getElementById("btnSoumettre").disabled = true;
+  } else {
+    errEl.style.display = "none";
+    document.getElementById("btnSoumettre").disabled = false;
+  }
+  // Afficher/masquer la section binôme
+  const binomeSec = document.getElementById("binomeSection");
+  if (type === "fin_etude") {
+    binomeSec.style.display = "block";
+    chargerPartenaires();
+  } else {
+    binomeSec.style.display = "none";
+    document.getElementById("fBinome").innerHTML = "<option value=''>— Chargement des partenaires… —</option>";
+  }
+});
+
+async function chargerPartenaires() {
+  const sel = document.getElementById("fBinome");
+  sel.innerHTML = "<option value=''>— Chargement… —</option>";
+  try {
+    const r = await fetch(`${API}/api/pfe-partenaires/${currentUser.id}`);
+    const d = await r.json();
+    if (d.success && d.partenaires.length > 0) {
+      sel.innerHTML = "<option value=''>— Sans binôme (individuel) —</option>" +
+        d.partenaires.map(p =>
+          `<option value="${p.id}">${p.prenom} ${p.nom} — ${p.filiere || ''} (${p.annee_etude || ''})</option>`
+        ).join("");
+    } else {
+      sel.innerHTML = "<option value=''>— Sans binôme (individuel) —</option><option disabled>Aucun partenaire éligible disponible</option>";
+    }
+  } catch {
+    sel.innerHTML = "<option value=''>— Sans binôme (individuel) —</option>";
+  }
+}
+
+chargerPeriodes();
+
+</script>
+<script src="/sidebar-toggle.js"></script>
+</body>
+</html>

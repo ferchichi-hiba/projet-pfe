@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISET Tozeur é Plateforme des Stages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#07112b;
+  --navy2:#0d1f4e;
+  --blue:#1a3a8f;
+  --gold:#c9930a;
+  --gold2:#f5d87e;
+  --white:#fff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --light:#f8fafc;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;color:var(--text);overflow-x:hidden}
+
+/* -- NAVBAR -- */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:0 60px;height:70px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(7,17,43,0.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  transition:all .3s;
+}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav-logo img{width:38px;height:38px;object-fit:contain;filter:brightness(1.1)}
+.nav-logo-text{display:flex;flex-direction:column;line-height:1.1}
+.nav-logo-text span:first-child{color:#fff;font-weight:800;font-size:1rem;letter-spacing:.02em}
+.nav-logo-text span:last-child{color:var(--gold2);font-weight:400;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-link-item{
+  color:rgba(255,255,255,.65);font-size:.85rem;font-weight:500;
+  padding:8px 16px;border-radius:50px;text-decoration:none;
+  transition:all .2s;letter-spacing:.01em;
+}
+.nav-link-item:hover{color:#fff;background:rgba(255,255,255,.1)}
+.nav-link-item.active{color:var(--gold2)}
+.nav-divider{width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 8px}
+.nav-btn{
+  display:flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--navy);font-weight:700;font-size:.875rem;
+  padding:10px 22px;border-radius:50px;text-decoration:none;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 20px rgba(201,147,10,.35);
+}
+.nav-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(201,147,10,.5)}
+/* Mobile menu */
+.nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:8px;background:none;border:none}
+.nav-hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:all .3s}
+.nav-mobile{
+  display:none;flex-direction:column;gap:4px;
+  position:absolute;top:70px;left:0;right:0;
+  background:rgba(7,17,43,.98);backdrop-filter:blur(16px);
+  padding:16px 24px 24px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.nav-mobile.open{display:flex}
+.nav-mobile .nav-link-item{padding:12px 16px;border-radius:12px;width:100%}
+.nav-mobile .nav-btn{margin-top:8px;justify-content:center}
+@media(max-width:800px){
+  .nav-links,.nav-divider{display:none}
+  .nav-hamburger{display:flex}
+}
+
+/* -- HERO -- */
+.hero{
+  min-height:100vh;
+  background:linear-gradient(135deg,#07112b 0%,#0d1f4e 40%,#0a2a5e 70%,#071830 100%);
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;
+  position:relative;overflow:hidden;
+  padding:100px 20px 60px;
+}
+.hero-bg{position:absolute;inset:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.25;animation:float 8s ease-in-out infinite}
+.blob1{width:500px;height:500px;background:radial-gradient(circle,#3b5bd6,transparent);top:-100px;left:-100px;animation-delay:0s}
+.blob2{width:600px;height:600px;background:radial-gradient(circle,#c9930a,transparent);bottom:-150px;right:-100px;animation-delay:-3s}
+.blob3{width:400px;height:400px;background:radial-gradient(circle,#1e5fa8,transparent);top:50%;left:50%;transform:translate(-50%,-50%);animation-delay:-6s}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+.blob3{animation:float2 10s ease-in-out infinite}
+@keyframes float2{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-55%) scale(1.08)}}
+
+/* Grid pattern overlay */
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:50px 50px;
+}
+
+.hero-content{position:relative;z-index:2;max-width:780px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(201,147,10,.15);border:1px solid rgba(201,147,10,.3);
+  color:var(--gold2);font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:7px 18px;border-radius:50px;margin-bottom:28px;
+}
+.hero-badge i{font-size:.75rem}
+.hero h1{
+  font-size:clamp(2.2rem,6vw,4rem);font-weight:900;line-height:1.1;
+  color:#fff;margin-bottom:20px;letter-spacing:-.02em;
+}
+.hero h1 span{
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero p{
+  color:rgba(255,255,255,.65);font-size:1.1rem;line-height:1.7;
+  max-width:580px;margin:0 auto 40px;font-weight:400;
+}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-hero-primary{
+  display:inline-flex;align-items:center;gap:9px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--navy);font-weight:700;font-size:.95rem;
+  padding:14px 32px;border-radius:50px;text-decoration:none;
+  box-shadow:0 8px 30px rgba(201,147,10,.4);
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-hero-primary:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(201,147,10,.5)}
+.btn-hero-secondary{
+  display:inline-flex;align-items:center;gap:9px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-weight:600;font-size:.95rem;
+  padding:14px 32px;border-radius:50px;text-decoration:none;
+  backdrop-filter:blur(8px);
+  transition:all .2s;
+}
+.btn-hero-secondary:hover{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.4)}
+
+/* Scroll indicator */
+.scroll-hint{
+  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:rgba(255,255,255,.4);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;
+  animation:bounce 2s ease-in-out infinite;
+}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+
+/* -- STATS -- */
+.stats{
+  background:#fff;
+  padding:50px 60px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  border-bottom:1px solid #e5e7eb;
+}
+.stat-item{
+  text-align:center;padding:20px;
+  border-right:1px solid #e5e7eb;
+  position:relative;
+}
+.stat-item:last-child{border-right:none}
+.stat-num{
+  font-size:2.5rem;font-weight:900;
+  background:linear-gradient(135deg,var(--blue),#3b82f6);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:block;line-height:1;margin-bottom:6px;
+}
+.stat-num .plus{font-size:1.8rem}
+.stat-label{color:var(--muted);font-size:.85rem;font-weight:500}
+
+/* -- FEATURES -- */
+.features{
+  padding:100px 60px;
+  background:var(--light);
+}
+.section-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  color:var(--gold);font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:14px;
+}
+.section-tag::before,.section-tag::after{content:'';flex:1;height:1px;background:var(--gold);opacity:.4;width:30px}
+.section-header{text-align:center;margin-bottom:60px}
+.section-header h2{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;color:var(--navy);letter-spacing:-.02em;margin-bottom:14px}
+.section-header p{color:var(--muted);max-width:520px;margin:0 auto;line-height:1.7;font-size:.95rem}
+
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;max-width:1100px;margin:0 auto;
+}
+.feature-card{
+  background:#fff;
+  border-radius:20px;
+  padding:36px 28px;
+  border:1px solid #e8ecf5;
+  transition:all .3s;
+  position:relative;overflow:hidden;
+  cursor:default;
+}
+.feature-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--navy),var(--blue));
+  opacity:0;transition:opacity .3s;
+}
+.feature-card:hover{transform:translateY(-8px);box-shadow:0 24px 50px rgba(10,30,80,.15);border-color:transparent}
+.feature-card:hover::before{opacity:1}
+.feature-card:hover .feat-icon,.feature-card:hover h3,.feature-card:hover p,.feature-card:hover .feat-tag{color:#fff!important}
+.feature-card:hover .feat-icon-wrap{background:rgba(255,255,255,.15)!important;border-color:rgba(255,255,255,.2)!important}
+.feat-icon-wrap{
+  width:56px;height:56px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(26,58,143,.08),rgba(59,130,246,.08));
+  border:1px solid rgba(26,58,143,.12);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;transition:all .3s;position:relative;
+}
+.feat-icon{font-size:1.4rem;color:var(--blue);transition:color .3s}
+.feature-card h3{font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:10px;position:relative;transition:color .3s}
+.feature-card p{color:var(--muted);font-size:.875rem;line-height:1.65;position:relative;transition:color .3s}
+.feat-tag{
+  display:inline-block;margin-top:16px;
+  font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--blue);position:relative;transition:color .3s;
+}
+
+/* -- HOW IT WORKS -- */
+.how{
+  padding:100px 60px;
+  background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%);
+  position:relative;overflow:hidden;
+}
+.how::before{
+  content:'';position:absolute;
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,147,10,.08),transparent 70%);
+  top:-200px;right:-200px;
+}
+.how .section-header h2{color:#fff}
+.how .section-tag{color:var(--gold2)}
+.how .section-tag::before,.how .section-tag::after{background:var(--gold2)}
+.how .section-header p{color:rgba(255,255,255,.5)}
+.steps{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  max-width:1000px;margin:0 auto;position:relative;
+}
+.steps::before{
+  content:'';position:absolute;
+  top:36px;left:calc(12.5% + 28px);right:calc(12.5% + 28px);
+  height:2px;
+  background:linear-gradient(90deg,var(--gold),rgba(201,147,10,.2));
+}
+.step{text-align:center;padding:0 20px;position:relative}
+.step-num{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:var(--navy);font-weight:900;font-size:1.3rem;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;
+  box-shadow:0 8px 24px rgba(201,147,10,.35);
+  position:relative;z-index:1;
+}
+.step h3{color:#fff;font-size:.95rem;font-weight:700;margin-bottom:8px}
+.step p{color:rgba(255,255,255,.45);font-size:.8rem;line-height:1.6}
+
+/* -- ROLES -- */
+.roles{padding:100px 60px;background:#fff}
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:0 auto}
+.role-card{
+  border-radius:24px;overflow:hidden;
+  position:relative;cursor:pointer;
+  transition:transform .3s,box-shadow .3s;
+  min-height:280px;display:flex;flex-direction:column;justify-content:flex-end;
+  text-decoration:none;
+}
+.role-card:hover{transform:translateY(-6px);box-shadow:0 30px 60px rgba(0,0,0,.25)}
+.role-bg{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center;
+  transition:transform .4s;
+}
+.role-card:hover .role-bg{transform:scale(1.06)}
+.role-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(7,17,43,.92) 0%,rgba(7,17,43,.3) 60%,transparent 100%);
+}
+.role-body{position:relative;padding:28px;color:#fff}
+.role-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:rgba(255,255,255,.15);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;margin-bottom:12px;
+}
+.role-body h3{font-size:1.1rem;font-weight:800;margin-bottom:5px}
+.role-body p{font-size:.8rem;color:rgba(255,255,255,.65);line-height:1.5;margin-bottom:14px}
+.role-link{
+  display:inline-flex;align-items:center;gap:6px;
+  color:var(--gold2);font-size:.8rem;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;
+}
+/* Role card backgrounds using CSS gradients (no external images needed) */
+.role-etudiant .role-bg{background:linear-gradient(135deg,#0f4c75,#1b6ca8,#2193b0)}
+.role-encadrant .role-bg{background:linear-gradient(135deg,#134e4a,#0f766e,#14b8a6)}
+.role-admin .role-bg{background:linear-gradient(135deg,#3b0764,#6d28d9,#7c3aed)}
+
+/* Pattern overlay on role cards */
+.role-etudiant .role-bg::after,
+.role-encadrant .role-bg::after,
+.role-admin .role-bg::after{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+
+/* -- CTA BANNER -- */
+.cta{
+  padding:90px 60px;text-align:center;
+  background:linear-gradient(135deg,var(--gold) 0%,#e6a812 50%,var(--gold2) 100%);
+  position:relative;overflow:hidden;
+}
+.cta::before{
+  content:'';position:absolute;
+  width:500px;height:500px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  top:-200px;right:-100px;
+}
+.cta::after{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(255,255,255,.08);
+  bottom:-100px;left:-50px;
+}
+.cta h2{
+  font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;
+  color:var(--navy);margin-bottom:14px;position:relative;letter-spacing:-.02em;
+}
+.cta p{color:rgba(7,17,43,.65);font-size:1rem;margin-bottom:36px;position:relative}
+.btn-cta{
+  display:inline-flex;align-items:center;gap:9px;
+  background:var(--navy);color:#fff;
+  font-weight:700;font-size:.95rem;
+  padding:14px 36px;border-radius:50px;text-decoration:none;
+  position:relative;
+  box-shadow:0 8px 30px rgba(7,17,43,.3);
+  transition:transform .2s,box-shadow .2s;
+}
+.btn-cta:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(7,17,43,.4)}
+
+/* -- FOOTER -- */
+footer{
+  background:var(--navy);
+  padding:50px 60px 28px;
+  color:rgba(255,255,255,.5);
+}
+.footer-top{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding-bottom:36px;border-bottom:1px solid rgba(255,255,255,.07);
+  gap:40px;flex-wrap:wrap;
+}
+.footer-brand .nav-logo{margin-bottom:12px}
+.footer-brand p{font-size:.85rem;line-height:1.6;max-width:280px}
+.footer-links h4{color:#fff;font-size:.875rem;font-weight:700;margin-bottom:14px}
+.footer-links ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.footer-links ul li a{color:rgba(255,255,255,.45);font-size:.82rem;text-decoration:none;transition:color .2s}
+.footer-links ul li a:hover{color:var(--gold2)}
+.footer-bottom{
+  text-align:center;margin-top:24px;font-size:.78rem;
+  color:rgba(255,255,255,.25);
+}
+
+/* -- RESPONSIVE -- */
+@media(max-width:900px){
+  .navbar{padding:0 24px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat-item:nth-child(2){border-right:none}
+  .stat-item:nth-child(3){border-top:1px solid #e5e7eb;border-right:1px solid #e5e7eb}
+  .stat-item:last-child{border-top:1px solid #e5e7eb}
+  .features,.how,.roles,.cta{padding:70px 24px}
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:repeat(2,1fr);gap:40px}
+  .steps::before{display:none}
+  .roles-grid{grid-template-columns:1fr}
+  .footer-top{flex-direction:column}
+}
+@media(max-width:600px){
+  .features-grid,.roles-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr);padding:40px 20px}
+  .hero-btns{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="mainNav">
+  <a class="nav-logo" href="#">
+    <img src="image/image.png" alt="ISET">
+    <div class="nav-logo-text">
+      <span>ISET Tozeur</span>
+      <span>Plateforme des stages</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="#hero-top" class="nav-link-item"><i class="fa fa-house" style="margin-right:5px;font-size:.8rem"></i>Accueil</a>
+    <a href="#features" class="nav-link-item"><i class="fa fa-star" style="margin-right:5px;font-size:.8rem"></i>Fonctionnalités</a>
+    <a href="#how" class="nav-link-item"><i class="fa fa-route" style="margin-right:5px;font-size:.8rem"></i>Processus</a>
+    <a href="#contact" class="nav-link-item"><i class="fa fa-envelope" style="margin-right:5px;font-size:.8rem"></i>Contact</a>
+  </div>
+  <div class="nav-divider"></div>
+  <a class="nav-btn" href="login.html">
+    <i class="fa fa-right-to-bracket"></i>
+    Se connecter
+  </a>
+  <button class="nav-hamburger" id="hamburger" aria-label="Menu" onclick="toggleMobile()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<!-- Mobile nav -->
+<div class="nav-mobile" id="mobileMenu">
+  <a href="#hero-top" class="nav-link-item" onclick="closeMobile()"><i class="fa fa-house" style="margin-right:8px"></i>Accueil</a>
+  <a href="#features" class="nav-link-item" onclick="closeMobile()"><i class="fa fa-star" style="margin-right:8px"></i>Fonctionnalités</a>
+  <a href="#how" class="nav-link-item" onclick="closeMobile()"><i class="fa fa-route" style="margin-right:8px"></i>Processus</a>
+  <a href="#contact" class="nav-link-item" onclick="closeMobile()"><i class="fa fa-envelope" style="margin-right:8px"></i>Contact</a>
+  <a class="nav-btn" href="login.html"><i class="fa fa-right-to-bracket"></i> Se connecter</a>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero-top">
+  <div class="hero-bg">
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge"><i class="fa fa-graduation-cap"></i> ISET Tozeur &mdash; Officiel</div>
+    <h1>La plateforme de gestion des<br><span>stages universitaires</span></h1>
+    <p>Un espace numérique unifié pour étudiants, encadrants et administration. Gérez vos stages de A é Z en toute simplicité.</p>
+    <div class="hero-btns">
+      <a href="login.html" class="btn-hero-primary">
+        <i class="fa fa-rocket"></i>
+        Accéder é la plateforme
+      </a>
+      <a href="#features" class="btn-hero-secondary">
+        <i class="fa fa-circle-play"></i>
+        Découvrir les fonctionnalités
+      </a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>Défiler</span>
+    <i class="fa fa-chevron-down"></i>
+  </div>
+</section>
+
+
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-header">
+    <div class="section-tag">Fonctionnalités</div>
+    <h2>Tout ce dont vous avez besoin</h2>
+    <p>Une suite complète d'outils pour simplifier la gestion des stages, du dépét de demande jusqu'au certificat final.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feat-icon-wrap"><i class="fa fa-file-signature feat-icon"></i></div>
+      <h3>Demande de stage</h3>
+      <p>Déposez votre demande en ligne, suivez son avancement en temps réel et recevez des notifications instantanées.</p>
+      <span class="feat-tag">étudiant</span>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon-wrap"><i class="fa fa-comments feat-icon"></i></div>
+      <h3>Messagerie intégrée</h3>
+      <p>Communiquez directement avec votre encadrant et l'administration sans quitter la plateforme.</p>
+      <span class="feat-tag">Tous les réles</span>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon-wrap"><i class="fa fa-book-open feat-icon"></i></div>
+      <h3>Journal de bord</h3>
+      <p>Documentez vos activités journaliéres et partagez vos avancées avec votre encadrant en temps réel.</p>
+      <span class="feat-tag">étudiant</span>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon-wrap"><i class="fa fa-chart-line feat-icon"></i></div>
+      <h3>Suivi et rapports</h3>
+      <p>Tableau de bord complet pour suivre la progression de chaque étudiant et générer des rapports détaillés.</p>
+      <span class="feat-tag">Encadrant</span>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon-wrap"><i class="fa fa-id-card feat-icon"></i></div>
+      <h3>Carte stagiaire</h3>
+      <p>Générez automatiquement votre carte officielle de stagiaire avec QR code de vérification intégré.</p>
+      <span class="feat-tag">étudiant</span>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon-wrap"><i class="fa fa-calendar-check feat-icon"></i></div>
+      <h3>Rendez-vous</h3>
+      <p>Planifiez vos réunions avec votre encadrant et gérez votre agenda de soutenance en quelques clics.</p>
+      <span class="feat-tag">étudiant &amp; Encadrant</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-header">
+    <div class="section-tag">Processus</div>
+    <h2>Comment éa fonctionne ?</h2>
+    <p>Quatre étapes simples pour gérer votre stage de bout en bout.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Inscription</h3>
+      <p>Créez votre compte avec vos identifiants universitaires.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Demande</h3>
+      <p>Soumettez votre demande de stage avec tous les documents requis.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Suivi</h3>
+      <p>Suivez votre progression et communiquez avec votre encadrant.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3>Validation</h3>
+      <p>Obtenez votre certificat officiel é la fin du stage.</p>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Prét é gérer votre stage ?</h2>
+  <p>Rejoignez des centaines d'étudiants qui utilisent déjé la plateforme.</p>
+  <a href="login.html" class="btn-cta">
+    <i class="fa fa-right-to-bracket"></i>
+    Commencer maintenant
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer id="contact">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a class="nav-logo" href="#">
+        <img src="image/image.png" alt="ISET" style="width:34px;filter:brightness(0) invert(1);opacity:.7">
+        <div class="nav-logo-text">
+          <span style="color:#fff;opacity:.8">ISET Tozeur</span>
+          <span>Institut Supérieur des études Technologiques</span>
+        </div>
+      </a>
+      <p>Plateforme officielle de gestion des stages de l'ISET Tozeur. Développée pour améliorer l'expérience de tous les acteurs.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Navigation</h4>
+      <ul>
+        <li><a href="#hero-top">Accueil</a></li>
+        <li><a href="#features">Fonctionnalités</a></li>
+        <li><a href="#how">Processus</a></li>
+        <li><a href="login.html">Se connecter</a></li>
+      </ul>
+    </div>
+    <div class="footer-links">
+      <h4>Contact</h4>
+      <ul>
+        <li><a href="mailto:iset.tozeur@iset.tn"><i class="fa fa-envelope" style="margin-right:6px;opacity:.6"></i>iset.tozeur@iset.tn</a></li>
+        <li><a href="tel:+21676000000"><i class="fa fa-phone" style="margin-right:6px;opacity:.6"></i>+216 76 XXX XXX</a></li>
+        <li><a href="#"><i class="fa fa-location-dot" style="margin-right:6px;opacity:.6"></i>Tozeur, Tunisie</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    &copy; 2026 ISET Tozeur é Plateforme officielle des stages. Tous droits réservés.
+  </div>
+</footer>
+
+<script>
+// Navbar scroll effect
+window.addEventListener('scroll', function() {
+  var nav = document.querySelector('.navbar');
+  if (window.scrollY > 50) {
+    nav.style.background = 'rgba(7,17,43,0.97)';
+    nav.style.boxShadow = '0 4px 30px rgba(0,0,0,.4)';
+  } else {
+    nav.style.background = 'rgba(7,17,43,0.85)';
+    nav.style.boxShadow = 'none';
+  }
+  // Active link highlight
+  var sections = [
+    { id:'hero-top', href:'#hero-top' },
+    { id:'features', href:'#features' },
+    { id:'how',      href:'#how' },
+    { id:'contact',  href:'#contact' }
+  ];
+  var scrollY = window.scrollY + 100;
+  var current = sections[0].href;
+  sections.forEach(function(s) {
+    var el = document.getElementById(s.id);
+    if (el && el.offsetTop <= scrollY) current = s.href;
+  });
+  document.querySelectorAll('.nav-link-item').forEach(function(a) {
+    a.classList.toggle('active', a.getAttribute('href') === current);
+  });
+});
+
+// Mobile menu
+function toggleMobile() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMobile() {
+  document.getElementById('mobileMenu').classList.remove('open');
+}
+// Close mobile menu on outside click
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('mobileMenu');
+  var btn = document.getElementById('hamburger');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+</script>
+</body>
+</html>

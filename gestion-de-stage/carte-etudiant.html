@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma Carte étudiant | Gestion de Stage</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">`n<link rel="stylesheet" href="/etudiant-theme.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --text:#1a1d2e;--muted:#8892a4;--sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+nav{flex:1;overflow-y:auto}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+
+/* CONTENT */
+.content{padding:28px;flex:1;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+
+/* CARD PREVIEW */
+.preview-section{flex:1;min-width:320px}
+.card-title-sec{font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.card-title-sec i{color:var(--accent)}
+
+/* CARTE éTUDIANT PREVIEW */
+/* CARTE ETUDIANT — ISET TOZEUR */
+/* ═══════════════════════════════════════════════
+   CARTE ÉTUDIANT — FORMAT OFFICIEL ISET TUNISIE
+   ═══════════════════════════════════════════════ */
+.carte-wrap{width:100%;max-width:680px;margin:0 auto 24px;perspective:1200px;}
+.carte{width:100%;aspect-ratio:85.6/54;border-radius:6px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(14,165,233,.28),0 2px 8px rgba(0,0,0,.12);transition:transform .3s ease;cursor:pointer;background:#fff;display:flex;flex-direction:column;border:1.5px solid #7dd3fc;font-family:'DM Sans',sans-serif;}
+.carte:hover{transform:rotateY(-3deg) rotateX(2deg) scale(1.02);}
+.carte-shimmer{position:absolute;inset:0;z-index:30;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.15) 48%,rgba(255,255,255,.28) 52%,rgba(255,255,255,.15) 58%,transparent 65%);animation:shimmer 4s ease-in-out infinite;}
+@keyframes shimmer{0%{transform:translateX(-130%)}100%{transform:translateX(230%)}}
+
+/* ── HEADER ── */
+.carte-hdr{background:#fff;display:flex;align-items:center;padding:2px 4px;gap:3px;flex-shrink:0;border-bottom:2px solid #0ea5e9;}
+.carte-logo-iset{width:44px;height:44px;flex-shrink:0;border-radius:50%;background:linear-gradient(150deg,#0284c7,#38bdf8);border:1.5px solid #fff;box-shadow:0 0 0 1.5px #7dd3fc;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.carte-logo-iset .iset-abbr{font-family:'Syne',sans-serif;font-weight:900;font-size:1.1rem;color:#fff;line-height:1;}
+.carte-logo-iset .iset-city{font-size:.58rem;color:#bae6fd;font-weight:700;line-height:1.2;}
+.carte-hdr-txt{flex:1;text-align:center;line-height:1.35;padding:0 4px;}
+.carte-hdr-txt .min1{display:block;font-size:.72rem;font-weight:700;color:#0c4a6e;letter-spacing:.01em;}
+.carte-hdr-txt .min2{display:block;font-size:.66rem;font-weight:600;color:#0284c7;letter-spacing:.01em;}
+.carte-hdr-txt .ar{display:block;font-size:.6rem;color:#666;direction:rtl;margin-top:1px;}
+.carte-logo-tn{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.carte-logo-tn svg{width:34px;height:34px;}
+
+/* ── BANDE TITRE BLEU CIEL ── */
+.carte-band{background:linear-gradient(135deg,#0284c7,#0ea5e9 55%,#38bdf8);color:#fff;padding:3px 7px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.carte-band-left{display:flex;align-items:center;gap:5px;}
+.carte-band-fr{font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:.09em;text-transform:uppercase;}
+.carte-band-sep{opacity:.5;font-size:.9rem;}
+.carte-band-ar{font-size:.9rem;direction:rtl;opacity:.9;font-weight:500;}
+.carte-band-year{font-size:.9rem;font-weight:700;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.15);border-radius:3px;padding:2px 7px;white-space:nowrap;}
+
+/* ── CORPS ── */
+.carte-body{flex:1;display:flex;min-height:0;background:#f0f9ff;}
+.carte-infos{flex:1;padding:2px 4px 2px 5px;display:flex;flex-direction:column;justify-content:space-evenly;min-width:0;border-right:.5px solid #bae6fd;}
+.carte-row{display:flex;align-items:center;border-bottom:.35px solid #e0f2fe;padding:1px 0;}
+.carte-row:last-child{border-bottom:none;}
+.carte-row-lbl{font-size:.72rem;color:#0284c7;font-weight:700;flex-shrink:0;white-space:nowrap;padding-right:3px;}
+.carte-row-sep{font-size:.68rem;color:#7dd3fc;flex-shrink:0;margin-right:3px;}
+.carte-row-val{font-size:.82rem;color:#0c4a6e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.carte-row-val.bold{font-weight:700;font-size:.95rem;color:#0c4a6e;text-transform:uppercase;}
+.carte-photo-col{padding:3px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5px;border-right:.5px solid #bae6fd;}
+.carte-photo{width:58px;height:74px;border-radius:3px;border:1.5px solid #0ea5e9;background:linear-gradient(135deg,#e0f2fe,#f0f9ff);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:#0ea5e9;overflow:hidden;flex-shrink:0;}
+.carte-photo img{width:100%;height:100%;object-fit:cover;}
+.carte-photo-label{font-size:.55rem;color:#7dd3fc;text-align:center;}
+.carte-qr-col{padding:3px 5px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+.carte-qr-lbl{font-size:.55rem;color:#7dd3fc;text-align:center;}
+
+/* ── FOOTER BLEU CIEL ── */
+.carte-foot{background:linear-gradient(135deg,#0284c7,#0ea5e9);padding:2px 5px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:3px;}
+.carte-cin-block{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.carte-cin-lbl{font-size:.65rem;color:#bae6fd;font-weight:600;white-space:nowrap;}
+.carte-cin-val{font-size:.78rem;color:#fff;font-weight:700;white-space:nowrap;}
+.carte-barcode{flex:1;text-align:center;font-family:'Courier New',monospace;font-size:.85rem;letter-spacing:.04em;color:#e0f2fe;overflow:hidden;}
+.carte-num-block{display:flex;align-items:center;gap:3px;flex-shrink:0;}
+.carte-num-lbl{font-size:.62rem;color:#bae6fd;white-space:nowrap;}
+.carte-num-val{font-size:.72rem;color:#fff;font-weight:700;white-space:nowrap;}
+.controls-section{width:280px;flex-shrink:0}
+.ctrl-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+.ctrl-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.ctrl-card-title i{color:var(--accent)}
+
+.form-group{margin-bottom:12px}
+.form-label{font-size:.75rem;font-weight:600;color:var(--text);margin-bottom:5px;display:block}
+.form-input{border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);background:var(--bg);outline:none;width:100%;transition:border-color .15s}
+.form-input:focus{border-color:var(--accent);background:var(--white)}
+
+.btn-download{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-family:'DM Sans',sans-serif;font-size:.875rem;font-weight:600;cursor:pointer;transition:opacity .18s,transform .18s;margin-top:4px}
+.btn-download:hover{opacity:.88;transform:translateY(-1px)}
+
+.btn-print{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--white);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .18s;margin-top:8px}
+.btn-print:hover{border-color:var(--accent);color:var(--accent)}
+
+/* info badge */
+.info-badge{display:flex;align-items:center;gap:8px;background:rgba(79,124,255,.06);border:1px solid rgba(79,124,255,.15);border-radius:10px;padding:10px 14px;font-size:.75rem;color:var(--muted);line-height:1.5}
+.info-badge i{color:var(--accent);flex-shrink:0}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.15);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+
+/* hidden QR for PDF */
+#qrPDF{position:absolute;left:-9999px;top:-9999px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Gestion<span> Stages</span><span class="logo-badge">étudiant</span></div>
+  <nav>
+    <span class="nav-section-label">Principal</span>
+    <a class="nav-item" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Mon Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon Stage</a>
+    <a class="nav-item" href="demande-stage.html"><i class="fa fa-paper-plane"></i> Demande de stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item" href="archive.html"><i class="fa fa-box-archive"></i> Mes Archives</a>
+    <span class="nav-section-label">Communication</span>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <div class="nav-divider"></div>
+    <div class="nav-section-toggle open" onclick="toggleExtra(this)">
+      <span class="toggle-label"><i class="fa fa-sparkles"></i> Fonctionnalités +</span>
+      <i class="fa fa-chevron-down toggle-arrow"></i>
+    </div>
+    <div class="nav-extra open">
+      <a class="nav-item" href="cv.html"><i class="fa fa-file-user"></i> CV Generator</a>
+      <a class="nav-item" href="document.html"><i class="fa fa-file-contract"></i> Documents officiels</a>
+      <a class="nav-item active" href="carte-etudiant.html"><i class="fa fa-id-card"></i> Ma carte étudiant</a>
+      <a class="nav-item" href="planning.html"><i class="fa fa-calendar-days"></i> Planning de stage</a>
+      <a class="nav-item" href="rendez-vous.html"><i class="fa fa-calendar-check"></i> Rendez-vous</a>
+      <a class="nav-item" href="soutenance.html"><i class="fa fa-graduation-cap"></i> Soutenance en ligne</a>
+      <a class="nav-item" href="ressource.html"><i class="fa fa-book-bookmark"></i> Ressources</a>
+      <a class="nav-item" href="carte-stagiaires.html"><i class="fa fa-map-location-dot"></i> Carte des stagiaires</a>
+      <a class="nav-item" href="chatbot.html"><i class="fa fa-robot"></i> Assistant IA</a>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">?? Ma carte <span>étudiant</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PREVIEW -->
+    <div class="preview-section">
+      <div class="card-title-sec"><i class="fa fa-id-card"></i> Aperçu de votre carte</div>
+
+      <div class="carte-wrap">
+      <div class="carte-wrap">
+        <div class="carte" id="cartePreview">
+          <div class="carte-shimmer"></div>
+
+          <!-- HEADER : Logo + Ministère + Sceau -->
+          <div class="carte-hdr">
+            <div class="carte-logo-iset">
+              <span class="iset-abbr">ISET</span>
+              <span class="iset-city">TOZEUR</span>
+            </div>
+            <div class="carte-hdr-txt">
+              <span class="min1">Minist&egrave;re de l&apos;Enseignement Sup&eacute;rieur et de la Recherche Scientifique</span>
+              <span class="min2">Direction G&eacute;n&eacute;rale des &Eacute;tudes Technologiques</span>
+              <span class="ar">&#x648;&#x632;&#x627;&#x631;&#x629; &#x627;&#x644;&#x62A;&#x639;&#x644;&#x64A;&#x645; &#x627;&#x644;&#x639;&#x627;&#x644;&#x64A; &#x648;&#x627;&#x644;&#x628;&#x62D;&#x62B; &#x627;&#x644;&#x639;&#x644;&#x645;&#x64A;</span>
+            </div>
+            <div class="carte-logo-tn">
+              <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" fill="#C8102E"/>
+                <circle cx="50" cy="50" r="24" fill="none" stroke="#fff" stroke-width="3"/>
+                <text x="50" y="58" text-anchor="middle" font-size="26" fill="#fff">&#x262A;</text>
+                <polygon points="50,14 53.5,26 66,26 56,34 59.5,46 50,38 40.5,46 44,34 34,26 46.5,26" fill="#fff"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- BANDE TITRE BLEU CIEL -->
+          <div class="carte-band">
+            <div class="carte-band-left">
+              <span class="carte-band-fr">Carte d&apos;&Eacute;tudiant</span>
+              <span class="carte-band-sep">|</span>
+              <span class="carte-band-ar">&#x628;&#x637;&#x627;&#x642;&#x629; &#x637;&#x627;&#x644;&#x628;</span>
+            </div>
+            <span class="carte-band-year" id="carteAnnee">2024 - 2025</span>
+          </div>
+
+          <!-- CORPS -->
+          <div class="carte-body">
+
+            <!-- Infos gauche -->
+            <div class="carte-infos">
+              <div class="carte-row">
+                <span class="carte-row-lbl">Nom &amp; Pr&eacute;nom</span>
+                <span class="carte-row-sep"> : </span>
+                <span class="carte-row-val bold" id="carteNom">Pr&eacute;nom NOM</span>
+              </div>
+              <div class="carte-row">
+                <span class="carte-row-lbl">N&eacute;(e) le</span>
+                <span class="carte-row-sep"> : </span>
+                <span class="carte-row-val" id="carteNaissance">--/--/----</span>
+              </div>
+              <div class="carte-row">
+                <span class="carte-row-lbl">Fili&egrave;re</span>
+                <span class="carte-row-sep"> : </span>
+                <span class="carte-row-val" id="carteFiliere">&mdash;</span>
+              </div>
+              <div class="carte-row">
+                <span class="carte-row-lbl">Sp&eacute;cialit&eacute;</span>
+                <span class="carte-row-sep"> : </span>
+                <span class="carte-row-val" id="carteSpec">&mdash;</span>
+              </div>
+              <div class="carte-row">
+                <span class="carte-row-lbl">N&deg; Inscription</span>
+                <span class="carte-row-sep"> : </span>
+                <span class="carte-row-val" id="carteNumInsc">&mdash;</span>
+              </div>
+              <div class="carte-row">
+                <span class="carte-row-lbl">Type stage</span>
+                <span class="carte-row-sep"> : </span>
+                <span class="carte-row-val" id="carteStageType">&mdash;</span>
+              </div>
+            </div>
+
+            <!-- Photo milieu -->
+            <div class="carte-photo-col">
+              <div class="carte-photo" id="cartePhoto">?</div>
+              <div class="carte-photo-label">Photo</div>
+            </div>
+
+            <!-- QR Code droite -->
+            <div class="carte-qr-col">
+              <div id="carteQRDiv"></div>
+              <div class="carte-qr-lbl">QR</div>
+            </div>
+
+          </div>
+
+          <!-- FOOTER BLEU CIEL -->
+          <div class="carte-foot">
+            <div class="carte-cin-block">
+              <span class="carte-cin-lbl">CIN N&deg;</span>
+              <span class="carte-cin-val" id="carteCIN">--------</span>
+            </div>
+            <div class="carte-barcode" id="carteBarcode">| | | | | | | | | |</div>
+            <div class="carte-num-block">
+              <span class="carte-num-lbl">N&deg; Etu.</span>
+              <span class="carte-num-val" id="carteNumEtu">----</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+        <i class="fa fa-circle-info"></i>
+        <span>La carte est générée automatiquement avec vos informations de profil. Le QR Code permet de vérifier votre identité en ligne.</span>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-section">
+
+      <div class="ctrl-card">
+        <div class="ctrl-card-title"><i class="fa fa-sliders"></i> Personnalisation</div>
+
+        <div class="form-group">
+          <label class="form-label">Ann&#233;e universitaire</label>
+          <input class="form-input" id="inputAnnee" value="2024 - 2025" oninput="updateCarte()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sp&#233;cialit&#233; (optionnel)</label>
+          <input class="form-input" id="inputSpec" placeholder="Ex: D&#233;veloppement Web" oninput="updateCarte()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="fa fa-camera" style="color:var(--accent)"></i> Changer la photo</label>
+          <label style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:10px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:.78rem;color:var(--muted);transition:border-color .2s;background:var(--bg)" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            <i class="fa fa-upload"></i> S&#233;lectionner une photo
+            <input type="file" id="inputPhoto" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+          </label>
+          <div style="font-size:.7rem;color:var(--muted);margin-top:4px;text-align:center">JPG, PNG — max 2 Mo</div>
+        </div>
+      </div>
+
+      <div class="ctrl-card">
+        <div class="ctrl-card-title"><i class="fa fa-download"></i> Télécharger</div>
+        <button class="btn-download" onclick="downloadPDF()">
+          <i class="fa fa-file-pdf"></i> Télécharger en PDF
+        </button>
+        <button class="btn-print" onclick="window.print()">
+          <i class="fa fa-print"></i> Imprimer
+        </button>
+      </div>
+
+      <div class="ctrl-card">
+        <div class="ctrl-card-title"><i class="fa fa-qrcode"></i> QR Code</div>
+        <div style="display:flex;justify-content:center;margin-bottom:12px">
+          <div id="qrBigDiv" style="padding:10px;background:#fff;border-radius:10px;border:1px solid var(--border)"></div>
+        </div>
+        <button onclick="downloadQROnly()" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px;border:1px solid var(--border);border-radius:9px;background:var(--white);color:var(--text);font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .18s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">
+          <i class="fa fa-download"></i> Télécharger QR Code
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- hidden QR for PDF -->
+<div id="qrPDF"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* -- LOGIN -- */
+const currentUser = {
+  id:     parseInt(localStorage.getItem("user_id")),
+  nom:    localStorage.getItem("user_nom")    || "",
+  prenom: localStorage.getItem("user_prenom") || "",
+  photo:  localStorage.getItem("user_photo")  || "",
+};
+if (!currentUser.id) window.location.href = "login.html";
+if (localStorage.getItem("user_role") !== "etudiant") { localStorage.clear(); window.location.href = "login.html"; }
+
+const ini = (currentUser.prenom[0]||"") + (currentUser.nom[0]||"");
+document.getElementById("sidebarNom").innerText = currentUser.prenom + " " + currentUser.nom;
+document.getElementById("topNom").innerText     = currentUser.prenom + " " + currentUser.nom;
+if (currentUser.photo) {
+  const url = "http://localhost:3000/uploads/" + currentUser.photo;
+  document.getElementById("sidebarAvatar").innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById("topAvatar").innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById("sidebarAvatar").innerText = ini;
+  document.getElementById("topAvatar").innerText     = ini;
+}
+
+/* -- USER DATA -- */
+let userData = {};
+let stageData = {};
+const verifyUrl = `http://localhost:3000/verify-profil.html?id=${currentUser.id}`;
+
+async function loadData() {
+  try {
+    const r  = await fetch(`http://localhost:3000/profil-complet/${currentUser.id}`);
+    const d  = await r.json();
+    if (d.success) userData = d.user;
+
+    const r2 = await fetch(`http://localhost:3000/mes-stages/${currentUser.id}`);
+    const d2 = await r2.json();
+    if (d2.success && d2.stages.length) stageData = d2.stages[0];
+  } catch(e) {}
+
+  buildCarte();
+}
+
+/* -- BUILD CARTE -- */
+function buildCarte() {
+  const prenom  = userData.prenom  || currentUser.prenom || "";
+  const nom     = userData.nom     || currentUser.nom    || "";
+  const filiere = userData.filiere || "—";
+  const spec    = document.getElementById("inputSpec").value || userData.specialite || "—";
+  const num     = userData.num_etudiant || `${currentUser.id}-ETU`;
+  const annee   = document.getElementById("inputAnnee").value || "2024-2025";
+  const email   = userData.email || currentUser.email || "";
+  const tel     = userData.telephone || "";
+  const type    = stageData.type_stage || userData.type_stage || "";
+  const typeLabel = { initiation:"Initiation", perfectionnement:"Perfectionnement", fin_etude:"Fin d'études" };
+  const typeText  = typeLabel[type] || "—";
+  const fullNom   = `${prenom} ${nom}`.trim();
+
+  // Infos carte
+  document.getElementById("carteNom").innerText       = fullNom || "—";
+  document.getElementById("carteFiliere").innerText   = filiere;
+  document.getElementById("carteSpec").innerText      = spec;
+  document.getElementById("carteAnnee").innerText     = annee;
+  document.getElementById("carteStageType").innerText = typeText;
+
+  // N° Inscription
+  const niEl = document.getElementById("carteNumInsc");
+  if (niEl) niEl.innerText = num;
+
+  // N° Etudiant (footer)
+  const nuEtuEl = document.getElementById("carteNumEtu");
+  if (nuEtuEl) nuEtuEl.innerText = num;
+
+  // Date de naissance
+  const naissEl = document.getElementById("carteNaissance");
+  if (naissEl) {
+    const dn = userData.date_naissance || "";
+    naissEl.innerText = dn ? dn.substring(0,10) : "—";
+  }
+
+  // CIN
+  const cinEl = document.getElementById("carteCIN");
+  if (cinEl) cinEl.innerText = userData.cin || "—";
+
+  // Barcode stylisé
+  const numBar = num.replace(/[^0-9]/g,'').padStart(8,'0');
+  const bcEl = document.getElementById("carteBarcode");
+  if (bcEl) {
+    const bars = numBar.split('').map(d => {
+      const v = parseInt(d);
+      return v % 3 === 0 ? '||' : v % 2 === 0 ? '|' : '|||';
+    }).join(' ');
+    bcEl.innerText = bars;
+  }
+
+  // Photo (profil ou upload local)
+  const photoEl = document.getElementById("cartePhoto");
+  const localPhoto = sessionStorage.getItem("cartePhotoLocal");
+  if (localPhoto) {
+    photoEl.innerHTML = `<img src="${localPhoto}">`;
+  } else if (userData.photo || currentUser.photo) {
+    const photoUrl = "http://localhost:3000/uploads/" + (userData.photo || currentUser.photo);
+    photoEl.innerHTML = `<img src="${photoUrl}" onerror="this.parentElement.innerText='${(prenom[0]||'')+(nom[0]||'')}'" >`;
+  } else {
+    photoEl.innerText = (prenom[0]||'') + (nom[0]||'') || "?";
+  }
+
+  // QR Code visible sur la carte (bleu ciel)
+  const qrEl = document.getElementById("carteQRDiv");
+  if (qrEl) {
+    qrEl.innerHTML = "";
+    new QRCode(qrEl, { text: verifyUrl, width: 44, height: 44, colorDark: "#0284c7", colorLight: "#f0f9ff", correctLevel: QRCode.CorrectLevel.M });
+  }
+
+  // QR grand (panneau contrôles)
+  document.getElementById("qrBigDiv").innerHTML = "";
+  new QRCode(document.getElementById("qrBigDiv"), {
+    text: verifyUrl, width: 130, height: 130,
+    colorDark: "#0284c7", colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // QR PDF
+  document.getElementById("qrPDF").innerHTML = "";
+  new QRCode(document.getElementById("qrPDF"), {
+    text: verifyUrl, width: 100, height: 100,
+    colorDark: "#0284c7", colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+/* -- PHOTO UPLOAD LOCAL -- */
+function previewPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    sessionStorage.setItem("cartePhotoLocal", e.target.result);
+    const photoEl = document.getElementById("cartePhoto");
+    photoEl.innerHTML = `<img src="${e.target.result}">`;
+    showToast("Photo mise à jour sur la carte !", "success");
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function updateCarte() { buildCarte(); }
+
+/* -- DOWNLOAD PDF ISET Tozeur (Bleu Ciel) -- */
+async function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:"landscape", unit:"mm", format:[85.6, 54] });
+  const W = 85.6, H = 54;
+  const SKY  = [14,165,233];   // #0ea5e9
+  const DSKY = [2,132,199];    // #0284c7
+  const LSKY = [240,249,255];  // #f0f9ff
+  const prenom  = userData.prenom  || currentUser.prenom || "";
+  const nom     = userData.nom     || currentUser.nom    || "";
+  const fullNom = (prenom + " " + nom).toUpperCase().trim();
+  const filiere = userData.filiere || "—";
+  const spec    = document.getElementById("inputSpec").value || "—";
+  const numEtu  = userData.num_etudiant || `${currentUser.id}-ETU`;
+  const annee   = document.getElementById("inputAnnee").value || "2024-2025";
+  const cin     = userData.cin || "—";
+  const dn      = (userData.date_naissance||"").substring(0,10) || "—";
+  const type    = stageData.type_stage || "";
+  const typeMap = { initiation:"Initiation", perfectionnement:"Perfectionnement", fin_etude:"Fin d'etudes" };
+  const typeText= typeMap[type] || "—";
+  let y = 0;
+
+  // Fond blanc
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,H,"F");
+
+  // HEADER blanc — logo ISET + Ministere + sceau
+  const hdrH = 12;
+  doc.setFillColor(255,255,255); doc.rect(0,y,W,hdrH,"F");
+  doc.setDrawColor(...SKY); doc.setLineWidth(0.6);
+  doc.line(0,y+hdrH,W,y+hdrH);
+  // Badge ISET gauche
+  doc.setFillColor(...SKY); doc.circle(5.5,y+6,4,"F");
+  doc.setTextColor(255,255,255); doc.setFontSize(4.5); doc.setFont("helvetica","bold");
+  doc.text("ISET",5.5,y+6,"center");
+  doc.setFontSize(2.5); doc.setTextColor(186,230,253);
+  doc.text("TOZEUR",5.5,y+8.8,"center");
+  // Texte Ministere centre
+  doc.setTextColor(12,74,110); doc.setFontSize(3); doc.setFont("helvetica","bold");
+  doc.text("Ministere de l'Enseignement Superieur et de la Recherche Scientifique",W/2,y+4.5,{align:"center"});
+  doc.setTextColor(2,132,199); doc.setFontSize(2.6); doc.setFont("helvetica","normal");
+  doc.text("Direction Generale des Etudes Technologiques",W/2,y+7.2,{align:"center"});
+  doc.setTextColor(100,100,100); doc.setFontSize(2.4);
+  doc.text("Institut Superieur des Etudes Technologiques de Tozeur",W/2,y+9.8,{align:"center"});
+  // Sceau droite
+  doc.setFillColor(200,16,46); doc.circle(W-5.5,y+5.5,4,"F");
+  doc.setFillColor(255,255,255); doc.circle(W-5,y+5,1.8,"F");
+  doc.setFillColor(200,16,46); doc.circle(W-5.1,y+5.2,0.8,"F");
+  y += hdrH;
+
+  // BANDE TITRE BLEU CIEL
+  const bandH = 7;
+  doc.setFillColor(...SKY); doc.rect(0,y,W,bandH,"F");
+  doc.setTextColor(255,255,255); doc.setFontSize(7.5); doc.setFont("helvetica","bold");
+  doc.text("CARTE D'ETUDIANT",W/2-6,y+5,{align:"center"});
+  doc.setFontSize(4); doc.setFont("helvetica","normal");
+  doc.text("| بطاقة طالب",W/2+14,y+5,{align:"center"});
+  doc.setFontSize(4.5); doc.setFont("helvetica","bold");
+  doc.text(annee,W-2,y+5,{align:"right"});
+  y += bandH;
+
+  // CORPS fond bleu très clair
+  const bodyH = H - y - 6;
+  doc.setFillColor(...LSKY); doc.rect(0,y,W,bodyH,"F");
+
+  // Infos gauche
+  const infoX = 3;
+  const rows = [
+    ["Nom et Prenom :", fullNom],
+    ["Ne(e) le :", dn],
+    ["Filiere :", filiere],
+    ["Specialite :", spec],
+    ["N° Inscription :", numEtu],
+    ["Type stage :", typeText],
+  ];
+  const rowH = bodyH / 6.5;
+  rows.forEach(([lbl,val],i) => {
+    const ry = y + 1 + i * rowH;
+    doc.setTextColor(...DSKY); doc.setFontSize(3.2); doc.setFont("helvetica","bold");
+    doc.text(lbl, infoX, ry+rowH-1.5);
+    doc.setTextColor(12,74,110); doc.setFontSize(3.7); doc.setFont("helvetica","normal");
+    doc.text(String(val), infoX+doc.getTextWidth(lbl)+1, ry+rowH-1.5, {maxWidth:W-infoX-22});
+    if (i < rows.length-1) {
+      doc.setDrawColor(186,230,253); doc.setLineWidth(0.12);
+      doc.line(infoX, ry+rowH-0.3, W-21, ry+rowH-0.3);
+    }
+  });
+
+  // Photo droite
+  const ph=bodyH-3, pw=12, px=W-pw-13, py2=y+1.5;
+  const photoEl2 = document.getElementById("cartePhoto").querySelector("img");
+  if (photoEl2) {
+    try {
+      const cv=document.createElement("canvas");
+      cv.width=48;cv.height=64;
+      cv.getContext("2d").drawImage(photoEl2,0,0,48,64);
+      doc.addImage(cv.toDataURL("image/jpeg",0.85),"JPEG",px,py2,pw,ph);
+    } catch(e) {
+      doc.setFillColor(224,242,254); doc.roundedRect(px,py2,pw,ph,1,1,"F");
+      doc.setTextColor(...SKY); doc.setFontSize(8);
+      doc.text((prenom[0]||"")+(nom[0]||""), px+pw/2, py2+ph/2+2, {align:"center"});
+    }
+  } else {
+    doc.setFillColor(224,242,254); doc.roundedRect(px,py2,pw,ph,1,1,"F");
+    doc.setTextColor(...SKY); doc.setFontSize(8);
+    doc.text((prenom[0]||"")+(nom[0]||""), px+pw/2, py2+ph/2+2, {align:"center"});
+  }
+  doc.setDrawColor(...SKY); doc.setLineWidth(0.4); doc.roundedRect(px,py2,pw,ph,1,1);
+
+  // QR droite
+  const qrEl2 = document.getElementById("qrPDF")?.querySelector("canvas") ||
+                document.getElementById("qrPDF")?.querySelector("img");
+  if (qrEl2) {
+    try {
+      const qrData = qrEl2.tagName==="CANVAS" ? qrEl2.toDataURL("image/png") : qrEl2.src;
+      const qrSz = bodyH-3;
+      doc.addImage(qrData,"PNG",W-qrSz-1,y+1.5,qrSz,qrSz);
+    } catch(e) {}
+  }
+  y += bodyH;
+
+  // FOOTER BLEU CIEL
+  doc.setFillColor(...SKY); doc.rect(0,y,W,6,"F");
+  doc.setTextColor(186,230,253); doc.setFontSize(2.8); doc.setFont("helvetica","bold");
+  doc.text("CIN N\xb0:", 3, y+3.8);
+  doc.setTextColor(255,255,255); doc.setFontSize(3.2);
+  doc.text(cin, 3+doc.getTextWidth("CIN N\xb0:")+1, y+3.8);
+  const bNums = numEtu.replace(/[^0-9]/g,'').padStart(8,'0');
+  doc.setTextColor(224,242,254); doc.setFontSize(5.5); doc.setFont("courier","bold");
+  doc.text("| "+bNums.split('').join(' | ')+" |", W/2, y+4.2, {align:"center"});
+  doc.setFontSize(2.6); doc.setFont("helvetica","bold"); doc.setTextColor(186,230,253);
+  doc.text("N\xb0 Etu.:", W-3, y+3.8, {align:"right"});
+  doc.setTextColor(255,255,255); doc.setFontSize(3);
+  doc.text(numEtu, W-3-doc.getTextWidth("N\xb0 Etu.:")-1, y+3.8, {align:"right"});
+
+  doc.save(`CarteEtudiant_ISET_${prenom}_${nom}.pdf`);
+  showToast("Carte telecharge !", "success");
+}
+/* -- DOWNLOAD QR ONLY -- */
+function downloadQROnly() {
+  const canvas = document.getElementById("qrBigDiv").querySelector("canvas");
+  if (!canvas) return showToast("QR Code non disponible", "");
+  const link = document.createElement("a");
+  link.download = `QR_${currentUser.prenom}_${currentUser.nom}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  showToast("? QR Code téléchargé !", "success");
+}
+
+/* -- TOAST -- */
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.className = `toast ${type} show`;
+  t.innerText = msg;
+  setTimeout(() => t.classList.remove("show"), 3000);
+}
+
+function logout(){ localStorage.clear(); window.location.href = '/login.html'; }
+
+/* -- INIT -- */
+loadData();
+</script>
+<script src="/sidebar-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mot de passe oublie - Gestion des Stages</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Inter", sans-serif; background: linear-gradient(135deg, #0c2340 0%, #163a5f 60%, #1e4d7b 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .card { width: 100%; max-width: 440px; animation: slideUp .45s cubic-bezier(.4,0,.2,1) both; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+    .header { text-align: center; margin-bottom: 28px; }
+    .logo-icon { width: 64px; height: 64px; border-radius: 18px; background: linear-gradient(135deg, #c9930a, #f5d87e); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 14px; }
+    .header h1 { color: #fff; font-size: 1.5rem; font-weight: 800; }
+    .header p { color: rgba(255,255,255,.5); font-size: .875rem; margin-top: 4px; }
+    .form-card { background: #fff; border-radius: 20px; padding: 32px 28px; box-shadow: 0 25px 50px rgba(0,0,0,.3); }
+    .stepper { display: flex; align-items: center; margin-bottom: 28px; }
+    .step-item { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .step-circle { width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 700; transition: all .3s; border: 2px solid #e2e8f0; position: relative; z-index: 1; }
+    .step-circle.active { background: linear-gradient(135deg, #c9930a, #f5d87e); color: #0c2340; border-color: #c9930a; }
+    .step-circle.done { background: #10b981; color: #fff; border-color: #10b981; }
+    .step-label { font-size: .7rem; color: #94a3b8; margin-top: 5px; white-space: nowrap; font-weight: 500; }
+    .step-label.active { color: #c9930a; font-weight: 700; }
+    .step-label.done { color: #10b981; }
+    .step-line { flex: 1; height: 2px; background: #e2e8f0; margin: 0 -2px; margin-bottom: 18px; transition: background .3s; }
+    .step-line.done { background: #10b981; }
+    .field-group { margin-bottom: 18px; }
+    .field-group label { display: block; font-size: .8rem; font-weight: 600; color: #374151; margin-bottom: 7px; }
+    .input-wrap { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: .95rem; pointer-events: none; }
+    .input-field { width: 100%; padding: 12px 44px 12px 42px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: .9rem; color: #1e293b; background: #f8fafc; outline: none; transition: border-color .2s, box-shadow .2s, background .2s; font-family: "Inter", sans-serif; }
+    .input-field:focus { border-color: #c9930a; box-shadow: 0 0 0 3px rgba(201,147,10,.15); background: #fff; }
+    .input-field::placeholder { color: #94a3b8; }
+    .input-field.error { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
+    .toggle-pass { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94a3b8; font-size: .95rem; padding: 2px 5px; }
+    .otp-grid { display: flex; gap: 10px; justify-content: center; margin: 8px 0; }
+    .otp-input { width: 50px; height: 58px; border: 2px solid #e5e7eb; border-radius: 12px; text-align: center; font-size: 1.4rem; font-weight: 700; color: #1e293b; background: #f8fafc; outline: none; transition: border-color .2s, box-shadow .2s; font-family: "Inter", sans-serif; }
+    .otp-input:focus { border-color: #c9930a; box-shadow: 0 0 0 3px rgba(201,147,10,.15); background: #fff; }
+    .otp-input.filled { border-color: #c9930a; background: #fff; }
+    .otp-timer { text-align: center; font-size: .78rem; color: #94a3b8; margin-top: 8px; }
+    .strength-bar { height: 4px; border-radius: 2px; margin-top: 8px; background: #e5e7eb; overflow: hidden; }
+    .strength-fill { height: 100%; border-radius: 2px; transition: width .3s, background .3s; width: 0%; }
+    .strength-label { font-size: .72rem; margin-top: 5px; font-weight: 600; }
+    .strength-rules { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+    .rule { display: flex; align-items: center; gap: 7px; font-size: .75rem; color: #94a3b8; transition: color .2s; }
+    .rule.ok { color: #10b981; }
+    .rule i { font-size: .7rem; width: 14px; text-align: center; }
+    .btn-primary { width: 100%; padding: 13px; background: linear-gradient(135deg, #c9930a, #f5d87e); color: #0c2340; font-weight: 700; font-size: .95rem; border: none; border-radius: 12px; cursor: pointer; transition: opacity .2s, transform .1s; font-family: "Inter", sans-serif; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary:hover:not(:disabled) { opacity: .92; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .btn-back { width: 100%; padding: 11px; background: transparent; color: #64748b; font-weight: 600; font-size: .875rem; border: 2px solid #e5e7eb; border-radius: 12px; cursor: pointer; margin-top: 10px; transition: all .2s; font-family: "Inter", sans-serif; }
+    .btn-back:hover { border-color: #c9930a; color: #c9930a; }
+    .alert { padding: 11px 14px; border-radius: 10px; font-size: .82rem; font-weight: 500; margin-bottom: 16px; display: flex; align-items: center; gap: 9px; animation: fadeIn .2s ease; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .alert.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .alert.info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .hidden { display: none !important; }
+    .back-link { text-align: center; margin-top: 20px; }
+    .back-link a { color: rgba(255,255,255,.6); font-size: .82rem; text-decoration: none; transition: color .2s; }
+    .back-link a:hover { color: #f5d87e; }
+    .success-icon { width: 72px; height: 72px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #10b981; margin: 0 auto 20px; border: 3px solid #bbf7d0; }
+    .shake { animation: shake .35s ease; }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 25%,75% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="logo-icon">&#127891;</div>
+    <h1>Gestion des Stages</h1>
+    <p>Reinitialisation du mot de passe</p>
+  </div>
+  <div class="form-card">
+    <div class="stepper" id="stepper">
+      <div class="step-item">
+        <div class="step-circle active" id="sc1">1</div>
+        <span class="step-label active" id="sl1">Email</span>
+      </div>
+      <div class="step-line" id="line1"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc2">2</div>
+        <span class="step-label" id="sl2">Code</span>
+      </div>
+      <div class="step-line" id="line2"></div>
+      <div class="step-item">
+        <div class="step-circle" id="sc3">3</div>
+        <span class="step-label" id="sl3">Nouveau MDP</span>
+      </div>
+    </div>
+    <div id="alertBox" class="alert hidden"></div>
+    <!-- Etape 1 -->
+    <div id="step1">
+      <p style="font-size:.875rem;color:#64748b;margin-bottom:20px;line-height:1.5">
+        Entrez votre adresse email. Nous vous enverrons un code a 6 chiffres.
+      </p>
+      <div class="field-group">
+        <label for="emailInput">Adresse email</label>
+        <div class="input-wrap">
+          <i class="fa fa-envelope input-icon"></i>
+          <input type="email" id="emailInput" class="input-field" placeholder="votre@email.tn" autocomplete="email">
+        </div>
+      </div>
+      <button class="btn-primary" id="btnSendCode" onclick="sendCode()">
+        <i class="fa fa-paper-plane"></i> Envoyer le code
+      </button>
+    </div>
+    <!-- Etape 2 -->
+    <div id="step2" class="hidden">
+      <p style="font-size:.875rem;color:#64748b;margin-bottom:6px;line-height:1.5">
+        Code envoye a <strong id="emailDisplay" style="color:#0c2340"></strong>
+      </p>
+      <p style="font-size:.8rem;color:#94a3b8;margin-bottom:14px">Verifiez egalement vos spams.</p>
+      <div class="otp-grid" id="otpGrid">
+        <input class="otp-input" maxlength="1" inputmode="numeric" id="otp0">
+        <input class="otp-input" maxlength="1" inputmode="numeric" id="otp1">
+        <input class="otp-input" maxlength="1" inputmode="numeric" id="otp2">
+        <input class="otp-input" maxlength="1" inputmode="numeric" id="otp3">
+        <input class="otp-input" maxlength="1" inputmode="numeric" id="otp4">
+        <input class="otp-input" maxlength="1" inputmode="numeric" id="otp5">
+      </div>
+      <div class="otp-timer" id="otpTimer">
+        Code valide pendant <strong id="timerDisplay">15:00</strong>
+      </div>
+      <button class="btn-primary" id="btnVerify" onclick="verifyCode()" style="margin-top:20px">
+        <i class="fa fa-check-circle"></i> Verifier le code
+      </button>
+      <button class="btn-back" onclick="goStep(1)"><i class="fa fa-arrow-left"></i> Retour</button>
+      <div style="text-align:center;margin-top:12px">
+        <button id="btnResend" onclick="sendCode()" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:.78rem;text-decoration:underline;font-family:Inter,sans-serif" disabled>
+          Renvoyer un nouveau code
+        </button>
+      </div>
+    </div>
+    <!-- Etape 3 -->
+    <div id="step3" class="hidden">
+      <p style="font-size:.875rem;color:#64748b;margin-bottom:20px">Choisissez un nouveau mot de passe securise.</p>
+      <div class="field-group">
+        <label for="newPass">Nouveau mot de passe</label>
+        <div class="input-wrap">
+          <i class="fa fa-lock input-icon"></i>
+          <input type="password" id="newPass" class="input-field" placeholder="Minimum 8 caracteres" autocomplete="new-password" oninput="checkStrength(this.value)">
+          <button type="button" class="toggle-pass" onclick="togglePass('newPass',this)" tabindex="-1"><i class="fa fa-eye"></i></button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+        <div class="strength-label" id="strengthLabel"></div>
+        <div class="strength-rules">
+          <div class="rule" id="rule-len"><i class="fa fa-circle"></i> 8 caracteres minimum</div>
+          <div class="rule" id="rule-letter"><i class="fa fa-circle"></i> Contient des lettres</div>
+          <div class="rule" id="rule-num"><i class="fa fa-circle"></i> Contient des chiffres</div>
+          <div class="rule" id="rule-special"><i class="fa fa-circle"></i> Caractere special (!@#...)</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="confirmPass">Confirmer le mot de passe</label>
+        <div class="input-wrap">
+          <i class="fa fa-lock input-icon"></i>
+          <input type="password" id="confirmPass" class="input-field" placeholder="Repetez votre mot de passe" autocomplete="new-password">
+          <button type="button" class="toggle-pass" onclick="togglePass('confirmPass',this)" tabindex="-1"><i class="fa fa-eye"></i></button>
+        </div>
+      </div>
+      <button class="btn-primary" id="btnReset" onclick="resetPassword()">
+        <i class="fa fa-shield-halved"></i> Reinitialiser le mot de passe
+      </button>
+      <button class="btn-back" onclick="goStep(2)"><i class="fa fa-arrow-left"></i> Retour</button>
+    </div>
+    <!-- Succes -->
+    <div id="stepSuccess" class="hidden" style="text-align:center;padding:16px 0">
+      <div class="success-icon"><i class="fa fa-check"></i></div>
+      <h3 style="color:#0f172a;font-size:1.2rem;font-weight:700;margin-bottom:8px">Mot de passe modifie !</h3>
+      <p style="color:#64748b;font-size:.875rem;line-height:1.5">Votre mot de passe a ete reinitialise avec succes.<br>Vous pouvez maintenant vous connecter.</p>
+      <button class="btn-primary" style="margin-top:24px" onclick="window.location.href='/login.html'">
+        <i class="fa fa-right-to-bracket"></i> Se connecter
+      </button>
+    </div>
+  </div>
+  <div class="back-link">
+    <a href="/login.html"><i class="fa fa-arrow-left" style="font-size:.75rem"></i> Retour a la connexion</a>
+  </div>
+</div>
+<script>
+  const API = window.location.origin;
+  let currentStep = 1;
+  let verifiedCode = '';
+  let timerInterval;
+
+  function goStep(n) {
+    [1,2,3].forEach(i => document.getElementById('step'+i).classList.add('hidden'));
+    document.getElementById('stepSuccess').classList.add('hidden');
+    if (n === 'success') {
+      document.getElementById('stepSuccess').classList.remove('hidden');
+      document.getElementById('stepper').style.opacity = '.4';
+    } else {
+      document.getElementById('step'+n).classList.remove('hidden');
+      updateStepper(n);
+    }
+    clearAlert();
+    currentStep = n;
+  }
+
+  function updateStepper(n) {
+    [1,2,3].forEach(i => {
+      const sc = document.getElementById('sc'+i);
+      const sl = document.getElementById('sl'+i);
+      sc.className = 'step-circle ' + (i < n ? 'done' : i === n ? 'active' : '');
+      sl.className = 'step-label '  + (i < n ? 'done' : i === n ? 'active' : '');
+      sc.innerHTML = i < n ? '<i class="fa fa-check" style="font-size:.7rem"></i>' : i;
+    });
+    ['line1','line2'].forEach((id,idx) => {
+      document.getElementById(id).className = 'step-line' + (n > idx+1 ? ' done' : '');
+    });
+  }
+
+  function showAlert(msg, type) {
+    type = type || 'error';
+    var icons = { error:'fa-circle-exclamation', success:'fa-check-circle', info:'fa-circle-info' };
+    var box = document.getElementById('alertBox');
+    box.className = 'alert ' + type;
+    box.innerHTML = '<i class="fa ' + icons[type] + '"></i> ' + msg;
+    box.classList.remove('hidden');
+  }
+  function clearAlert() { document.getElementById('alertBox').classList.add('hidden'); }
+
+  async function sendCode() {
+    var email = document.getElementById('emailInput').value.trim().toLowerCase();
+    var btn = document.getElementById('btnSendCode');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showAlert('Veuillez entrer une adresse email valide.');
+      document.getElementById('emailInput').classList.add('error');
+      return;
+    }
+    document.getElementById('emailInput').classList.remove('error');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Envoi en cours...';
+    try {
+      var r = await fetch(API + '/forgot-password', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email: email })
+      });
+      if (r.status === 429) {
+        showAlert('Trop de tentatives. Reessayez dans 1 heure.');
+        return;
+      }
+      var d = await r.json();
+      if (!d.success) {
+        showAlert(d.message || 'Erreur lors de l\'envoi du code.');
+        return;
+      }
+      document.getElementById('emailDisplay').textContent = email;
+      showAlert('Code envoye ! Verifiez votre boite mail et vos spams.', 'success');
+      goStep(2);
+      startTimer(15 * 60);
+      initOtp();
+    } catch(e) {
+      showAlert('Erreur de connexion. Verifiez votre acces internet.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Envoyer le code';
+    }
+  }
+
+  function startTimer(seconds) {
+    clearInterval(timerInterval);
+    document.getElementById('btnResend').disabled = true;
+    var rem = seconds;
+    timerInterval = setInterval(function() {
+      rem--;
+      if (rem <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('otpTimer').innerHTML = '<strong style="color:#ef4444">Code expire.</strong> Demandez un nouveau code ci-dessous.';
+        document.getElementById('btnResend').disabled = false;
+        return;
+      }
+      var m = String(Math.floor(rem/60)).padStart(2,'0');
+      var s = String(rem%60).padStart(2,'0');
+      document.getElementById('timerDisplay').textContent = m + ':' + s;
+      if (rem < 840) document.getElementById('btnResend').disabled = false;
+    }, 1000);
+  }
+
+  function initOtp() {
+    for (var i = 0; i < 6; i++) {
+      (function(idx) {
+        var inp = document.getElementById('otp'+idx);
+        inp.value = ''; inp.classList.remove('filled');
+        inp.oninput = function() {
+          inp.value = inp.value.replace(/\D/g,'').slice(-1);
+          if (inp.value) { inp.classList.add('filled'); if (idx<5) document.getElementById('otp'+(idx+1)).focus(); }
+        };
+        inp.onkeydown = function(e) {
+          if (e.key==='Backspace' && !inp.value && idx>0) document.getElementById('otp'+(idx-1)).focus();
+        };
+        inp.onpaste = function(e) {
+          e.preventDefault();
+          var t = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);
+          t.split('').forEach(function(c,j) { var el=document.getElementById('otp'+j); el.value=c; el.classList.add('filled'); });
+          document.getElementById('otp'+Math.min(t.length-1,5)).focus();
+        };
+      })(i);
+    }
+    setTimeout(function() { document.getElementById('otp0').focus(); }, 100);
+  }
+
+  function getOtp() {
+    var code = '';
+    for (var i=0;i<6;i++) code += document.getElementById('otp'+i).value;
+    return code;
+  }
+
+  async function verifyCode() {
+    var email = document.getElementById('emailInput').value.trim().toLowerCase();
+    var code  = getOtp();
+    var btn   = document.getElementById('btnVerify');
+    if (code.length !== 6) {
+      showAlert('Entrez les 6 chiffres du code recu.');
+      document.getElementById('otpGrid').classList.add('shake');
+      setTimeout(function(){document.getElementById('otpGrid').classList.remove('shake');},400);
+      return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Verification...';
+    try {
+      var r = await fetch(API + '/verify-code', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email:email, code:code})
+      });
+      var d = await r.json();
+      if (d.success) {
+        verifiedCode = code;
+        clearInterval(timerInterval);
+        showAlert('Code verifie !', 'success');
+        setTimeout(function(){goStep(3);}, 500);
+      } else {
+        showAlert(d.message || 'Code incorrect ou expire.');
+        document.getElementById('otpGrid').classList.add('shake');
+        setTimeout(function(){document.getElementById('otpGrid').classList.remove('shake');},400);
+      }
+    } catch(e) { showAlert('Erreur de connexion.'); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Verifier le code';
+    }
+  }
+
+  function checkStrength(val) {
+    var rules = { len: val.length>=8, letter: /[A-Za-z]/.test(val), num: /[0-9]/.test(val), special: /[^A-Za-z0-9]/.test(val) };
+    Object.entries(rules).forEach(function(entry) {
+      var k=entry[0], ok=entry[1];
+      var el = document.getElementById('rule-'+k);
+      el.className = 'rule' + (ok?' ok':'');
+      el.querySelector('i').className = ok ? 'fa fa-check-circle' : 'fa fa-circle';
+    });
+    var score = Object.values(rules).filter(Boolean).length;
+    var lvls = [
+      {pct:'0%',bg:'#ef4444',txt:''},
+      {pct:'25%',bg:'#ef4444',txt:'Tres faible'},
+      {pct:'50%',bg:'#f59e0b',txt:'Faible'},
+      {pct:'75%',bg:'#3b82f6',txt:'Moyen'},
+      {pct:'100%',bg:'#10b981',txt:'Fort'}
+    ];
+    var lv = lvls[score];
+    var fill = document.getElementById('strengthFill');
+    var lbl  = document.getElementById('strengthLabel');
+    fill.style.width = val ? lv.pct : '0%';
+    fill.style.background = lv.bg;
+    lbl.textContent = val ? lv.txt : '';
+    lbl.style.color = lv.bg;
+  }
+
+  async function resetPassword() {
+    var email    = document.getElementById('emailInput').value.trim().toLowerCase();
+    var password = document.getElementById('newPass').value;
+    var confirm  = document.getElementById('confirmPass').value;
+    var btn      = document.getElementById('btnReset');
+    if (password.length < 8) { showAlert('Le mot de passe doit contenir au moins 8 caracteres.'); return; }
+    if (!/[A-Za-z]/.test(password)||!/[0-9]/.test(password)) { showAlert('Le mot de passe doit contenir des lettres et des chiffres.'); return; }
+    if (password !== confirm) {
+      showAlert('Les deux mots de passe ne correspondent pas.');
+      document.getElementById('confirmPass').classList.add('error'); return;
+    }
+    document.getElementById('confirmPass').classList.remove('error');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Modification...';
+    try {
+      var r = await fetch(API + '/reset-password', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email:email, code:verifiedCode, password:password})
+      });
+      var d = await r.json();
+      if (d.success) goStep('success');
+      else showAlert(d.message || 'Erreur. Recommencez depuis le debut.');
+    } catch(e) { showAlert('Erreur de connexion.'); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-shield-halved"></i> Reinitialiser le mot de passe';
+    }
+  }
+
+  function togglePass(id, btn) {
+    var inp = document.getElementById(id);
+    var show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    btn.querySelector('i').className = show ? 'fa fa-eye-slash' : 'fa fa-eye';
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Enter') return;
+    if (currentStep === 1) sendCode();
+    else if (currentStep === 2) verifyCode();
+    else if (currentStep === 3) resetPassword();
+  });
+
+  var pre = new URLSearchParams(window.location.search).get('email');
+  if (pre) document.getElementById('emailInput').value = pre;
+</script>
+</body>
+</html>

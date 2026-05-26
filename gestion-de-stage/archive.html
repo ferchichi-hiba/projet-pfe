@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes Archives | Gestion de Stage</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/etudiant-theme.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6fb;--white:#ffffff;--border:#e5e9f2;
+  --accent:#4f7cff;--accent2:#7c5cfc;--green:#10b981;
+  --orange:#f59e0b;--red:#ef4444;--text:#1a1d2e;--muted:#8892a4;
+  --sidebar-w:240px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 14px;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow:hidden}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);padding:0 8px 22px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.logo span{color:var(--accent)}
+nav{flex:1;overflow-y:auto;margin:0 -14px;padding:0 14px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;cursor:pointer}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.1);color:var(--accent);font-weight:600}
+.nav-item i{width:16px;text-align:center;font-size:.85rem}
+.nav-section-label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:12px 12px 4px;opacity:.7}
+.nav-divider{height:1px;background:var(--border);margin:8px 0}
+.nav-section-toggle{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:.875rem;font-weight:500;transition:all .18s;margin-bottom:2px;user-select:none}
+.nav-section-toggle:hover{background:var(--bg);color:var(--text)}
+.toggle-label{display:flex;align-items:center;gap:10px}
+.toggle-arrow{font-size:.75rem;transition:transform .2s}
+.nav-extra{display:none}
+.nav-extra.open{display:block}
+.nav-extra.open + .nav-section-toggle .toggle-arrow,.nav-section-toggle.open .toggle-arrow{transform:rotate(180deg)}
+.sidebar-bottom{margin-top:auto;border-top:1px solid var(--border);padding-top:14px}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-bottom:6px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#fff;flex-shrink:0;overflow:hidden}
+.user-chip-name{font-size:.82rem;font-weight:600;color:var(--text)}
+.user-chip-role{font-size:.7rem;color:var(--muted)}
+
+/* ══ MAIN ══ */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;color:var(--text)}
+.topbar-title span{color:var(--accent)}
+.user-pill{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 6px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:500;color:var(--text)}
+.user-pill .avatar-circle{width:26px;height:26px;font-size:.7rem}
+.content{padding:28px;flex:1}
+
+/* ══ ANIMATION ══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ PAGE HEADER ══ */
+.page-header{margin-bottom:24px;animation:fadeUp .4s ease both}
+.page-header h1{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:4px}
+.page-header p{color:var(--muted);font-size:.875rem}
+
+/* ══ ARCHIVE CARD ══ */
+.archive-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:16px;margin-bottom:22px;
+  overflow:hidden;animation:fadeUp .4s ease both;
+}
+.archive-card-header{
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;
+}
+.archive-card-icon{
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(79,124,255,.12));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;color:var(--green);flex-shrink:0;
+}
+.archive-card-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--text)}
+.archive-card-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+.archive-badge{
+  margin-left:auto;display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;border-radius:20px;font-size:.72rem;font-weight:700;
+  background:rgba(16,185,129,.12);color:var(--green);
+  border:1px solid rgba(16,185,129,.25);flex-shrink:0;
+}
+
+.archive-body{padding:22px 24px}
+
+/* ══ GRID ══ */
+.arc-grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px}
+.arc-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+
+/* ══ INFO ROWS ══ */
+.info-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.845rem}
+.info-row:last-child{border-bottom:none}
+.info-row i{width:18px;text-align:center;color:var(--accent);font-size:.82rem;margin-top:2px}
+.info-label{color:var(--muted);min-width:130px;font-size:.78rem;padding-top:1px}
+.info-val{color:var(--text);font-weight:500;flex:1}
+
+/* ══ SECTION TITLES ══ */
+.sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;color:var(--text);display:flex;align-items:center;gap:7px;margin-bottom:13px}
+.sec-title i{color:var(--accent)}
+
+/* ══ ENC CARD ══ */
+.enc-mini{display:flex;align-items:center;gap:12px;padding:13px;background:var(--bg);border-radius:11px;border:1px solid var(--border)}
+.enc-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#fff;flex-shrink:0}
+.enc-name{font-weight:700;font-size:.875rem;color:var(--text)}
+.enc-sub{font-size:.73rem;color:var(--muted);margin-top:1px}
+
+/* ══ RAPPORT CARD ══ */
+.rapport-card{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;border-radius:11px;
+  background:rgba(79,124,255,.05);
+  border:1px solid rgba(79,124,255,.18);
+}
+.rapport-icon{
+  width:42px;height:42px;border-radius:10px;
+  background:rgba(79,124,255,.1);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;
+}
+.rapport-name{font-size:.85rem;font-weight:600;color:var(--text)}
+.rapport-meta{font-size:.72rem;color:var(--muted);margin-top:2px}
+.btn-dl{
+  margin-left:auto;display:flex;align-items:center;gap:6px;
+  background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:600;
+  cursor:pointer;text-decoration:none;transition:opacity .18s;flex-shrink:0;
+}
+.btn-dl:hover{opacity:.85}
+
+/* ══ FEEDBACK ══ */
+.feedback-item{
+  padding:14px;background:var(--bg);
+  border-radius:11px;border-left:3px solid var(--accent);
+  margin-bottom:10px;
+}
+.feedback-item:last-child{margin-bottom:0}
+.feedback-text{font-size:.845rem;color:var(--text);line-height:1.65}
+.feedback-meta{font-size:.72rem;color:var(--muted);margin-top:7px;display:flex;align-items:center;gap:6px}
+
+/* ══ STAT CHIPS ══ */
+.stat-chip{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;display:flex;align-items:center;gap:10px;
+}
+.stat-chip i{font-size:.9rem;color:var(--accent)}
+.chip-label{font-size:.73rem;color:var(--muted)}
+.chip-val{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--text)}
+
+/* ══ SEPARATOR ══ */
+.arc-sep{height:1px;background:var(--border);margin:20px 0}
+
+/* ══ EMPTY STATE ══ */
+.empty-arc{text-align:center;padding:60px 20px;animation:fadeUp .4s ease both}
+.empty-arc .icon{font-size:4rem;margin-bottom:16px}
+.empty-arc h2{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px}
+.empty-arc p{color:var(--muted);font-size:.875rem;line-height:1.6;max-width:420px;margin:0 auto 24px}
+.btn-start{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:11px 26px;border-radius:10px;font-weight:700;font-size:.875rem;text-decoration:none;transition:opacity .18s}
+.btn-start:hover{opacity:.88}
+
+/* ══ PROGRESS BAR ══ */
+.prog-wrap{margin-top:4px}
+.prog-bar{height:7px;background:var(--border);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--green),var(--accent));transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">Gestion<span> Stages</span></div>
+  <nav>
+    <span class="nav-section-label">Principal</span>
+    <a class="nav-item" href="etudiant.html"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item" href="profil.html"><i class="fa fa-user"></i> Mon Profil</a>
+    <a class="nav-item" href="stage.html"><i class="fa fa-briefcase"></i> Mon Stage</a>
+    <a class="nav-item" href="demande-stage.html"><i class="fa fa-paper-plane"></i> Demande de stage</a>
+    <a class="nav-item" href="journal.html"><i class="fa fa-book-open"></i> Journal de bord</a>
+    <a class="nav-item active" href="archive.html"><i class="fa fa-box-archive"></i> Mes Archives</a>
+    <span class="nav-section-label">Communication</span>
+    <a class="nav-item" href="messagerie.html"><i class="fa fa-comments"></i> Messagerie</a>
+    <a class="nav-item" href="notifications.html"><i class="fa fa-bell"></i> Notifications</a>
+    <a class="nav-item" href="suggestion.html"><i class="fa fa-lightbulb"></i> Suggestions</a>
+    <div class="nav-divider"></div>
+    <div class="nav-section-toggle" onclick="toggleExtra(this)">
+      <span class="toggle-label"><i class="fa fa-sparkles"></i> Fonctionnalités +</span>
+      <i class="fa fa-chevron-down toggle-arrow"></i>
+    </div>
+    <div class="nav-extra" id="navExtra">
+      <a class="nav-item" href="cv.html"><i class="fa fa-file-user"></i> CV Generator</a>
+      <a class="nav-item" href="document.html"><i class="fa fa-file-contract"></i> Documents officiels</a>
+      <a class="nav-item" href="carte-etudiant.html"><i class="fa fa-id-card"></i> Ma carte étudiant</a>
+      <a class="nav-item" href="planning.html"><i class="fa fa-calendar-days"></i> Planning de stage</a>
+      <a class="nav-item" href="rendez-vous.html"><i class="fa fa-calendar-check"></i> Rendez-vous</a>
+      <a class="nav-item" href="soutenance.html"><i class="fa fa-graduation-cap"></i> Soutenance en ligne</a>
+      <a class="nav-item" href="ressource.html"><i class="fa fa-book-bookmark"></i> Ressources</a>
+      <a class="nav-item" href="carte-stagiaires.html"><i class="fa fa-map-location-dot"></i> Carte des stagiaires</a>
+      <a class="nav-item" href="chatbot.html"><i class="fa fa-robot"></i> Assistant IA</a>
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="avatar-circle" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-chip-name" id="sidebarNom">...</div>
+        <div class="user-chip-role">Étudiant</div>
+      </div>
+    </div>
+    <button class="nav-item" onclick="logout()" style="color:var(--red)">
+      <i class="fa fa-right-from-bracket"></i> Déconnexion
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">🗃️ Mes <span>Archives</span></div>
+    <div class="user-pill">
+      <div class="avatar-circle" id="topAvatar">?</div>
+      <span id="topNom">...</span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <div class="page-header">
+      <h1>📁 Mes stages terminés</h1>
+      <p>Retrouvez ici tous vos stages validés par votre encadrant, avec votre rapport et les feedbacks reçus.</p>
+    </div>
+
+    <!-- Liste des archives -->
+    <div id="archiveList">
+      <div style="text-align:center;padding:40px;color:var(--muted)">
+        <i class="fa fa-spinner fa-spin" style="font-size:1.5rem;margin-bottom:10px;display:block"></i>
+        Chargement de vos archives…
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000';
+
+/* ── Auth ───────────────────────────────────── */
+const currentUser = {
+  id:     parseInt(localStorage.getItem('etudiant_id') || localStorage.getItem('user_id')),
+  nom:    localStorage.getItem('user_nom')    || '',
+  prenom: localStorage.getItem('user_prenom') || '',
+  photo:  localStorage.getItem('user_photo')  || '',
+};
+if (!currentUser.id || isNaN(currentUser.id)) { window.location.href = '/login.html'; }
+if (localStorage.getItem('user_role') !== 'etudiant') { localStorage.clear(); window.location.href = '/login.html'; }
+
+const ini = (currentUser.prenom[0] || '') + (currentUser.nom[0] || '');
+document.getElementById('sidebarNom').textContent = currentUser.prenom + ' ' + currentUser.nom;
+document.getElementById('topNom').textContent     = currentUser.prenom + ' ' + currentUser.nom;
+if (currentUser.photo) {
+  const url = API + '/uploads/' + currentUser.photo;
+  document.getElementById('sidebarAvatar').innerHTML = `<img src="${url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover">`;
+  document.getElementById('topAvatar').innerHTML     = `<img src="${url}" style="width:26px;height:26px;border-radius:50%;object-fit:cover">`;
+} else {
+  document.getElementById('sidebarAvatar').textContent = ini;
+  document.getElementById('topAvatar').textContent     = ini;
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '/login.html';
+}
+
+function toggleExtra(el) {
+  const extra = document.getElementById('navExtra');
+  extra.classList.toggle('open');
+  el.classList.toggle('open');
+}
+
+/* ── Utilitaires ────────────────────────────── */
+function formatDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+}
+function formatSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' o';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' Ko';
+  return (bytes/(1024*1024)).toFixed(1) + ' Mo';
+}
+function typeBadge(t) {
+  const m = { PFE:'Projet de fin d\'études', Stage:'Stage', Initiation:'Stage d\'initiation' };
+  return m[t] || t || '—';
+}
+function timeAgo(d) {
+  if (!d) return '';
+  const diff = Date.now() - new Date(d);
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Aujourd\'hui';
+  if (days === 1) return 'Hier';
+  if (days < 30)  return `Il y a ${days} j`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `Il y a ${months} mois`;
+  return `Il y a ${Math.floor(months/12)} an(s)`;
+}
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Charger les archives ───────────────────── */
+async function chargerArchives(userId) {
+  const container = document.getElementById('archiveList');
+  try {
+    const r = await fetch(`${API}/api/etudiant/archives/${userId}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+
+    if (!data.success || !data.archives || data.archives.length === 0) {
+    container.innerHTML = `
+      <div class="empty-arc">
+        <div class="icon">🗃️</div>
+        <h2>Aucun stage archivé</h2>
+        <p>Vos stages terminés et validés par votre encadrant apparaîtront ici, avec votre rapport et les feedbacks reçus.</p>
+        <a href="stage.html" class="btn-start"><i class="fa fa-briefcase"></i> Voir mon stage en cours</a>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = '';
+  data.archives.forEach((s, idx) => {
+    const delay = (idx * 0.08).toFixed(2);
+    const encInit = s.enc_prenom && s.enc_nom
+      ? s.enc_prenom[0].toUpperCase() + s.enc_nom[0].toUpperCase()
+      : '?';
+
+    /* ── Rapport HTML ── */
+    let rapportHtml;
+    if (s.rapport_id) {
+      const rapportUrl = `${API}/uploads/${s.chemin_fichier}`;
+      rapportHtml = `
+        <div class="rapport-card">
+          <div class="rapport-icon"><i class="fa fa-file-pdf"></i></div>
+          <div>
+            <div class="rapport-name">${esc(s.nom_fichier || 'Rapport.pdf')}</div>
+            <div class="rapport-meta">
+              ${formatSize(s.taille)}${s.date_depot ? ' · Déposé le ' + formatDate(s.date_depot) : ''}
+              ${s.date_validation ? ' · Validé le ' + formatDate(s.date_validation) : ''}
+            </div>
+          </div>
+          <a href="${rapportUrl}" target="_blank" class="btn-dl">
+            <i class="fa fa-download"></i> Télécharger
+          </a>
+        </div>`;
+    } else {
+      rapportHtml = `<div style="color:var(--muted);font-size:.84rem;font-style:italic;padding:10px 0">Aucun rapport enregistré.</div>`;
+    }
+
+    /* ── Feedbacks HTML ── */
+    let feedbacksHtml;
+    if (s.feedbacks && s.feedbacks.length > 0) {
+      feedbacksHtml = s.feedbacks.map(f => `
+        <div class="feedback-item">
+          <div class="feedback-text">${esc(f.commentaire)}</div>
+          <div class="feedback-meta">
+            <i class="fa fa-user-tie" style="font-size:.7rem;color:var(--accent)"></i>
+            <strong>${esc(f.enc_prenom)} ${esc(f.enc_nom)}</strong>
+            <span>·</span>${timeAgo(f.created_at)}
+          </div>
+        </div>`).join('');
+    } else {
+      feedbacksHtml = `<div style="color:var(--muted);font-size:.84rem;font-style:italic;padding:8px 0">Aucun feedback enregistré pour ce stage.</div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'archive-card';
+    card.style.animationDelay = delay + 's';
+    card.innerHTML = `
+      <!-- EN-TÊTE -->
+      <div class="archive-card-header">
+        <div class="archive-card-icon"><i class="fa fa-circle-check"></i></div>
+        <div>
+          <div class="archive-card-title">${esc(s.titre)}</div>
+          <div class="archive-card-sub">
+            ${s.entreprise ? esc(s.entreprise) + (s.ville ? ' · ' + esc(s.ville) : '') : 'Stage universitaire'}
+            ${s.annee_univ ? ' · ' + esc(s.annee_univ) : ''}
+          </div>
+        </div>
+        <div class="archive-badge"><i class="fa fa-check"></i> Validé</div>
+      </div>
+
+      <!-- BODY -->
+      <div class="archive-body">
+
+        <!-- Stat chips -->
+        <div class="arc-grid3" style="margin-bottom:20px">
+          <div class="stat-chip">
+            <i class="fa fa-graduation-cap"></i>
+            <div>
+              <div class="chip-label">Type</div>
+              <div class="chip-val">${esc(typeBadge(s.type_stage))}</div>
+            </div>
+          </div>
+          <div class="stat-chip">
+            <i class="fa fa-calendar-days"></i>
+            <div>
+              <div class="chip-label">Période</div>
+              <div class="chip-val" style="font-size:.8rem;font-weight:600">
+                ${s.date_debut ? formatDate(s.date_debut) : '—'}&nbsp;→&nbsp;${s.date_fin_prevue ? formatDate(s.date_fin_prevue) : '—'}
+              </div>
+            </div>
+          </div>
+          <div class="stat-chip">
+            <i class="fa fa-chart-line"></i>
+            <div>
+              <div class="chip-label">Progression finale</div>
+              <div class="chip-val">${s.progression || 100}%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progression bar -->
+        <div class="prog-wrap" style="margin-bottom:20px">
+          <div class="prog-bar">
+            <div class="prog-fill" id="prog-${s.id}" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="arc-sep"></div>
+
+        <!-- Grille : infos + encadrant -->
+        <div class="arc-grid2">
+
+          <!-- Infos stage -->
+          <div>
+            <div class="sec-title"><i class="fa fa-circle-info"></i> Informations du stage</div>
+            ${s.entreprise ? `<div class="info-row"><i class="fa fa-building"></i><div class="info-label">Entreprise</div><div class="info-val">${esc(s.entreprise)}</div></div>` : ''}
+            ${s.ville ? `<div class="info-row"><i class="fa fa-location-dot"></i><div class="info-label">Ville</div><div class="info-val">${esc(s.ville)}</div></div>` : ''}
+            ${s.description ? `<div class="info-row"><i class="fa fa-align-left"></i><div class="info-label">Description</div><div class="info-val" style="white-space:pre-line">${esc(s.description)}</div></div>` : ''}
+            <div class="info-row"><i class="fa fa-calendar-plus"></i><div class="info-label">Date début</div><div class="info-val">${formatDate(s.date_debut)}</div></div>
+            <div class="info-row"><i class="fa fa-calendar-check"></i><div class="info-label">Date fin prévue</div><div class="info-val">${formatDate(s.date_fin_prevue)}</div></div>
+          </div>
+
+          <!-- Encadrant -->
+          <div>
+            <div class="sec-title"><i class="fa fa-user-tie"></i> Encadrant</div>
+            ${s.enc_nom ? `
+              <div class="enc-mini">
+                <div class="enc-avatar">${encInit}</div>
+                <div>
+                  <div class="enc-name">${esc(s.enc_prenom)} ${esc(s.enc_nom)}</div>
+                  <div class="enc-sub">${s.enc_grade ? esc(s.enc_grade) : 'Encadrant'}${s.enc_email ? ' · ' + esc(s.enc_email) : ''}</div>
+                </div>
+              </div>` : `<div style="color:var(--muted);font-size:.84rem;font-style:italic">Non renseigné</div>`}
+          </div>
+        </div>
+
+        <div class="arc-sep"></div>
+
+        <!-- Rapport -->
+        <div style="margin-bottom:20px">
+          <div class="sec-title"><i class="fa fa-file-lines"></i> Rapport de stage</div>
+          ${rapportHtml}
+        </div>
+
+        <div class="arc-sep"></div>
+
+        <!-- Feedbacks -->
+        <div>
+          <div class="sec-title"><i class="fa fa-comment-dots"></i> Feedback de l'encadrant</div>
+          ${feedbacksHtml}
+        </div>
+
+      </div>`;
+
+    container.appendChild(card);
+
+    // Animer la barre de progression
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const fill = document.getElementById('prog-' + s.id);
+        if (fill) fill.style.width = (s.progression || 100) + '%';
+      }, 100 + idx * 80);
+    });
+  });
+  } catch(err) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--red)">
+        <i class="fa fa-triangle-exclamation" style="font-size:1.5rem;margin-bottom:10px;display:block"></i>
+        Erreur lors du chargement des archives. Vérifiez que le serveur est démarré.
+        <br><small style="color:var(--muted)">${err.message}</small>
+      </div>`;
+  }
+}
+
+/* ── INIT ───────────────────────────────────── */
+chargerArchives(currentUser.id);
+</script>
+</body>
+</html>
